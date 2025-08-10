@@ -1,0 +1,54 @@
+.modal-content {
+    border-radius: 20px;
+    background-color: white;
+}
+
+::ng-deep .mat-datepicker-content .mat-calendar {
+    background-color: rgb(13, 238, 219) !important;
+}
+
+::ng-deep .mat-datepicker-content .mat-calendar-header {
+    background-color: rgb(13, 238, 219) !important;
+}
+
+::ng-deep .mat-datepicker-popup {
+    background-color: rgb(13, 238, 219) !important;
+    margin-top: 0px !important;
+    /* Reset any top margin */
+    transform: translateY(0) !important;
+    /* Reset any translateY transform */
+    transform-origin: top center !important;
+    /* Ensure the transform origin is top left */
+    top: auto !important;
+    /* Reset top positioning */
+    bottom: 0px !important;
+    /* Reset bottom positioning */
+}
+
+::ng-deep .mat-datepicker-content {
+    background-color: rgb(13, 238, 219) !important;
+}
+
+.modal-content .modal-header {
+    background-color: white;
+    color: black;
+}
+
+.modal-content .modal-body {
+    background-color: white;
+    color: black;
+}
+
+.modal-content .modal-footer {
+    background-color: white;
+    color: black;
+}
+
+.modal-content .modal-header .close {
+    color: black
+}
+
+tr:hover {
+    background-color: none;
+    cursor: pointer;
+}

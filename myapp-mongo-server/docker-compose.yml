@@ -1,0 +1,19 @@
+version: '3.8'
+
+services:
+  backend:
+    build: .
+    container_name: myapp-backend
+    ports:
+      - "9090:9090"
+#    environment:
+#      - NODE_ENV=production
+
+  myapp:
+    build: ../myapp
+    container_name: myapp-frontend
+    ports:
+      - "4200:4200"
+      - "80:80"
+    depends_on:
+      - backend

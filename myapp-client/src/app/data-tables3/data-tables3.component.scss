@@ -1,0 +1,17 @@
+#jsonTable3 tbody tr:hover {
+    background-color: rgb(235, 24, 87);
+}
+
+
+.selected #jsonTable3 tbody tr {
+    background-color: rgb(239, 12, 43) !important;
+    color: white;
+}
+
+tr.selected {
+    background-color: aquamarine !important;
+}
+
+#jsonTable3 tbody tr {
+    background-color: salmon;
+}

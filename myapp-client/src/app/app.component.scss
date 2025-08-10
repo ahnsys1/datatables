@@ -1,0 +1,38 @@
+.tablinks {
+    padding: 10px;
+    width: 200px;
+
+}
+
+.nav-item {
+    padding: 10px;
+    width: 200px;
+    text-decoration: underline;
+    color: black;
+}
+
+.active {
+    background-color: rgb(226, 43, 61);
+}
+
+button {
+    font-size: 1.2rem;
+    padding: 5px 5px;
+}
+
+button[routerLink] {
+    width: 200px;
+}
+
+dialog::backdrop {
+    background-color: salmon;
+}
+
+::backdrop {
+    background-image: linear-gradient(45deg,
+            magenta,
+            rebeccapurple,
+            dodgerblue,
+            green);
+    opacity: 0.75;
+}
