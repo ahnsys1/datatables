@@ -20,7 +20,7 @@ import { ConfirmationDialogComponent, ConfirmationDialogData } from '../shared/c
 export class DataTables3Component implements OnInit {
 
   private table!: any;
-  private employeeIdToManagerMap: Map<string, Employee> = new Map();
+  private employeeIdToEmployeeMap: Map<string, Employee> = new Map();
 
   constructor(private dialog: MatDialog, private employeeService: EmployeeService) { }
 
@@ -124,31 +124,20 @@ export class DataTables3Component implements OnInit {
         { data: 'name', title: 'Name' },
         {
           data: 'manager', title: 'Manager', render: (data, type, row) => {
-            const managerId = row.manager;
-
-            if (managerId == null) {
-              return (type === 'display' || type === 'filter') ? 'no' : '';
+            if (data !== null) {
+              let d = this.employeeIdToEmployeeMap.get(data);
+              return d?.name;
+            } else {
+              return "";
             }
-
-            const managerName = this.employeeIdToManagerMap.get(managerId)?.name;
-
-            if (type === 'sort') {
-              return managerName || '';
-            }
-
-            if (type === 'display' || type === 'filter') {
-              return managerName || 'no';
-            }
-
-            return managerName;
           }
         },
-        { data: 'office', title: 'Office' },
         { data: 'position', title: 'Position' },
+        { data: 'office', title: 'Office' },
         { data: 'extn', title: 'extn' },
         { data: 'start_date', title: 'Start date', render: (data: any) => new DatePipe('en-US').transform(data, 'yyyy-MM-dd') },
         { data: 'salary', title: 'Salary' },
-        { data: 'hasManagerRights', title: "is manager", render: (data) => data ? 'Yes' : 'No' }
+        { data: 'hasManagerRights', title: "is manager", render: (data) => data ? 'Yes' : 'No' },
       ],
       pageLength: 10,
       lengthMenu: [],
@@ -193,12 +182,17 @@ export class DataTables3Component implements OnInit {
   addEmployee(emp: Employee): void {
     this.employeeService.createEmployee(emp).subscribe({
       next: (res: Employee) => {
-        this.employeeIdToManagerMap.set(res.id, res);
+        this.employeeIdToEmployeeMap.set(res.id, res);
         this.table.row.add(res).draw();
+
       },
       error: (err: any) => {
         alert('Failed to add employee: ' + err.message);
-      }
+      },
+      complete:
+        () => { this.table.draw(); }
+
+
     });
   }
 
@@ -212,14 +206,21 @@ export class DataTables3Component implements OnInit {
         const newData = { ...oldData, ...res };
 
         // Update the map to prevent stale manager data
-        this.employeeIdToManagerMap.set(newData.id, newData);
+        this.employeeIdToEmployeeMap.set(newData.id, newData);
 
-        // Update the row and redraw the current page without resetting pagination
-        row.data(newData).draw(false);
+        // Update the data for the selected row
+        row.data(newData);
+        newData.managerName = newData.manager?.name;
+
+        // Invalidate all rows to force re-rendering of cells (like manager names)
+        // and then redraw the table without changing the current page.
+        this.table.rows().invalidate().draw(false);
       },
       error: (err: any) => {
         alert('Failed to edit employee: ' + err.message);
-      }
+      },
+      complete:
+        () => { this.table.draw(); }
     });
   }
 
@@ -227,7 +228,9 @@ export class DataTables3Component implements OnInit {
   deleteEmployee(empId: string) {
     this.employeeService.deleteEmployee(empId).subscribe({
       next: () => {
+        this.employeeIdToEmployeeMap.delete(empId);
         this.table.rows(".selected").remove().draw();
+        this.table.draw();
       },
       error: (err: any) => {
         alert('Failed to delete employee: ' + err.message);
@@ -240,7 +243,7 @@ export class DataTables3Component implements OnInit {
       next: (res: Employee[]) => {
         for (let i: number = 0; i < res.length; i++) {
           const employee = res[i];
-          this.employeeIdToManagerMap.set(employee.id, employee);
+          this.employeeIdToEmployeeMap.set(employee.id, employee);
         }
         this.table.rows.add(res).draw();
       },

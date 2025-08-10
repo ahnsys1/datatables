@@ -22,7 +22,7 @@ import { ConfirmationDialogComponent, ConfirmationDialogData } from '../shared/c
 export class DataTables2Component implements OnInit {
 
   private table!: any;
-  private employeeIdToManagerMap: Map<string, Employee> = new Map();
+  private employeeIdToEmployeeMap: Map<string, Employee> = new Map();
   constructor(private dialog: MatDialog, private employeeService: EmployeeService) { }
 
   ngOnInit(): void {
@@ -70,29 +70,20 @@ export class DataTables2Component implements OnInit {
         { data: 'name', title: 'Name' },
         {
           data: 'manager', title: 'Manager', render: (data, type, row) => {
-            const managerId = row.manager;
-
-            if (managerId == null) {
-              return (type === 'display' || type === 'filter') ? 'no' : '';
+            if (data !== null) {
+              let d = this.employeeIdToEmployeeMap.get(data);
+              return d?.name;
+            } else {
+              return "";
             }
-
-            const managerName = this.employeeIdToManagerMap.get(managerId)?.name;
-
-            if (type === 'sort') {
-              return managerName || '';
-            }
-
-            if (type === 'display' || type === 'filter') {
-              return managerName || 'no';
-            }
-
-            return managerId;
           }
         },
         { data: 'position', title: 'Position' },
         { data: 'office', title: 'Office' },
         { data: 'extn', title: 'extn' },
-        { data: 'start_date', title: 'Start date', type: 'date', render: (data) => new DatePipe('en-US').transform(data, 'yyyy-MM-dd') },
+        {
+          data: 'start_date', title: 'Start date', type: 'date', render: (data) => new DatePipe('en-US').transform(data, 'yyyy-MM-dd')
+        },
         { data: 'salary', title: 'Salary' },
         { data: 'hasManagerRights', title: "is manager", render: (data) => data ? 'Yes' : 'No' },
         {
@@ -121,7 +112,7 @@ export class DataTables2Component implements OnInit {
       next: (res: Employee[]) => {
         for (let i: number = 0; i < res.length; i++) {
           const employee = res[i];
-          this.employeeIdToManagerMap.set(employee.id, employee);
+          this.employeeIdToEmployeeMap.set(employee.id, employee);
         }
 
         this.table.rows.add(res).draw();
@@ -137,7 +128,7 @@ export class DataTables2Component implements OnInit {
     this.employeeService.createEmployee(emp).subscribe({
       next: (res: Employee) => {
         // Add the new employee to the manager map to ensure consistency
-        this.employeeIdToManagerMap.set(res.id, res);
+        this.employeeIdToEmployeeMap.set(res.id, res);
         this.table.row.add(res).draw();
       },
       error: (err: any) => {
@@ -156,10 +147,13 @@ export class DataTables2Component implements OnInit {
 
         // Update the manager map to prevent stale data if a manager's details changed
         // This is important if the edited employee is also a manager for other employees.
-        this.employeeIdToManagerMap.set(newData.id, newData);
+        this.employeeIdToEmployeeMap.set(newData.id, newData);
 
-        // Update the specific row and redraw the table without resetting pagination
-        rowToUpdate.data(newData).draw(false);
+        // Update the specific row's data, then invalidate all rows to force a
+        // re-render of all manager names, and finally redraw the table.
+        newData.managerName = newData.manager?.name;
+        rowToUpdate.data(newData);
+        this.table.draw();
       },
       error: (err: any) => {
         alert('Failed to edit employee: ' + err.message);
@@ -185,7 +179,9 @@ export class DataTables2Component implements OnInit {
           if (id) {
             this.employeeService.deleteEmployee(id).subscribe({
               next: () => {
-                this.table.row("#" + id).remove().draw();
+                this.employeeIdToEmployeeMap.delete(id);
+                this.table.row("#" + id).remove();
+                this.table.rows().invalidate().draw(false);
               },
               error: (err: any) => {
                 alert('Failed to delete employee: ' + err.message);
