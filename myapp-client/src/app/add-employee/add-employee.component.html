@@ -30,7 +30,6 @@
             <label>Manager</label>
             <select class="form-control" name="manager" #manager="ngModel" [(ngModel)]="employeeObject.manager"
                 [compareWith]="compareEmployees">
-                <option value="">Select Manager</option>
                 <option *ngFor="let m of managers" [ngValue]="m">
                     {{m.name}}
                 </option>

@@ -60,7 +60,7 @@ public class EmployeeService {
      * @param potentialNewManager The proposed new manager.
      * @throws IllegalArgumentException if a cycle is detected.
      */
-    private void detectCycle(EmployeeJPA employee, EmployeeJPA potentialNewManager) {
+    public void detectCycle(EmployeeJPA employee, EmployeeJPA potentialNewManager) {
         if (potentialNewManager == null) {
             return; // No new manager, no cycle is being introduced.
         }
