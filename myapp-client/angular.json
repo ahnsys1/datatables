@@ -35,15 +35,13 @@
             "styles": [
               "src/libs/bootstrap-5.3.5-dist/css/bootstrap.min.css",
               "src/libs/datatables_2.3.0/dataTables.dataTables.min.css",
-              "node_modules/bootstrap/dist/css/bootstrap.min.css",
               "node_modules/jquery-ui-dist/jquery-ui.css",
               "src/styles.scss"
             ],
             "scripts": [
               "src/libs/jquery/jquery-3.7.1.min.js",
-              "node_modules/jquery-ui-dist/jquery-ui.min.js",
               "src/libs/datatables_2.3.0/dataTables.min.js",
-              "src/libs/datatables.net-select/js/dataTables.select.min.js",
+              "node_modules/jquery-ui-dist/jquery-ui.min.js",
               "src/libs/bootstrap-5.3.5-dist/js/bootstrap.min.js"
             ]
           },

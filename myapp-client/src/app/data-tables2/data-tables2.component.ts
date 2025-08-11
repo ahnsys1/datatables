@@ -108,6 +108,9 @@ export class DataTables2Component implements OnInit {
 
 
   getEmployees(): void {
+    this.employeeIdToEmployeeMap.clear();
+    this.table.clear();
+
     this.employeeService.getEmployeesWithManagers().subscribe({
       next: (res: Employee[]) => {
         for (let i: number = 0; i < res.length; i++) {
@@ -153,7 +156,8 @@ export class DataTables2Component implements OnInit {
         // re-render of all manager names, and finally redraw the table.
         newData.managerName = newData.manager?.name;
         rowToUpdate.data(newData);
-        this.table.draw();
+
+        this.getEmployees();
       },
       error: (err: any) => {
         alert('Failed to edit employee: ' + err.message);

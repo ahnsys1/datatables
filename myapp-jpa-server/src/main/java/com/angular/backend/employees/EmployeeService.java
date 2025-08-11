@@ -65,15 +65,21 @@ public class EmployeeService {
             return; // No new manager, no cycle is being introduced.
         }
 
+        EmployeeJPA backupManager = employee.getManager();
+        employee.setManager(potentialNewManager);
+
         EmployeeJPA current = potentialNewManager;
         while (current != null) {
             if (current.equals(employee)) {
                 // This means the employee is an ancestor of the potential new manager,
                 // so setting this relationship would create a cycle.
+                employee.setManager(backupManager);
                 throw new IllegalArgumentException("Setting this manager would create a cycle in the employee hierarchy.");
             }
             current = current.getManager();
         }
+
+        employee.setManager(backupManager);
     }
 
     /**

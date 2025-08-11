@@ -214,7 +214,7 @@ export class DataTables3Component implements OnInit {
 
         // Invalidate all rows to force re-rendering of cells (like manager names)
         // and then redraw the table without changing the current page.
-        this.table.rows().invalidate().draw(false);
+        this.getEmployees();
       },
       error: (err: any) => {
         alert('Failed to edit employee: ' + err.message);
@@ -239,6 +239,8 @@ export class DataTables3Component implements OnInit {
   }
 
   getEmployees(): void {
+    this.employeeIdToEmployeeMap.clear();
+    this.table.clear();
     this.employeeService.getEmployeesWithManagers().subscribe({
       next: (res: Employee[]) => {
         for (let i: number = 0; i < res.length; i++) {
@@ -246,6 +248,7 @@ export class DataTables3Component implements OnInit {
           this.employeeIdToEmployeeMap.set(employee.id, employee);
         }
         this.table.rows.add(res).draw();
+        this.table.draw();
       },
       error: (err: any) => {
         alert('Failed to get employees: ' + err.message);
