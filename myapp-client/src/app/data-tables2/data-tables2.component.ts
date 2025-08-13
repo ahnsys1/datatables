@@ -133,6 +133,7 @@ export class DataTables2Component implements OnInit {
         // Add the new employee to the manager map to ensure consistency
         this.employeeIdToEmployeeMap.set(res.id, res);
         this.table.row.add(res).draw();
+        this.getEmployees();
       },
       error: (err: any) => {
         alert('Failed to add employee: ' + err.message + " " + JSON.stringify(emp));

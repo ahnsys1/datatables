@@ -190,7 +190,7 @@ export class DataTables3Component implements OnInit {
         alert('Failed to add employee: ' + err.message);
       },
       complete:
-        () => { this.table.draw(); }
+        () => { this.getEmployees(); }
 
 
     });
@@ -247,8 +247,11 @@ export class DataTables3Component implements OnInit {
           const employee = res[i];
           this.employeeIdToEmployeeMap.set(employee.id, employee);
         }
-        this.table.rows.add(res).draw();
-        this.table.draw();
+        if (res.length > 0) {
+          this.table.rows.add(res).draw();
+          this.table.draw();
+        }
+
       },
       error: (err: any) => {
         alert('Failed to get employees: ' + err.message);
