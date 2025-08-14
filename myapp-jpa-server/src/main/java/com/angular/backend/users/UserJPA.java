@@ -25,6 +25,6 @@ public class UserJPA {
     public String firstName;
     public String lastName;
     public String username;
-    public String age;
+    public int age;
     public String email;
 }
