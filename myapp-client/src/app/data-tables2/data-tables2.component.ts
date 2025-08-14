@@ -12,6 +12,7 @@ import { MatDialog, MatDialogRef } from '@angular/material/dialog';
 import { Employee } from '../shared/model/Employee';
 import { EmployeeService } from '../service/EmployeeService';
 import { ConfirmationDialogComponent, ConfirmationDialogData } from '../shared/confirmation-dialog';
+import { ErrorDialogComponent, ErrorDialogData } from '../shared/error-dialog';
 
 
 @Component({
@@ -161,7 +162,14 @@ export class DataTables2Component implements OnInit {
         this.getEmployees();
       },
       error: (err: any) => {
-        alert('Failed to edit employee: ' + err.message);
+        const dialogRef = this.dialog.open(ErrorDialogComponent, {
+          data: {
+            title: 'Cycle detected',
+            message: 'User cannot be his/her own manager.',
+            confirmText: 'OK',
+
+          } as ErrorDialogData
+        });
       }
     });
   }
