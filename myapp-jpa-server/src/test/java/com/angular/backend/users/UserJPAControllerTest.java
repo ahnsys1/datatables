@@ -20,12 +20,13 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
+import com.angular.backend.AbstractIntegrationTest;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 @SpringBootTest
 @AutoConfigureMockMvc
 @Testcontainers
-public class UserJPAControllerTest {
+public class UserJPAControllerTest extends AbstractIntegrationTest {
 
     @Autowired
     private UserRepository userRepository;
