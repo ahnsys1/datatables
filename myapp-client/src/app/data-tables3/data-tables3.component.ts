@@ -10,6 +10,7 @@ import { EmployeeService } from '../service/EmployeeService';
 import { Employee } from '../shared/model/Employee';
 import { DatePipe } from '@angular/common';
 import { ConfirmationDialogComponent, ConfirmationDialogData } from '../shared/confirmation-dialog';
+import { ErrorDialogComponent, ErrorDialogData } from '../shared/error-dialog';
 
 @Component({
   selector: 'app-data-tables3',
@@ -217,7 +218,14 @@ export class DataTables3Component implements OnInit {
         this.getEmployees();
       },
       error: (err: any) => {
-        alert('Failed to edit employee: ' + err.message);
+        const dialogRef = this.dialog.open(ErrorDialogComponent, {
+          data: {
+            title: 'Cycle detected',
+            message: 'User cannot be his/her own manager.',
+            confirmText: 'OK',
+
+          } as ErrorDialogData
+        });
       },
       complete:
         () => { this.table.draw(); }
