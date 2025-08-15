@@ -14,7 +14,7 @@ import { MAT_DATE_FORMATS } from '@angular/material/core';
 import { ErrorInterceptor } from './shared/interceptor/error.interceptor';
 
 const httpLoaderFactory: (http: HttpClient) => TranslateHttpLoader = (http: HttpClient) =>
-  new TranslateHttpLoader();
+  new TranslateHttpLoader(http, './i18n/', '.json');
 
 
 const MY_DATE_FORMATS = {

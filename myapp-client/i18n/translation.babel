@@ -91,7 +91,7 @@
 		<machine_translation_formality>default</machine_translation_formality>
 		<machine_translation_context/>
 	</editor_configuration>
-	<primary_language/>
+	<primary_language>cs-CZ</primary_language>
 	<configuration>
 		<indent>tab</indent>
 		<format>json</format>
