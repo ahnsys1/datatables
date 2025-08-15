@@ -7,6 +7,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { EmployeeService } from '../service/EmployeeService';
 import { Employee } from '../shared/model/Employee';
+import { TranslateModule } from '@ngx-translate/core';
 declare var $: any; // jQuery
 
 @Component({
@@ -17,7 +18,8 @@ declare var $: any; // jQuery
     FormsModule,
     MatFormFieldModule,
     MatInputModule,
-    MatButtonModule
+    MatButtonModule,
+    TranslateModule
   ],
   providers: [
   ],
