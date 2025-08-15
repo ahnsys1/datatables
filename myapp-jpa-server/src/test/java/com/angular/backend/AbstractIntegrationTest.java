@@ -2,8 +2,6 @@ package com.angular.backend;
 
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.DynamicPropertyRegistry;
-import org.springframework.test.context.DynamicPropertySource;
 import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.images.AbstractImagePullPolicy;
 import org.testcontainers.junit.jupiter.Container;
@@ -23,9 +21,9 @@ public abstract class AbstractIntegrationTest {
                     return false;
                 }
 
-              public boolean shouldPull(DockerImageName imageName) {
-                  return false;
-              }
+                public boolean shouldPull(DockerImageName imageName) {
+                    return false;
+                }
             });
 
 }
