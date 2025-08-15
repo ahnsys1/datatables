@@ -15,6 +15,8 @@ import { ErrorInterceptor } from './shared/interceptor/error.interceptor';
 
 const httpLoaderFactory: (http: HttpClient) => TranslateHttpLoader = (http: HttpClient) =>
   new TranslateHttpLoader();
+
+
 const MY_DATE_FORMATS = {
   parse: {
     dateInput: 'yyyy-MM-dd',

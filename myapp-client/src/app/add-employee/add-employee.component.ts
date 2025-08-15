@@ -131,7 +131,7 @@ export class AddEmployeeComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   getModalTitle(): string {
-    return this.isEditMode ? 'Edit Employee' : 'Add New Employee';
+    return this.isEditMode ? 'edit-employee-title' : 'add-employee-title';
   }
 
 
