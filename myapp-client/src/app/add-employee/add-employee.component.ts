@@ -8,6 +8,8 @@ import { MatInputModule } from '@angular/material/input';
 import { EmployeeService } from '../service/EmployeeService';
 import { Employee } from '../shared/model/Employee';
 import { TranslateModule } from '@ngx-translate/core';
+import { TranslatePipe } from '@ngx-translate/core';
+
 declare var $: any; // jQuery
 
 @Component({
@@ -18,9 +20,7 @@ declare var $: any; // jQuery
     FormsModule,
     MatFormFieldModule,
     MatInputModule,
-    MatButtonModule,
-    TranslateModule
-  ],
+    MatButtonModule, TranslatePipe],
   providers: [
   ],
   templateUrl: './add-employee.component.html',
