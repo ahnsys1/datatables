@@ -43,7 +43,7 @@ export class AddEmployeeComponent implements OnInit, AfterViewInit, OnDestroy {
     private employeeService: EmployeeService
   ) {
     // Set reasonable date constraints
-    this.isEditMode = !!data;
+    this.isEditMode = data?.id ? true : false;
 
     // Initialize employee object with data if in edit mode
     if (this.data) {
@@ -51,10 +51,7 @@ export class AddEmployeeComponent implements OnInit, AfterViewInit, OnDestroy {
 
     }
 
-    console.log('AddEmployeeComponent constructor called', {
-      isEditMode: this.isEditMode,
-      data: this.data
-    });
+
   }
   ngAfterViewInit(): void {
     // Initialize jQuery UI datepicker
