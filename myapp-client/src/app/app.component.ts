@@ -1,11 +1,17 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
+import { MatDialog } from '@angular/material/dialog';
 import { RouterModule } from '@angular/router';
-import { TranslateDirective, TranslateModule, TranslatePipe, TranslateService } from "@ngx-translate/core";
+import { TranslateModule, TranslateService } from "@ngx-translate/core";
+import {
+  TranslatePipe,
+  TranslateDirective
+} from "@ngx-translate/core";
+import { BrowserModule } from '@angular/platform-browser';
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [TranslatePipe, TranslateDirective],
+  imports: [RouterModule, TranslateModule],
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.scss']
 })

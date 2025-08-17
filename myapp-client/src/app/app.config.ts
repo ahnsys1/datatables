@@ -21,7 +21,7 @@ export const appConfig: ApplicationConfig = {
         suffix: '.json'
       }),
       fallbackLang: 'cz',
-      lang: 'en'
+      lang: 'cz'
     })
   ]
 };
