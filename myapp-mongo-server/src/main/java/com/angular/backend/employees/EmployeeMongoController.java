@@ -38,6 +38,12 @@ public class EmployeeMongoController {
         return new ResponseEntity<>(employeeMongoService.getAllEmployees(), HttpStatus.OK);
     }
 
+    @GetMapping("/with-managers")
+    public ResponseEntity<Iterable<EmployeeMongo>> getAllEmployeesWirhManagers() {
+        List<EmployeeMongo> allEmployeesWithManagers = employeeMongoService.getAllEmployeesWithManagers();
+        return new ResponseEntity<>(allEmployeesWithManagers, HttpStatus.OK);
+    }
+
     @GetMapping("/root")
     public ResponseEntity<Iterable<EmployeeMongo>> getEmployeeTree() {
         List<EmployeeMongo> rootEmployees = employeeMongoService.getEmployeeTree();

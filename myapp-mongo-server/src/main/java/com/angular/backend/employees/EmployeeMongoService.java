@@ -1,12 +1,13 @@
 package com.angular.backend.employees;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
 
 @Service
 @Transactional
@@ -110,5 +111,17 @@ public class EmployeeMongoService {
         }
         employeeMongoRepository.deleteById(id);
         return true;
+    }
+
+    public List<EmployeeMongo> getAllEmployeesWithManagers() {
+        List<EmployeeMongo> allEmployees = employeeMongoRepository.findAll();
+        Map<String, EmployeeMongo> id2EmployeeMap = new HashMap<>();
+        allEmployees.forEach(empl -> id2EmployeeMap.put(empl.getId(), empl));
+        allEmployees.forEach(empl -> {
+            if (empl.getManagerId() != null) {
+                empl.setManager(id2EmployeeMap.get(empl.getManagerId()));
+            }
+        });
+        return allEmployees;
     }
 }

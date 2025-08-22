@@ -16,7 +16,7 @@ public abstract class AbstractIntegrationTest {
     // Using a specific version with a digest is the best practice for security and reproducibility.
     // The 'postgres:16' tag is a "floating" tag that can change, leading to the behavior you observed
     // where only a subset of layers are pulled on subsequent runs.
-    static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>(DockerImageName.parse("postgres:latest"))
+    static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>(DockerImageName.parse("postgres:16.9"))
             .withReuse(true);
 
 }
