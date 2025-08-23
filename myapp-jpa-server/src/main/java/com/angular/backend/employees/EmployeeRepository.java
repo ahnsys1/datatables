@@ -24,4 +24,12 @@ public interface EmployeeRepository extends JpaRepository<EmployeeJPA, String> {
     @Query("SELECT e FROM EmployeeJPA e WHERE e.manager IS NULL OR e.hasManagerRights = true")
     List<EmployeeJPA> findPotentialManagers();
 
+    /**
+     * Checks if any employee is managed by the given manager ID.
+     *
+     * @param managerId The ID of the manager to check for.
+     * @return true if at least one employee has this manager, false otherwise.
+     */
+    boolean existsByManagerId(String managerId);
+
 }

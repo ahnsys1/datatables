@@ -7,6 +7,7 @@ import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -61,5 +62,48 @@ public class EmployeeRepositoryTest extends AbstractIntegrationTest {
         String id = saved.getId();
         employeeRepository.deleteById(id);
         assertFalse(employeeRepository.findById(id).isPresent());
+    }
+
+    @Test
+    void testDeleteManagerWithSubordinates_shouldThrowException() {
+        // Given
+        EmployeeJPA manager = new EmployeeJPA();
+        manager.setName("Manager");
+        employeeRepository.save(manager);
+
+        EmployeeJPA employee = new EmployeeJPA();
+        employee.setName("Subordinate");
+        employee.setManager(manager);
+        employeeRepository.save(employee);
+
+        // When & Then
+        // Deleting a manager with subordinates should violate a foreign key constraint.
+        // We need to flush to trigger the exception inside the test method.
+        assertThrows(RuntimeException.class, () -> {
+            employeeRepository.deleteById(manager.getId());
+            employeeRepository.flush();
+        });
+    }
+
+    @Test
+    void testExistsByManagerId() {
+        // Given
+        EmployeeJPA manager = new EmployeeJPA();
+        manager.setName("Manager");
+        employeeRepository.save(manager);
+
+        EmployeeJPA employee = new EmployeeJPA();
+        employee.setName("Subordinate");
+        employee.setManager(manager);
+        employeeRepository.save(employee);
+
+        EmployeeJPA employeeWithoutManager = new EmployeeJPA();
+        employeeWithoutManager.setName("No Manager");
+        employeeRepository.save(employeeWithoutManager);
+
+        // When & Then
+        assertTrue(employeeRepository.existsByManagerId(manager.getId()));
+        assertFalse(employeeRepository.existsByManagerId(employee.getId()));
+        assertFalse(employeeRepository.existsByManagerId("non-existent-id"));
     }
 }

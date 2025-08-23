@@ -172,7 +172,7 @@ public class EmployeeMongoControllerTest extends AbstractMongoIntegrationTest {
                 .param("managerId", employee.getId())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(employee)))
-                .andExpect(status().isInternalServerError());
+                .andExpect(status().is4xxClientError());
     }
 
     @Test
@@ -196,7 +196,7 @@ public class EmployeeMongoControllerTest extends AbstractMongoIntegrationTest {
                 .param("managerId", employee.getId())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(ceo)))
-                .andExpect(status().isInternalServerError());
+                .andExpect(status().is4xxClientError());
     }
 
     @Test
