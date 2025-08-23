@@ -11,6 +11,9 @@ import { Employee } from '../shared/model/Employee';
 import { DatePipe } from '@angular/common';
 import { ConfirmationDialogComponent, ConfirmationDialogData } from '../shared/confirmation-dialog';
 import { ErrorDialogComponent, ErrorDialogData } from '../shared/error-dialog';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
+import { TranslatePipe } from '@ngx-translate/core';
+
 
 @Component({
   selector: 'app-data-tables3',
@@ -23,8 +26,7 @@ export class DataTables3Component implements OnInit {
   private table!: any;
   private employeeIdToEmployeeMap: Map<string, Employee> = new Map();
 
-  constructor(private dialog: MatDialog, private employeeService: EmployeeService) { }
-
+  constructor(private dialog: MatDialog, private employeeService: EmployeeService, private translate: TranslateService) { }
   ngOnInit(): void {
     const dtOptions3: Config = {
       layout: {
@@ -241,7 +243,19 @@ export class DataTables3Component implements OnInit {
         this.table.draw();
       },
       error: (err: any) => {
-        alert('Failed to delete employee: ' + err.message);
+        this.translate.get([
+          'manager-cannot-be-deleted',
+          'employee-cannot-subordintes-to-be-deleted'
+        ]).subscribe(translations => {
+          this.dialog.open(ErrorDialogComponent, {
+            data: {
+              title: translations['manager-cannot-be-deleted'],
+              message: translations['employee-cannot-subordintes-to-be-deleted'],
+              confirmText: 'OK',
+            } as ErrorDialogData
+          });
+        });
+
       }
     });
   }

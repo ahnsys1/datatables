@@ -1,4 +1,6 @@
 {
 	"add-employee-title": "Pridej zamestnance",
-	"edit-employee-title": "Uprav zamestnance"
+	"edit-employee-title": "Uprav zamestnance",
+	"manager-cannot-be-deleted": "Manazer nelze smazat",
+	"employee-cannot-subordintes-to-be-deleted": "Nemuzete smazat manazera s podrizenymi"
 }

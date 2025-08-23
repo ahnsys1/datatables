@@ -11,9 +11,10 @@ import { AddEmployeeComponent } from "../add-employee/add-employee.component";
 import { MatDialog, MatDialogRef } from '@angular/material/dialog';
 import { Employee } from '../shared/model/Employee';
 import { EmployeeService } from '../service/EmployeeService';
-import { ConfirmationDialogComponent, ConfirmationDialogData } from '../shared/confirmation-dialog';
-import { ErrorDialogComponent, ErrorDialogData } from '../shared/error-dialog';
-
+import { ConfirmationDialogComponent, ConfirmationDialogData } from '../shared/confirmation-dialog/confirmation-dialog.component';
+import { ErrorDialogComponent, ErrorDialogData } from '../shared/error-dialog/error-dialog.component';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
+import { TranslatePipe } from '@ngx-translate/core';
 
 @Component({
   selector: 'app-data-tables2',
@@ -24,7 +25,7 @@ export class DataTables2Component implements OnInit {
 
   private table!: any;
   private employeeIdToEmployeeMap: Map<string, Employee> = new Map();
-  constructor(private dialog: MatDialog, private employeeService: EmployeeService) { }
+  constructor(private dialog: MatDialog, private employeeService: EmployeeService, private translate: TranslateService) { }
 
   ngOnInit(): void {
     const dtOptions: Config = {
@@ -197,7 +198,18 @@ export class DataTables2Component implements OnInit {
                 this.table.rows().invalidate().draw(false);
               },
               error: (err: any) => {
-                alert('Failed to delete employee: ' + err.message);
+                this.translate.get([
+                  'manager-cannot-be-deleted',
+                  'employee-cannot-subordintes-to-be-deleted'
+                ]).subscribe(translations => {
+                  this.dialog.open(ErrorDialogComponent, {
+                    data: {
+                      title: translations['manager-cannot-be-deleted'],
+                      message: translations['employee-cannot-subordintes-to-be-deleted'],
+                      confirmText: 'OK',
+                    } as ErrorDialogData
+                  });
+                });
               }
             });
           }

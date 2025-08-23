@@ -1,4 +1,6 @@
 {
 	"add-employee-title": "Add employee",
-	"edit-employee-title": "Edit employee"
+	"edit-employee-title": "Edit employee",
+	"manager-cannot-be-deleted": "Cannot delete manager",
+	"employee-cannot-subordintes-to-be-deleted": "Cannot delete manager who has subordinates"
 }
