@@ -148,7 +148,17 @@ export class DataTables3Component implements OnInit {
           { data: 'extn', title: translations['extn'] },
           { data: 'start_date', title: translations['start-date'], render: (data: any) => new DatePipe('en-US').transform(data, 'yyyy-MM-dd') },
           { data: 'salary', title: translations['salary'] },
-          { data: 'hasManagerRights', title: translations['is-manager'], render: (data) => data ? translations['yes'] : translations['no'] },
+          {
+            data: 'hasManagerRights', title: translations['is-manager'], render: (data, type, row, meta) => {
+
+              if (row.manager == null || data == true) {
+                return translations['yes'];
+              } else if (row.manager_id != null) {
+                return translations['no'];
+              }
+
+            }
+          },
         ],
         pageLength: 10,
         lengthMenu: [],
@@ -226,7 +236,7 @@ export class DataTables3Component implements OnInit {
 
         // Invalidate all rows to force re-rendering of cells (like manager names)
         // and then redraw the table without changing the current page.
-        this.getEmployees();
+        this.table.rows().invalidate().draw(false);
       },
       error: (err: any) => {
         const dialogRef = this.dialog.open(ErrorDialogComponent, {

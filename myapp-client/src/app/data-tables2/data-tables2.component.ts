@@ -74,8 +74,8 @@ export class DataTables2Component implements OnInit {
         columnDefs: [{ "defaultContent": "", "targets": "_all" }],
         columns: [
           { data: 'id', title: translations['id'], visible: false },
-          { data: 'name', title: translations['name'] },
           {
+
             data: 'manager', title: translations['manager'], render: (data, type, row) => {
               if (data !== null) {
                 let d = this.employeeIdToEmployeeMap.get(data);
@@ -92,7 +92,21 @@ export class DataTables2Component implements OnInit {
             data: 'start_date', title: translations['start-date'], type: 'date', render: (data) => new DatePipe('en-US').transform(data, 'yyyy-MM-dd')
           },
           { data: 'salary', title: translations['salary'] },
-          { data: 'hasManagerRights', title: translations['is-manager'], render: (data) => data ? translations['yes'] : translations['no'] },
+          {
+            data: 'hasManagerRights', title: translations['is-manager'], render: (data, type, row, meta) => {
+
+              if (row.manager == null || data == true) {
+                return translations['yes'];
+              } else if (row.manager_id != null) {
+                return translations['no'];
+              }
+
+            }
+          },
+          {
+            title: translations['actions'],
+          },
+
           {
             title: translations['actions'],
             searchable: false,
@@ -101,8 +115,8 @@ export class DataTables2Component implements OnInit {
               return `<button name='editButton' style='width: 100%' class='btn btn-info'>${translations['edit-employee']}</button><br/>` +
                 `<button name='deleteButton' style='width: 100%; background-color: coral' class='btn btn-danger'>${translations['delete-employee']}</button>`;
             }
-          }
-        ],
+          }]
+        ,
         rowId: "id",
         drawCallback: () => {
           this.deleteRowEnabled();
@@ -139,9 +153,9 @@ export class DataTables2Component implements OnInit {
     this.employeeService.createEmployee(emp).subscribe({
       next: (res: Employee) => {
         // Add the new employee to the manager map to ensure consistency
-        this.employeeIdToEmployeeMap.set(res.id, res);
+        this.employeeIdToEmployeeMap.set(res.id, res); // The draw() call will re-render the table with the new row.
+        // A full getEmployees() call is not needed and is inefficient.
         this.table.row.add(res).draw();
-        this.getEmployees();
       },
       error: (err: any) => {
         alert(this.translate.instant('failed-to-add-employee') + ': ' + err.message + " " + JSON.stringify(emp));
@@ -166,7 +180,10 @@ export class DataTables2Component implements OnInit {
         newData.managerName = newData.manager?.name;
         rowToUpdate.data(newData);
 
-        this.getEmployees();
+        // Invalidate all rows to re-run the render functions (e.g., to update manager names)
+        // and redraw the table without resetting pagination. This is more efficient
+        // than a full getEmployees() call.
+        this.table.rows().invalidate().draw(false);
       },
       error: (err: any) => {
         const dialogRef = this.dialog.open(ErrorDialogComponent, {
