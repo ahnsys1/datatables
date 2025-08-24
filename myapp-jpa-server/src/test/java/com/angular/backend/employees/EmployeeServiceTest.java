@@ -163,4 +163,25 @@ public class EmployeeServiceTest extends AbstractIntegrationTest {
         // Then
         assertFalse(deleted);
     }
+
+    @Test
+    void deleteEmployee_whenManagerHasSubordinates_shouldThrowException() {
+        // Given
+        EmployeeJPA manager = new EmployeeJPA();
+        manager.setName("Manager");
+        employeeRepository.save(manager);
+
+        EmployeeJPA subordinate = new EmployeeJPA();
+        subordinate.setName("Subordinate");
+        subordinate.setManager(manager);
+        employeeRepository.save(subordinate);
+
+        // When & Then
+        Exception exception = assertThrows(IllegalStateException.class, () -> {
+            employeeService.deleteEmployee(manager.getId());
+        });
+
+        assertTrue(exception.getMessage().contains("Cannot delete employee who is a manager with subordinates."));
+        assertTrue(employeeRepository.existsById(manager.getId()), "Manager should not be deleted");
+    }
 }
