@@ -74,6 +74,7 @@ export class DataTables2Component implements OnInit {
         columnDefs: [{ "defaultContent": "", "targets": "_all" }],
         columns: [
           { data: 'id', title: translations['id'], visible: false },
+          { data: 'name', title: translations['name'] },
           {
 
             data: 'manager', title: translations['manager'], render: (data, type, row) => {
@@ -97,16 +98,12 @@ export class DataTables2Component implements OnInit {
 
               if (row.manager == null || data == true) {
                 return translations['yes'];
-              } else if (row.manager_id != null) {
+              } else {
                 return translations['no'];
               }
 
             }
           },
-          {
-            title: translations['actions'],
-          },
-
           {
             title: translations['actions'],
             searchable: false,
@@ -137,13 +134,20 @@ export class DataTables2Component implements OnInit {
       next: (res: Employee[]) => {
         for (let i: number = 0; i < res.length; i++) {
           const employee = res[i];
+
           this.employeeIdToEmployeeMap.set(employee.id, employee);
         }
 
-        this.table.rows.add(res).draw();
+        this.table.rows.add(res).draw(false);
       },
       error: (err: any) => {
-        alert(this.translate.instant('failed-to-get-employees') + ': ' + err.message);
+        const dialogRef = this.dialog.open(ErrorDialogComponent, {
+          data: {
+            title: this.translate.instant('error-dialog.title'),
+            message: this.translate.instant('employee-cannot-be-own-manager'),
+            confirmText: this.translate.instant('ok'),
+          } as ErrorDialogData
+        });
       }
     });
   }

@@ -1,6 +1,7 @@
 package com.angular.backend.employees;
 
 import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -39,7 +40,7 @@ public class EmployeeMongoController {
     }
 
     @GetMapping("/with-managers")
-    public ResponseEntity<Iterable<EmployeeMongo>> getAllEmployeesWirhManagers() {
+    public ResponseEntity<Iterable<EmployeeMongo>> getAllEmployeesWithManagers() {
         List<EmployeeMongo> allEmployeesWithManagers = employeeMongoService.getAllEmployeesWithManagers();
         return new ResponseEntity<>(allEmployeesWithManagers, HttpStatus.OK);
     }

@@ -153,12 +153,11 @@ export class DataTables3Component implements OnInit {
 
               if (row.manager == null || data == true) {
                 return translations['yes'];
-              } else if (row.manager_id != null) {
+              } else {
                 return translations['no'];
               }
-
             }
-          },
+          }
         ],
         pageLength: 10,
         lengthMenu: [],
@@ -242,7 +241,7 @@ export class DataTables3Component implements OnInit {
         const dialogRef = this.dialog.open(ErrorDialogComponent, {
           data: {
             title: this.translate.instant('cycle-detected'),
-            message: this.translate.instant('user-cannot-be-own-manager'),
+            message: this.translate.instant('employee-cannot-be-own-manager'),
             confirmText: this.translate.instant('ok'),
 
           } as ErrorDialogData
@@ -289,14 +288,23 @@ export class DataTables3Component implements OnInit {
           this.employeeIdToEmployeeMap.set(employee.id, employee);
         }
         if (res.length > 0) {
-          this.table.rows.add(res).draw();
+          this.table.rows.add(res).draw(false);
           this.table.draw();
         }
 
       },
       error: (err: any) => {
-        alert(this.translate.instant('failed-to-get-employees') + ': ' + err.message);
+        const dialogRef = this.dialog.open(ErrorDialogComponent, {
+          data: {
+            title: this.translate.instant('error-dialog.title'),
+            message: this.translate.instant('failed-to-get-employees'),
+            confirmText: this.translate.instant('ok'),
+
+          } as ErrorDialogData
+        });
       }
-    });
+
+    }
+    );
   }
 }

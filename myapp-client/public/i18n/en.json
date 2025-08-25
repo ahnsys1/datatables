@@ -3,6 +3,11 @@
     "edit-employee": "Edit employee",
     "delete-employee": "Delete employee",
     "remove-employee": "Remove employee",
+    "error-dialog": {
+        "title": "Error",
+        "message": "Error when fetching employees.",
+        "confirmText": "OK"
+    },
     "id": "ID",
     "name": "Name",
     "manager": "Manager",
@@ -12,6 +17,7 @@
     "start-date": "Start date",
     "salary": "Salary",
     "is-manager": "is manager",
+    "employee-cannot-be-own-manager": "Employee cannot be his/her own manager.",
     "actions": "Actions",
     "yes": "Yes",
     "no": "No",

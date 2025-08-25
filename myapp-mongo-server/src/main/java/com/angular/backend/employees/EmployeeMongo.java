@@ -11,9 +11,6 @@ import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
-import com.fasterxml.jackson.annotation.JsonIdentityInfo;
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -21,7 +18,6 @@ import lombok.Setter;
 @Getter
 @Setter
 @Document(collection = "employees")
-@JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "id")
 public class EmployeeMongo {
 
     public EmployeeMongo(String id, String name, String position,
@@ -47,6 +43,7 @@ public class EmployeeMongo {
     @Field("start_date")
     @JsonFormat(pattern = "yyyy-MM-dd")
     private LocalDate start_date;
+
     private String office;
 
     @Field("has_manager_rights")
@@ -55,8 +52,6 @@ public class EmployeeMongo {
     @Field("manager_id")
     private String managerId;
 
-    @Transient
-    @JsonIgnore
     private EmployeeMongo manager;
 
     @Transient

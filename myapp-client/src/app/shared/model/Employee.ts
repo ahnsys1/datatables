@@ -9,7 +9,7 @@ export class Employee {
     public office: string;
     public extn: string;
 
-    public manager: Employee | null = null;
+    public manager: Employee | null;
     public hasManagerRights: boolean = false;
     public children: Employee[] = [];
     constructor(

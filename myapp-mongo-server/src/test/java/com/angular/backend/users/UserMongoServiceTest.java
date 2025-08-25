@@ -11,14 +11,12 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
-import org.testcontainers.junit.jupiter.Testcontainers;
 
 import com.angular.backend.AbstractMongoIntegrationTest;
 
 @SpringBootTest
-@Testcontainers
 @Import(UserMongoService.class)
-public class UserMongoServiceTest extends AbstractMongoIntegrationTest {
+class UserMongoServiceTest extends AbstractMongoIntegrationTest {
 
     @Autowired
     private UserMongoRepository userMongoRepository;

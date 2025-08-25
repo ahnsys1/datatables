@@ -1,18 +1,12 @@
 package com.angular.backend;
 
-import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
 import org.springframework.test.context.ActiveProfiles;
-import org.testcontainers.containers.MongoDBContainer;
-import org.testcontainers.junit.jupiter.Container;
-import org.testcontainers.junit.jupiter.Testcontainers;
+import org.springframework.test.context.ContextConfiguration;
 
 @ActiveProfiles("test")
-@Testcontainers
+@ContextConfiguration(initializers = MongoContainerInitializer.class)
 public abstract class AbstractMongoIntegrationTest {
-
-    @ServiceConnection
-    @Container
-    public static MongoDBContainer mongoDBContainer = new MongoDBContainer("mongo:7.0.23-jammy")
-            .withReuse(true);
-
+    // The container lifecycle and property setting are now handled by MongoContainerInitializer.
+    // This ensures a single container is shared across all test classes, regardless of
+    // their Spring context configuration.
 }

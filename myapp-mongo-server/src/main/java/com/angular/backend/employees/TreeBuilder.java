@@ -8,7 +8,6 @@ import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 @Component
@@ -35,7 +34,6 @@ public class TreeBuilder {
                 EmployeeMongo manager = employeeMap.get(managerId);
                 if (manager != null) {
                     manager.addChild(employee);
-                    employee.setManager(manager); // Set manager object for context
                 }
             } else {
                 rootNodes.add(employee);

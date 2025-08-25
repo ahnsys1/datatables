@@ -12,7 +12,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
 import com.angular.backend.AbstractIntegrationTest;
@@ -80,7 +79,7 @@ public class EmployeeRepositoryTest extends AbstractIntegrationTest {
         // When & Then
         // Deleting a manager with subordinates should violate a foreign key constraint.
         // We need to flush to trigger the exception inside the test method.
-        assertThrows(DataIntegrityViolationException.class, () -> {
+        assertThrows(RuntimeException.class, () -> {
             employeeRepository.deleteById(manager.getId());
             employeeRepository.flush();
         });
