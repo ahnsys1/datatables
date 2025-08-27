@@ -32,4 +32,6 @@ public interface EmployeeRepository extends JpaRepository<EmployeeJPA, String> {
      */
     boolean existsByManagerId(String managerId);
 
+    boolean existsByName(String name);
+
 }
