@@ -1,6 +1,7 @@
 package com.angular.backend.employees;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -59,6 +60,13 @@ public class EmployeeController {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
         return new ResponseEntity<>(employee, HttpStatus.OK);
+    }
+
+    @GetMapping("/employeeNameExists/{employeeName}")
+    public ResponseEntity<Optional<Boolean>> isEmployeeNameExisting(@PathVariable String employeeName) {
+        List<EmployeeJPA> allEmployees = employeeService.getAllEmployees();
+        boolean exists = allEmployees.stream().anyMatch(emp -> emp.getName().equalsIgnoreCase(employeeName));
+        return new ResponseEntity<>(Optional.of(exists), HttpStatus.OK);
     }
 
     @PutMapping("/{id}")

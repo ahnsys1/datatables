@@ -74,6 +74,7 @@ export class DataTables2Component implements OnInit {
         columnDefs: [{ "defaultContent": "", "targets": "_all" }],
         columns: [
           { data: 'id', title: translations['id'], visible: false },
+          { data: 'name', title: translations['name'] },
           {
 
             data: 'manager', title: translations['manager'], render: (data, type, row) => {

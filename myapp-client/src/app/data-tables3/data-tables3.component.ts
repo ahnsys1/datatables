@@ -24,7 +24,7 @@ export class DataTables3Component implements OnInit {
   private table!: any;
   private employeeIdToEmployeeMap: Map<string, Employee> = new Map();
 
-  constructor(private dialog: MatDialog, private employeeService: EmployeeService, private translate: TranslateService) { }
+  constructor(private dialog: MatDialog, private employeesRepository: EmployeesRepository, private employeeService: EmployeeService, private translate: TranslateService) { }
   ngOnInit(): void {
     // Using `get` ensures that the translations are loaded before we try to use them.
     // `instant` can fail if the component initializes before the translation file is fetched.
@@ -202,6 +202,9 @@ export class DataTables3Component implements OnInit {
 
 
   addEmployee(emp: Employee): void {
+    for (intn i = 0; i < employeesR) {
+
+    }
     this.employeeService.createEmployee(emp).subscribe({
       next: (res: Employee) => {
         this.employeeIdToEmployeeMap.set(res.id, res);
