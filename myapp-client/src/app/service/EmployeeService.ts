@@ -19,6 +19,9 @@ export class EmployeeService {
     return this.http.get<Employee>(`${this.API_URL}/employees/${id}`);
   }
 
+  isEmployeeExists(name: string): Observable<boolean> {
+    return this.http.get<boolean>(`${this.API_URL}/employees/exists?name=${name}`);
+  }
 
   getRootEmployees(): Observable<Employee[]> {
     return this.http.get<Employee[]>(`${this.API_URL}/employees/tree`);
@@ -34,6 +37,10 @@ export class EmployeeService {
 
   getEmployeesWithManagers(): Observable<Employee[]> {
     return this.http.get<Employee[]>(`${this.API_URL}/employees/with-managers`);
+  }
+
+  employeeByNameExists(employeeName: string): Observable<boolean> {
+    return this.http.get<boolean>(`${this.API_URL}/employees/employeeByNameExists/${employeeName}`);
   }
 
   createEmployee(employee: Employee): Observable<Employee> {

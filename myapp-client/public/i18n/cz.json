@@ -26,5 +26,7 @@
     "cancel": "Zrusit",
     "datatables.info": "Od _START_ do _END_ z _MAX_ radku<br/>",
     "manager-cannot-be-deleted": "Manazer nelze smazat",
-    "employee-cannot-subordintes-to-be-deleted": "Nemuzete smazat manazera s podrizenymi"
+    "employee-cannot-subordintes-to-be-deleted": "Nemuzete smazat manazera s podrizenymi",
+    "name-is-required": "Jmeno je vyzadovano.",
+    "employee-name-exists": "Zamestnanec s timto jmenem jiz existuje"
 }

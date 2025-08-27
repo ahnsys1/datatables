@@ -26,5 +26,7 @@
     "cancel": "Cancel",
     "manager-cannot-be-deleted": "Manager Deletion Error",
     "employee-cannot-subordintes-to-be-deleted": "Cannot delete a manager who has subordinates.",
-    "datatables.info": "From _START_ to _END_ of _MAX_ rows<br/>"
+    "datatables.info": "From _START_ to _END_ of _MAX_ rows<br/>",
+    "name-is-required": "Employee name is required.",
+    "employee-name-exists": "Employee for this name already exists."
 }

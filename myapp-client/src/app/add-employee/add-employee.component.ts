@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { AfterViewInit, ChangeDetectionStrategy, Component, Inject, OnDestroy, OnInit } from '@angular/core';
+import { AfterViewInit, ChangeDetectionStrategy, ChangeDetectorRef, Component, Inject, OnDestroy, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
@@ -36,19 +36,23 @@ export class AddEmployeeComponent implements OnInit, AfterViewInit, OnDestroy {
 
   isEditMode: boolean = false;
   managers: Employee[] = [];
+  employeeNameExists = false;
+  private originalName: string | undefined;
 
   constructor(
     public dialogRef: MatDialogRef<AddEmployeeComponent>,
     @Inject(MAT_DIALOG_DATA) public data: Employee | null,
-    private employeeService: EmployeeService
+    private employeeService: EmployeeService,
+    private cdr: ChangeDetectorRef
   ) {
-    // Set reasonable date constraints
-    this.isEditMode = data?.id ? true : false;
+    this.isEditMode = !!data?.id;
 
     // Initialize employee object with data if in edit mode
     if (this.data) {
       this.employeeObject = { ...this.data };
-
+      if (this.isEditMode) {
+        this.originalName = this.data.name;
+      }
     }
 
 
@@ -109,21 +113,27 @@ export class AddEmployeeComponent implements OnInit, AfterViewInit, OnDestroy {
     });
   }
 
+  checkEmployeeName(name: string): void {
+    // Don't validate if the name is empty or hasn't changed from the original in edit mode
+    if (!name || (this.isEditMode && name === this.originalName)) {
+      this.employeeNameExists = false;
+      return;
+    }
+
+    this.employeeService.employeeByNameExists(name).subscribe((exists: boolean) => {
+      this.employeeNameExists = exists;
+      this.cdr.markForCheck(); // Manually trigger change detection for OnPush
+    });
+  }
+
 
   compareEmployees(e1: Employee, e2: Employee): boolean {
     return e1 && e2 ? e1.id === e2.id : e1 === e2;
   }
 
   onSubmit(form: any): void {
-    console.log('Form submitted', { valid: form.valid, value: form.value });
-    if (form.valid) {
-      const employeeData = {
-        ...this.employeeObject
-    /*   start_date: this.employeeObject.start_date ? formatDate(this.employeeObject.start_date, 'yyyy-mm-dd', 'en-US') : null
-       */};
-
-      console.log('Closing dialog with data:', employeeData);
-      this.dialogRef.close(employeeData);
+    if (form.valid && !this.employeeNameExists) {
+      this.dialogRef.close({ ...this.employeeObject });
     }
   }
 

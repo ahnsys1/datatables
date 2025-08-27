@@ -62,7 +62,7 @@ public class EmployeeController {
         return new ResponseEntity<>(employee, HttpStatus.OK);
     }
 
-    @GetMapping("/employeeNameExists/{employeeName}")
+    @GetMapping("/employeeByNameExists/{employeeName}")
     public ResponseEntity<Optional<Boolean>> isEmployeeNameExisting(@PathVariable String employeeName) {
         List<EmployeeJPA> allEmployees = employeeService.getAllEmployees();
         boolean exists = allEmployees.stream().anyMatch(emp -> emp.getName().equalsIgnoreCase(employeeName));
