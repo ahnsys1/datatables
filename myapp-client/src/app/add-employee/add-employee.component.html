@@ -8,22 +8,21 @@
 
         <div class="form-group m-2">
             <label>{{ 'name' | translate }}</label>
-            <div><input name="name" [(ngModel)]="employeeObject.name" required #name="ngModel"
-                    (ngModelChange)="checkEmployeeName($event)" />
-                <br />
-            </div>
-            <div *ngIf="name.errors?.['required'] && (name.dirty || name.touched)">
+            <input type="text" class="form-control" placeholder="Enter name" #name="ngModel" name="name" required
+                matInput [(ngModel)]="employeeObject.name">
+            <div *ngIf="name.invalid && (name.dirty || name.touched)" class="text-danger">
                 {{ 'name-is-required' | translate }}
             </div>
-            <div *ngIf="employeeNameExists">
+            <div *ngIf="employeeNameExists && ((name.dirty || name.touched))">
                 {{ 'employee-name-exists' | translate }}
             </div>
         </div>
 
 
 
+
         <div class="form-group m-2">
-            <label>Position</label>
+            <label>{{ 'position' | translate }}</label>
             <input type="text" class="form-control" placeholder="Enter position" #position="ngModel" name="position"
                 required matInput [(ngModel)]="employeeObject.position">
             <div *ngIf="position.invalid && (position.dirty || position.touched)" class="text-danger">
