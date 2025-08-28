@@ -7,7 +7,6 @@ import java.util.List;
 
 import org.hibernate.annotations.UuidGenerator;
 
-import com.angular.backend.employees.EmployeeJPA.StringToBooleanDeserializer;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIdentityInfo;
 import com.fasterxml.jackson.annotation.ObjectIdGenerators;
