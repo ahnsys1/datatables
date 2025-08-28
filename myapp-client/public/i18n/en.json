@@ -3,6 +3,12 @@
     "edit-employee": "Edit employee",
     "delete-employee": "Delete employee",
     "remove-employee": "Remove employee",
+    "error-dialog": {
+        "title": "Error",
+        "message": "An error occurred while processing the request.",
+        "confirmText": "OK"
+    },
+    "employee-cannot-be-own-manager": "Employee cannot be his own manager.",
     "id": "ID",
     "name": "Name",
     "manager": "Manager",

@@ -2,6 +2,12 @@
     "new-employee": "Novy zamestnanec",
     "edit-employee": "Uprav zamestnance",
     "delete-employee": "Smaz zamestnance",
+    "error-dialog": {
+        "title": "Chyba",
+        "message": "Nastala chyba pri zpracovani pozadavku.",
+        "confirmText": "OK"
+    },
+    "employee-cannot-be-own-manager": "Zamestnanec nemuze byt svym manazerem.",
     "remove-employee": "Smaz zamestnance",
     "id": "ID",
     "name": "Jmeno",
