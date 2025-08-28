@@ -153,7 +153,7 @@ export class DataTables3Component implements OnInit {
 
               if (row.manager == null || data == true) {
                 return translations['yes'];
-              } else if (row.manager_id != null) {
+              } else {
                 return translations['no'];
               }
 

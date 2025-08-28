@@ -98,7 +98,7 @@ export class DataTables2Component implements OnInit {
 
               if (row.manager == null || data == true) {
                 return translations['yes'];
-              } else if (row.manager_id != null) {
+              } else {
                 return translations['no'];
               }
 
@@ -184,7 +184,7 @@ export class DataTables2Component implements OnInit {
         // Invalidate all rows to re-run the render functions (e.g., to update manager names)
         // and redraw the table without resetting pagination. This is more efficient
         // than a full getEmployees() call.
-        this.table.rows().invalidate().draw(false);
+        this.getEmployees();
       },
       error: (err: any) => {
         const dialogRef = this.dialog.open(ErrorDialogComponent, {
