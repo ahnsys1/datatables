@@ -17,14 +17,14 @@ import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabas
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.context.annotation.Import;
 
-import com.angular.backend.AbstractIntegrationTest;
+import com.angular.backend.AbstractPostgresIntegrationTest;
 
 import jakarta.persistence.EntityNotFoundException;
 
 @DataJpaTest
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 @Import({EmployeeService.class, TreeBuilder.class, JacksonAutoConfiguration.class})
-public class EmployeeServiceTest extends AbstractIntegrationTest {
+public class EmployeeServiceTest extends AbstractPostgresIntegrationTest {
 
     private static final DateTimeFormatter fmt = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 

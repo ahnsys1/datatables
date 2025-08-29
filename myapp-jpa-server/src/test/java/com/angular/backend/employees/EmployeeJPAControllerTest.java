@@ -19,12 +19,12 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import com.angular.backend.AbstractIntegrationTest;
+import com.angular.backend.AbstractPostgresIntegrationTest;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 @AutoConfigureMockMvc
 @SpringBootTest
-public class EmployeeJPAControllerTest extends AbstractIntegrationTest {
+public class EmployeeJPAControllerTest extends AbstractPostgresIntegrationTest {
 
     @Autowired
     private EmployeeRepository employeeRepository;

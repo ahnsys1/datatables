@@ -14,11 +14,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
-import com.angular.backend.AbstractIntegrationTest;
+import com.angular.backend.AbstractPostgresIntegrationTest;
 
 @Testcontainers
 @DataJpaTest
-public class EmployeeRepositoryTest extends AbstractIntegrationTest {
+public class EmployeeRepositoryTest extends AbstractPostgresIntegrationTest {
 
     private static final DateTimeFormatter fmt = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 

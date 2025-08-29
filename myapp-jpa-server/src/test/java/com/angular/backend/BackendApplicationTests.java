@@ -9,7 +9,7 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 
 @SpringBootTest
 @Testcontainers
-class BackendApplicationTests extends AbstractIntegrationTest {
+class BackendApplicationTests extends AbstractPostgresIntegrationTest {
 
     // This class is used to test if the Spring application context loads correctly
     // and if the main application bean is available in the context.

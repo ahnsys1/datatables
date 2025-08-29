@@ -11,11 +11,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 
-import com.angular.backend.AbstractIntegrationTest;
+import com.angular.backend.AbstractPostgresIntegrationTest;
 
 @DataJpaTest
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
-public class UserRepositoryTest extends AbstractIntegrationTest {
+public class UserRepositoryTest extends AbstractPostgresIntegrationTest {
 
     @Autowired
     private UserRepository userRepository;

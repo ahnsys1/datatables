@@ -10,7 +10,7 @@ import org.testcontainers.utility.DockerImageName;
 
 @ActiveProfiles("test")
 @Testcontainers
-public abstract class AbstractIntegrationTest {
+public abstract class AbstractPostgresIntegrationTest {
 
     @Container
     public static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>(DockerImageName.parse("postgres:17.5"));
