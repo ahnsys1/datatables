@@ -17,11 +17,3 @@
     text-decoration: underline;
     color: black;
 }
-
-// This targets the autocomplete panel, which is rendered outside the component's view.
-// `panelClass` was added to the <mat-autocomplete> element in the HTML,
-// and `::ng-deep` is used here to allow this component's styles to "pierce"
-// the view encapsulation and style the globally rendered panel.
-
-
-// Style each individual option in the dropdown.
