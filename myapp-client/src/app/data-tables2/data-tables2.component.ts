@@ -157,6 +157,7 @@ export class DataTables2Component implements OnInit {
         this.employeeIdToEmployeeMap.set(res.id, res); // The draw() call will re-render the table with the new row.
         // A full getEmployees() call is not needed and is inefficient.
         this.table.row.add(res).draw();
+        this.getEmployees();
       },
       error: (err: any) => {
         alert(this.translate.instant('failed-to-add-employee') + ': ' + err.message + " " + JSON.stringify(emp));
