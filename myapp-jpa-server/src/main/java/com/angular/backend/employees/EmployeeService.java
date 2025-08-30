@@ -133,7 +133,7 @@ public class EmployeeService {
         }
 
         if (employeeRepository.existsByManagerId(id)) {
-            throw new IllegalStateException("Cannot delete employee who is a manager with subordinates.");
+            return false;
         }
 
         employeeRepository.deleteById(id);

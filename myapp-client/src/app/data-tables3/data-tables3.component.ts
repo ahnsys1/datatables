@@ -161,7 +161,7 @@ export class DataTables3Component implements OnInit {
           },
         ],
         pageLength: 10,
-        lengthMenu: [],
+        lengthMenu: [10, 25],
         lengthChange: false,
         info: true,
         infoCallback(settings, start, end, max, total, pre) {

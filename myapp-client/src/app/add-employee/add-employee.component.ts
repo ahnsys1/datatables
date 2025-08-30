@@ -10,8 +10,10 @@ import { Employee } from '../shared/model/Employee';
 import { TranslateModule } from '@ngx-translate/core';
 import { TranslatePipe } from '@ngx-translate/core';
 import { MatAutocompleteModule } from '@angular/material/autocomplete';
+import { MatDialogModule } from '@angular/material/dialog';
 import { Observable, of, Subject } from 'rxjs';
 import { debounceTime, distinctUntilChanged, switchMap, tap } from 'rxjs/operators';
+
 
 declare var $: any; // jQuery
 
@@ -162,5 +164,19 @@ export class AddEmployeeComponent implements OnInit, AfterViewInit, OnDestroy {
     return this.isEditMode ? 'edit-employee-title' : 'add-employee-title';
   }
 
+  onEmployeeSelected(selectedEmployee: Employee) {
+    if (selectedEmployee) {
+      this.employeeObject.name = selectedEmployee.name;
+      this.employeeObject.position = selectedEmployee.position;
+      this.employeeObject.manager = selectedEmployee.manager;
+      this.employeeObject.hasManagerRights = selectedEmployee.hasManagerRights;
+      this.employeeObject.salary = selectedEmployee.salary;
+      this.employeeObject.start_date = selectedEmployee.start_date;
+      this.employeeObject.office = selectedEmployee.office;
+      this.employeeObject.extn = selectedEmployee.extn;
+      this.employeeObject.id = selectedEmployee.id;
+
+    }
+  }
 
 }

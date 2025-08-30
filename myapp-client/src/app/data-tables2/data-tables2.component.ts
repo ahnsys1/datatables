@@ -4,21 +4,26 @@ import DataTable from 'datatables.net-dt';
 // The 'datatables.net' package is a dependency of 'datatables.net-dt' and is included automatically.
 // The Buttons and Select extensions also have '-dt' packages that include the default styling
 // and are generally better suited for module bundlers like Vite.
+import { CommonModule, DatePipe } from '@angular/common';
+import { MatDialog, MatDialogRef } from '@angular/material/dialog';
+import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import 'datatables.net-buttons-dt';
 import 'datatables.net-select-dt';
-import { DatePipe } from '@angular/common';
 import { AddEmployeeComponent } from "../add-employee/add-employee.component";
-import { MatDialog, MatDialogRef } from '@angular/material/dialog';
-import { Employee } from '../shared/model/Employee';
 import { EmployeeService } from '../service/EmployeeService';
 import { ConfirmationDialogComponent, ConfirmationDialogData } from '../shared/confirmation-dialog/confirmation-dialog.component';
 import { ErrorDialogComponent, ErrorDialogData } from '../shared/error-dialog/error-dialog.component';
-import { TranslateModule, TranslateService } from '@ngx-translate/core';
-import { TranslatePipe } from '@ngx-translate/core';
+import { Employee } from '../shared/model/Employee';
+
+import { MatDialogModule } from '@angular/material/dialog';
+
 
 @Component({
   selector: 'app-data-tables2',
   templateUrl: './data-tables2.component.html',
+  imports: [
+    CommonModule
+  ],
   styleUrl: './data-tables2.component.scss'
 })
 export class DataTables2Component implements OnInit {

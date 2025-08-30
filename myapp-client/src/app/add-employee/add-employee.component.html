@@ -10,11 +10,13 @@
             <input type="text" class="form-control" placeholder="Enter name" #name="ngModel" name="name" required
                 matInput [(ngModel)]="employeeObject.name" (ngModelChange)="onNameChange($event)"
                 [matAutocomplete]="auto">
-            <mat-autocomplete #auto="matAutocomplete" panelClass="yellow-autocomplete-panel">
-                <mat-option *ngFor="let employee of filteredEmployees$ | async" [value]="employee.name">
+            <mat-autocomplete #auto="matAutocomplete" panelClass="yellow-autocomplete-panel"
+                (optionSelected)="onEmployeeSelected($event.option.value)">
+                <mat-option *ngFor="let employee of filteredEmployees$ | async" [value]="employee">
                     {{ employee.name }}
                 </mat-option>
             </mat-autocomplete>
+
             <div *ngIf="name.invalid && (name.dirty || name.touched)" class="text-danger">
                 {{ 'name-is-required' | translate }}
             </div>
@@ -97,6 +99,9 @@
                 Extension is required.
             </div>
         </div>
+
+        <input type="hidden" class="form-control" #id="ngModel" name="id" [(ngModel)]="employeeObject.id">
+
 
         <div class="button-group m-2">
             <button type="submit" class="btn btn-success m-2" [disabled]="!employeeForm.valid">
