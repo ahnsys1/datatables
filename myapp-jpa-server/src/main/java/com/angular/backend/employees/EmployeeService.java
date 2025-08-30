@@ -139,4 +139,8 @@ public class EmployeeService {
         employeeRepository.deleteById(id);
         return true;
     }
+
+    public List<EmployeeJPA> searchEmployeesByNameSubstring(String name) {
+        return employeeRepository.findByNameContainingIgnoreCase(name);
+    }
 }

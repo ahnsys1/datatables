@@ -35,8 +35,14 @@ public class EmployeeController {
         return new ResponseEntity<>(allEmployees, HttpStatus.OK);
     }
 
+    @GetMapping("/getEmployeesByNameSubstring/search")
+    public ResponseEntity<Iterable<EmployeeJPA>> getEmployeesByNameSubstring(@RequestParam String name) {
+        List<EmployeeJPA> employees = employeeService.searchEmployeesByNameSubstring(name);
+        return new ResponseEntity<>(employees, HttpStatus.OK);
+    }
+
     @GetMapping("/with-managers")
-    public ResponseEntity<Iterable<EmployeeJPA>> getAllEmployeesWirhManagers() {
+    public ResponseEntity<Iterable<EmployeeJPA>> getAllEmployeesWithManagers() {
         List<EmployeeJPA> allEmployeesWithManagers = employeeService.getAllEmployeesWithManagers();
         return new ResponseEntity<>(allEmployeesWithManagers, HttpStatus.OK);
     }

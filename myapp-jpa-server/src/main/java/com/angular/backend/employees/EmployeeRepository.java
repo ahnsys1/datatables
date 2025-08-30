@@ -34,4 +34,6 @@ public interface EmployeeRepository extends JpaRepository<EmployeeJPA, String> {
 
     boolean existsByName(String name);
 
+    List<EmployeeJPA> findByNameContainingIgnoreCase(String name);
+
 }
