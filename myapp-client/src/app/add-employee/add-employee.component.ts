@@ -9,6 +9,9 @@ import { EmployeeService } from '../service/EmployeeService';
 import { Employee } from '../shared/model/Employee';
 import { TranslateModule } from '@ngx-translate/core';
 import { TranslatePipe } from '@ngx-translate/core';
+import { MatAutocompleteModule } from '@angular/material/autocomplete';
+import { Observable, of, Subject } from 'rxjs';
+import { debounceTime, distinctUntilChanged, switchMap, tap } from 'rxjs/operators';
 
 declare var $: any; // jQuery
 
@@ -20,7 +23,8 @@ declare var $: any; // jQuery
     FormsModule,
     MatFormFieldModule,
     MatInputModule,
-    MatButtonModule, TranslatePipe],
+    MatButtonModule, TranslatePipe,
+    MatAutocompleteModule],
   providers: [
   ],
   templateUrl: './add-employee.component.html',
@@ -37,6 +41,8 @@ export class AddEmployeeComponent implements OnInit, AfterViewInit, OnDestroy {
   isEditMode: boolean = false;
   managers: Employee[] = [];
   employeeNameExists = false;
+  filteredEmployees$!: Observable<Employee[]>;
+  private nameChangeSubject = new Subject<string>();
   private originalName: string | undefined;
 
   constructor(
@@ -79,9 +85,32 @@ export class AddEmployeeComponent implements OnInit, AfterViewInit, OnDestroy {
 
   ngOnInit(): void {
     this.loadManagers();
+    this.setupNameAutocomplete();
     console.log('AddEmployeeComponent initialized', {
       employeeObject: this.employeeObject,
     });
+    this.filteredEmployees$ = this.employeeService.getEmployees();
+  }
+
+  private setupNameAutocomplete(): void {
+    this.filteredEmployees$ = this.nameChangeSubject.pipe(
+      debounceTime(300), // Wait for 300ms pause in typing
+      distinctUntilChanged(), // Ignore if the new value is the same as the last
+      switchMap(name => {
+        // Don't validate if the name is empty or hasn't changed from the original in edit mode
+        if (!name || (this.isEditMode && name === this.originalName)) {
+          this.employeeNameExists = false;
+          this.cdr.markForCheck();
+          return of([]); // Return empty array for autocomplete
+        }
+        return this.employeeService.getEmployeesByNameSubstring(name).pipe(
+          tap(employees => {
+            this.employeeNameExists = employees.some(e => e.name.toLowerCase() === name.toLowerCase());
+            this.cdr.markForCheck();
+          })
+        );
+      })
+    );
   }
 
   loadManagers() {
@@ -113,17 +142,9 @@ export class AddEmployeeComponent implements OnInit, AfterViewInit, OnDestroy {
     });
   }
 
-  checkEmployeeName(name: string): void {
-    // Don't validate if the name is empty or hasn't changed from the original in edit mode
-    if (!name || (this.isEditMode && name === this.originalName)) {
-      this.employeeNameExists = false;
-      return;
-    }
-
-    this.employeeService.employeeByNameExists(name).subscribe((exists: boolean) => {
-      this.employeeNameExists = exists;
-      this.cdr.markForCheck(); // Manually trigger change detection for OnPush
-    });
+  onNameChange(name: string): void {
+    this.nameChangeSubject.next(name);
+    this.filteredEmployees$ = this.employeeService.getEmployeesByNameSubstring(name);
   }
 
 

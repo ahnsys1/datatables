@@ -18,78 +18,10 @@
     color: black;
 }
 
-span .select-info {
-    visibility: false;
-
-}
-
-table#jsonTable.dataTable tbody tr:hover {
-    background-color: #ffa;
-}
-
-table#jsonTable.dataTable tbody tr:hover>.sorting_1 {
-    background-color: #ffa;
-}
+// This targets the autocomplete panel, which is rendered outside the component's view.
+// `panelClass` was added to the <mat-autocomplete> element in the HTML,
+// and `::ng-deep` is used here to allow this component's styles to "pierce"
+// the view encapsulation and style the globally rendered panel.
 
 
-select-info {
-    visibility: false;
-}
-
-button {
-    font-size: 1.2rem;
-    padding: 5px 5px;
-}
-
-dialog::backdrop {
-    background-color: white;
-}
-
-::backdrop {
-    background-image: linear-gradient(45deg,
-            magenta,
-            rebeccapurple,
-            dodgerblue,
-            green);
-
-    opacity: 0.75;
-}
-
-.tablinks {
-    background-color: blueviolet
-}
-
-#jsonTable3 thead tr th {
-    background-color: lightskyblue
-}
-
-#jsonTable3 tbody tr:nth-child(even) {
-    background-color: beige
-}
-
-#jsonTable thead tr th {
-    background-color: lightskyblue
-}
-
-#jsonTable tbody tr:nth-child(even) {
-    background-color: beige
-}
-
-#jsonTable tbody tr:nth-child(odd) {
-    background-color: aliceblue
-}
-
-#jsonTable3 tbody tr:nth-child(odd) {
-    background-color: aliceblue
-}
-
-.my-disabled-button {
-    opacity: 0.6;
-    cursor: not-allowed;
-}
-
-
-
-.mat-mdc-dialog-container {
-    --mdc-dialog-container-shape: 20px;
-}
+// Style each individual option in the dropdown.

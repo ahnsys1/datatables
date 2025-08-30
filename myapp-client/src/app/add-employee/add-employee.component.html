@@ -5,15 +5,20 @@
         <h2 class="text-center m-2">{{ getModalTitle() | translate }}</h2>
 
 
-
         <div class="form-group m-2">
             <label>{{ 'name' | translate }}</label>
             <input type="text" class="form-control" placeholder="Enter name" #name="ngModel" name="name" required
-                matInput [(ngModel)]="employeeObject.name">
+                matInput [(ngModel)]="employeeObject.name" (ngModelChange)="onNameChange($event)"
+                [matAutocomplete]="auto">
+            <mat-autocomplete #auto="matAutocomplete" panelClass="yellow-autocomplete-panel">
+                <mat-option *ngFor="let employee of filteredEmployees$ | async" [value]="employee.name">
+                    {{ employee.name }}
+                </mat-option>
+            </mat-autocomplete>
             <div *ngIf="name.invalid && (name.dirty || name.touched)" class="text-danger">
                 {{ 'name-is-required' | translate }}
             </div>
-            <div *ngIf="employeeNameExists && ((name.dirty || name.touched))">
+            <div *ngIf="employeeNameExists && (name.dirty || name.touched)">
                 {{ 'employee-name-exists' | translate }}
             </div>
         </div>

@@ -52,6 +52,13 @@ export class EmployeeService {
     return this.http.post<Employee>(`${this.API_URL}/employees`, employee, { params });
   }
 
+
+
+  getEmployeesByNameSubstring(name: string): Observable<Employee[]> {
+    return this.http.get<Employee[]>(`${this.API_URL}/employees/getEmployeesByNameSubstring/search?name=${encodeURIComponent(name)}`);
+  }
+
+
   updateEmployee(employee: Employee): Observable<Employee> {
     let params = new HttpParams();
     // When updating, we always specify the manager's status.

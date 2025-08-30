@@ -11,6 +11,14 @@
     background-color: rgb(13, 238, 219) !important;
 }
 
+.mat-mdc-option {
+    background-color: #fffacd !important; // A pleasant light yellow (LemonChiffon).
+}
+
+.mat-mdc-option.mdc-list-item {
+    background-color: #fffacd !important; // A pleasant light yellow (LemonChiffon).
+}
+
 ::ng-deep .mat-datepicker-popup {
     background-color: rgb(13, 238, 219) !important;
     margin-top: 0px !important;
