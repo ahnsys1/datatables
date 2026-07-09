@@ -1,0 +1,231 @@
+networks:
+  myapp-network:
+    driver: bridge
+
+
+    
+
+
+volumes:
+  rabbitmq_data:
+    driver: local
+  postgres_data:
+    driver: local
+  es_data:
+    driver: local
+
+services:
+  myapp-client:
+    build:
+      context: ../myapp-client
+      dockerfile: Dockerfile
+    ports:
+      - "4200:80"
+    depends_on:
+      backend:
+        condition: service_started
+    networks:
+      - myapp-network
+    restart: always
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  backend:
+    build: .
+    ports:
+      - "9090:9090"
+    environment:
+      # Ensure your application is configured to connect to myapp-postgres
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/postgres
+# Use service name 'postgres'
+      - SPRING_DATASOURCE_USERNAME=postgres
+      - SPRING_DATASOURCE_PASSWORD=password
+      - SPRING_RABBITMQ_HOST=rabbitmq
+      - SPRING_RABBITMQ_PORT=5672
+      - SPRING_RABBITMQ_USERNAME=myuser
+      - SPRING_RABBITMQ_PASSWORD=mypassword
+      - SPRING_RABBITMQ_STOMP_PORT=61613
+      - SPRING_KAFKA_BOOTSTRAP_SERVERS=host.docker.internal:9094
+      - SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI=http://localhost:8180/realms/myrealm
+      - SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI=http://keycloak:8080/realms/myrealm/protocol/openid-connect/certs
+      - KEYCLOAK_ADMIN_SERVER_URL=http://keycloak:8080
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+    depends_on:
+      postgres:
+        condition: service_started
+      rabbitmq:
+        condition: service_started
+      keycloak:
+        condition: service_healthy
+    networks:
+      - myapp-network
+    restart: always
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:9090/actuator/health"]
+      interval: 30s
+      timeout: 20s
+      retries: 3
+
+  rabbitmq:
+    image: rabbitmq:4.1.8
+    ports:
+      - "61613:61613"
+# STOMP port
+      - "5672:5672"
+# AMQP protocol port
+      - "15672:15672"
+# Management UI port
+      - "15674:15674"
+# web-stomp (WS) for browser clients
+    environment:
+      - RABBITMQ_DEFAULT_USER=myuser
+      - RABBITMQ_DEFAULT_PASS=mypassword
+      - RABBITMQ_MNESIA_BASE=/var/lib/rabbitmq
+      - RABBITMQ_ENABLED_PLUGINS=rabbitmq_stomp,rabbitmq_management,rabbitmq_web_stomp
+    volumes:
+      - ./rabbitmq:/etc/rabbitmq
+      - rabbitmq_data:/var/lib/rabbitmq
+    networks:
+      - myapp-network
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      interval: 10s
+      timeout: 5s
+      start_period: 40s
+      retries: 5
+    restart: always
+
+  keycloak:
+    image: keycloak/keycloak:26.5.7
+    command: ["start-dev", "--import-realm"]
+    environment:
+      - KEYCLOAK_ADMIN=admin
+      - KEYCLOAK_ADMIN_PASSWORD=admin
+      - KC_HEALTH_ENABLED=true
+      - KC_BOOTSTRAP_ADMIN_USERNAME=admin
+      - KC_BOOTSTRAP_ADMIN_PASSWORD=admin
+    ports:
+      - "8180:8080"
+    volumes:
+      - ./src/main/resources/keycloak:/opt/keycloak/data/import:ro
+    networks:
+      - myapp-network
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "bash",
+          "-c",
+          "exec 3<>/dev/tcp/127.0.0.1/9000; printf 'GET /health/ready HTTP/1.1\\r\\nHost: localhost\\r\\nConnection: close\\r\\n\\r\\n' >&3; grep '200 OK' <&3"
+        ]
+      interval: 15s
+      timeout: 5s
+      retries: 20
+    restart: always
+ 
+  postgres:
+    image: postgres:17.7
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_DB=postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d postgres"]
+      interval: 60s
+      timeout: 5s
+      retries: 5
+    networks:
+      - myapp-network
+    restart: always
+
+ # Elastic Stack (ELK)
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.17.13
+    container_name: elasticsearch
+    environment:
+      - discovery.type=single-node
+      - ES_JAVA_OPTS=-Xms512m -Xmx512m
+      - xpack.security.enabled=false
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    volumes:
+      - es_data:/usr/share/elasticsearch/data
+    ports:
+      - "9200:9200"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sS --fail http://localhost:9200/_cluster/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 10
+      start_period: 30s
+    networks:
+      - myapp-network
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana:7.17.13
+    container_name: kibana
+    environment:
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+    ports:
+      - "5601:5601"
+    depends_on:
+      - elasticsearch
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sS --fail http://localhost:5601/api/status || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 10
+      start_period: 30s
+    networks:
+      - myapp-network
+
+  logstash:
+    image: docker.elastic.co/logstash/logstash:7.17.13
+    container_name: logstash
+    volumes:
+      - ../logstash/pipeline:/usr/share/logstash/pipeline:ro
+    ports:
+      - "5000:5000"
+      - "5044:5044"
+    depends_on:
+      - elasticsearch
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sS --fail http://localhost:9600/ || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 10
+      start_period: 30s
+    networks:
+      - myapp-network
+
+  filebeat:
+    image: docker.elastic.co/beats/filebeat:7.17.13
+    container_name: filebeat
+    user: root
+    volumes:
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ../filebeat/filebeat.yml:/usr/share/filebeat/filebeat.yml:ro
+      - ../filebeat/modules.d:/usr/share/filebeat/modules.d:ro
+    depends_on:
+      - elasticsearch
+      - logstash
+    healthcheck:
+      test: ["CMD-SHELL", "ls /usr/share/filebeat/filebeat.yml >/dev/null || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 10s
+    networks:
+      - myapp-network

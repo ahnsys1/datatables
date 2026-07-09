@@ -1,0 +1,621 @@
+DB
+//ALTER ACCOUNT QJ04263 SET EDITION = 'ENTERPRISE';
+
+//show accounts;
+
+
+use role accountadmin;
+use warehouse compute_wh;
+
+create or replace database mydb;
+
+create or replace schema MYDB.myschema;
+
+
+create or replace table PERMANENT_TABLE 
+(
+    id int,
+    name string
+);
+
+alter table PERMANENT_TABLE SET DATA_RETENTION_TIME_IN_DAYS = 1;
+
+create or replace transient table TRASIENT_TABLE 
+(
+    id int,
+    name string
+);
+alter table TRASIENT_TABLE SET DATA_RETENTION_TIME_IN_DAYS = 1;
+
+create or replace temporary table TEMPORARY_TABLE 
+(
+    id int,
+    name string
+);
+alter table TEMPORARY_TABLE SET DATA_RETENTION_TIME_IN_DAYS = 1;
+show tables;
+
+create or replace TABLE employees (
+    id integer,
+    name varchar(50),
+    department varchar(50),
+    salary integer
+);
+
+insert into employees (id, name, department, salary) 
+values (1, 'Pat Fay', 'HR', 50000),
+        (2, 'Donald OConnel', 'IT', 75000),
+        (3, 'Steven King', 'Sales', 60000),
+        (4, 'Susan Mavris', 'IT', 80000),
+        (5, 'Jenifer Whalen', 'Marketing', 55000);
+
+
+select * from employees;
+
+
+create or replace VIEW it_imployees AS
+SELECT id, name, salary
+FROM employees
+WHERE department = 'IT';
+
+select * from it_imployees;
+
+create or replace secure VIEW hr_imployees AS
+SELECT id, name, salary
+FROM employees
+WHERE department = 'HR';
+
+select * from hr_imployees;
+
+Create or replace VIEW employee_sallaries
+AS SELECT
+department, 
+SUM(salary) AS total_salary
+FROM employees
+GROUP BY department;
+
+select * from employee_sallaries;
+
+
+create or replace MATERIALIZED VIEW materialized_eployee_salariries
+AS SELECT
+department, 
+SUM(salary) AS total_salary
+FROM employees 
+GROUP BY department;
+
+select * from materialized_eployee_salariries;
+
+show views;
+
+
+
+
+
+create or replace table customer (
+    id integer,
+    name varchar(50),
+    age integer,
+    state varchar(50)
+
+
+);
+
+list @%customer;
+
+list @~;
+
+Create or replace STAGE CUSTOMER_STAGE;
+
+
+list @Customer_stage;
+
+
+Truncate table customer;
+
+
+copy into customer
+FROM @customer_stage
+file_format = (TYPE= 'csv', skip_header = 1);
+
+select * from customer;
+
+
+//undrop schema myschema;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+STAGES
+// Set the Roles, Warehouses and Databases
+USE ROLE ACCOUNTADMIN;
+USE WAREHOUSE COMPUTE_WH;
+USE SCHEMA MYDB.MYSCHEMA;
+use database mydb;
+ 
+//GRANT USAGE ON INTEGRATION s3_snowpipe_int TO ROLE ACCOUNTADMIN;
+// Create an Employee table
+CREATE OR REPLACE TABLE USER (
+  id INTEGER,
+  name VARCHAR(50),
+  location VARCHAR(50),
+  email VARCHAR(50)
+);
+
+//DESCRIBE ROLE snowflakerole;
+
+    
+
+/////////////////////////////////////////////////////
+
+//LIST @my_stage;
+// Create an storage integration with s3 and iam role
+CREATE OR REPLACE STORAGE INTEGRATION S3_INT_PIPE
+  TYPE = EXTERNAL_STAGE
+  STORAGE_PROVIDER = 'S3'
+  ENABLED = TRUE
+  STORAGE_AWS_ROLE_ARN = 'arn:aws:iam::817137372834:role/snowflakerole'
+  STORAGE_ALLOWED_LOCATIONS = ('s3://my-snowflake-bucket111/event');
+
+// Describe the storage integratio
+  //STORAGE_AWS_aws sts get-caller-identityROLE_ARN = 'arn:aws:iam::260289090760:user/233p1000-s'
+DESC INTEGRATION s3_int;
+//SELECT SYSTEM$VALIDATE_STORAGE_INTEGRATION('S3_INT');
+DESC STAGE my_s3_stage;
+
+list @my_s3_stage;
+
+
+
+
+
+//Create a file format
+CREATE OR REPLACE FILE FORMAT my_csv_format
+TYPE = 'CSV'
+FIELD_DELIMITER = ','
+RECORD_DELIMITER = '\n'
+SKIP_HEADER = 1;
+
+SHOW ORGANIZATION ACCOUNTS;
+
+//Create a external s3 stage
+CREATE OR REPLACE STAGE my_s3_stage
+STORAGE_INTEGRATION = S3_INT
+URL = 's3://my-snowflake-bucket111/' 
+FILE_FORMAT = my_csv_format;
+
+
+//s3://my-snowflake-bucket111/
+//Access the external stage
+
+DESCRIBE INTEGRATION s3_int;
+DESC STORAGE INTEGRATION s3_snowpipe_int;
+describe stage my_s3_stage;
+
+
+
+COPY INTO USER
+FROM @my_s3_stage/USER_EXPORT.csv 
+FILE_FORMAT = (FORMAT_NAME = my_csv_format);
+
+
+//Select data from the table
+SELECT * FROM USER;
+
+
+
+
+USE ROLE ACCOUNTADMIN;
+USE WAREHOUSE COMPUTE_WH;
+USE SCHEMA MYDB.MYSCHEMA;
+//use database mydb;
+
+// INTERNAL STAGE
+
+ //Create an Employee table
+CREATE OR REPLACE TABLE customer (
+    id INTEGER,
+    name VARCHAR(50),
+    age INTEGER,
+    state VARCHAR(50)
+);
+
+//Access the table stage
+list @%customer;
+
+//Access the user stage
+list @~;
+
+//Create a named stage
+CREATE OR REPLACE STAGE CUSTOMER_STAGE;
+
+//Access the names internal stage
+list @CUSTOMER_STAGE;
+
+//Truncate the table
+TRUNCATE TABLE CUSTOMER;
+
+//undrop schema myschema;
+
+//Load data to customer table
+copy into customer
+from @CUSTOMER_STAGE
+file_format = (TYPE = 'CSV' SKIP_HEADER = 1);
+
+
+//Select data from the table
+SELECT * FROM CUSTOMER;
+
+//undrop schema myschema;
+
+
+
+
+
+
+
+
+
+
+
+
+
+// EXTERNAL STAGE
+//Create an Employee table
+CREATE OR REPLACE TABLE USER (
+id INTEGER,
+name VARCHAR(50),
+location VARCHAR(50),
+email VARCHAR(50)
+);
+
+PRI PREGENEROVANI JE NUTNE AKTUALIZOVAT Trusted entities V trust relationships
+//Create an storage integration with s3 and iam role
+CREATE OR REPLACE STORAGE INTEGRATION s3_int
+TYPE = EXTERNAL_STAGE
+STORAGE_PROVIDER = 'S3'
+ENABLED = TRUE
+STORAGE_AWS_ROLE_ARN = 'arn:aws:iam::817137372834:role/snowflakerole'
+STORAGE_ALLOWED_LOCATIONS = ('s3://my-snowflake-bucket111/event/');
+
+
+//Describe the storage integration
+DESC INTEGRATION s3_int;
+
+//Create a file format
+CREATE OR REPLACE FILE FORMAT my_csv_format
+TYPE = 'CSV'
+FIELD_DELIMITER = ','
+RECORD_DELIMITER = '\n'
+SKIP_HEADER = 1;
+
+
+
+CREATE OR REPLACE FILE FORMAT my_json_format
+TYPE = 'JSON';
+
+CREATE OR REPLACE STAGE my_s3_stage
+STORAGE_INTEGRATION = s3_int
+URL = 's3://my-snowflake-bucket111/event/'
+FILE_FORMAT = my_json_format;
+
+
+//Access the external stage
+list @my_s3_stage;
+
+COPY INTO EVENT
+from @my_s3_stage
+FILE_FORMAT = (FORMAT_NAME = my_JSON_format);
+
+
+
+
+
+select * from event;
+
+/////////////////////////////// UP IS WORKIG
+
+// PRIRADIT ROLI UZIVATELI
+//Create an storage integration with s3 and iam role
+CREATE OR REPLACE STORAGE INTEGRATION s3_int2
+TYPE = EXTERNAL_STAGE
+STORAGE_PROVIDER = 'S3'
+ENABLED = TRUE
+STORAGE_AWS_ROLE_ARN = 'arn:aws:iam::817137372834:role/snowflakerole2'
+STORAGE_ALLOWED_LOCATIONS = ('s3://my-snowflake-bucket111/users/');
+
+desc integration s3_int2;
+
+CREATE OR REPLACE STAGE my_s3_stage2
+STORAGE_INTEGRATION = s3_int2
+URL = 's3://my-snowflake-bucket111/users/'
+FILE_FORMAT = my_json_format;
+
+list @my_s3_stage2;
+
+
+COPY INTO user
+from @my_s3_stage2
+FILE_FORMAT = (FORMAT_NAME = my_csv_format);
+
+select * from user;
+
+
+
+
+
+
+
+
+
+// CONTINUOS INGESTION
+
+
+//Create an Employee table
+CREATE OR REPLACE TABLE EVENT2 (
+  EVENT VARIANT
+);
+
+//Create an storage integration with s3 and iam role
+CREATE OR REPLACE STORAGE INTEGRATION s3_snowpipe_int
+  TYPE = EXTERNAL_STAGE
+  STORAGE_PROVIDER = 'S3'
+  ENABLED = TRUE
+  STORAGE_AWS_ROLE_ARN = 'arn:aws:iam::817137372834:role/snowpipe_role'
+  STORAGE_ALLOWED_LOCATIONS = ('s3://my-snowflake-bucket111/event2/');
+
+//Describe the storage integration
+DESC INTEGRATION s3_snowpipe_int;
+
+//Create a file format
+CREATE OR REPLACE FILE FORMAT my_json_format
+  TYPE = 'JSON';
+
+//Create a external s3 stage
+CREATE OR REPLACE STAGE my_s3_snowpipe_stage
+  STORAGE_INTEGRATION = s3_snowpipe_int
+  URL = 's3://my-snowflake-bucket111/event2/'
+  FILE_FORMAT = my_json_format;
+
+//Access the external stage
+list @my_s3_snowpipe_stage;
+
+//Create a snowpipe to load the event data from s3
+create or replace pipe s3_pipe
+auto_ingest = true AS
+copy into event2
+from @my_s3_snowpipe_stage
+FILE_FORMAT = (FORMAT_NAME = my_json_format);
+
+
+
+//Select the status of the pipe
+SELECT SYSTEM$PIPE_STATUS('s3_pipe');
+
+
+show pipes;
+
+select * from event2;
+
+
+
+
+
+
+
+
+TASKS
+USE ROLE ACCOUNTADMIN;
+USE WAREHOUSE COMPUTE_WH;
+USE SCHEMA MYDB.MYSCHEMA;
+use database mydb;
+
+DESC STORAGE INTEGRATION s3_snowpipe_int;
+
+SHOW STORAGE INTEGRATIONS;
+
+
+CREATE OR REPLACE STORAGE INTEGRATION s3_snowpipe_int
+  TYPE = EXTERNAL_STAGE
+  STORAGE_PROVIDER = S3
+  ENABLED = TRUE
+  STORAGE_AWS_ROLE_ARN = 'arn:aws:iam::817137372834:role/snowpipe_role'
+  STORAGE_ALLOWED_LOCATIONS = ('s3://my-snowflake-bucket111/event/');
+
+
+
+
+//Describe the storage integration
+DESC INTEGRATION s3_snowpipe_int;
+
+//Create a file format
+CREATE OR REPLACE FILE FORMAT my_json_format
+  TYPE = 'JSON';
+
+//Create a external s3 stage
+CREATE OR REPLACE STAGE my_s3_snowpipe_stage
+  STORAGE_INTEGRATION = s3_snowpipe_int
+  URL = 's3://my-snowflake-bucket111/event/'
+  FILE_FORMAT = my_json_format;
+
+//Access the external stage
+LIST @my_s3_snowpipe_stage;
+
+//Create a snowpipe to load the event data from s3
+CREATE OR REPLACE PIPE s3_pipe
+  AUTO_INGEST = TRUE AS
+  COPY INTO event
+    FROM @my_s3_snowpipe_stage
+    FILE_FORMAT = (FORMAT_NAME = my_json_format);
+
+//Select the status of the pipe
+SELECT SYSTEM$PIPE_STATUS('s3_pipe');
+
+//Get the notification channel
+SHOW PIPES;
+
+//Select data from the table
+SELECT * FROM event;
+
+  
+USE SCHEMA MYDB.MYSCHEMA;
+
+//Create an Employee table
+CREATE OR REPLACE TABLE customer (
+    id INTEGER,
+    name VARCHAR(50),
+    age INTEGER,
+    state VARCHAR(50)
+);
+
+//Access the table stage
+list @%customer;
+
+//Access the user stage
+list @~;
+
+//Create a named stage
+CREATE OR REPLACE STAGE CUSTOMER_STAGE;
+
+//Access the names internal stage
+list @CUSTOMER_STAGE;
+
+//Truncate the table
+TRUNCATE TABLE CUSTOMER;
+
+//Load data to customer table
+copy into customer
+from @CUSTOMER_STAGE
+file_format = (TYPE = 'CSV' SKIP_HEADER = 1);
+
+
+
+USE ROLE ACCOUNTADMIN;
+USE WAREHOUSE COMPUTE_WH;
+USE SCHEMA MYDB.MYSCHEMA;
+//===== Without Task =======
+
+//Create an source table
+CREATE OR REPLACE TABLE SOURCE_TABLE (
+  id INT,
+  name VARCHAR,
+  created_date DATE
+);
+
+//Insert some records on the source table
+INSERT INTO SOURCE_TABLE VALUES
+  (1, 'Chaos', '2023-12-11'),
+  (2, 'Genius', '2024-07-04');
+
+//Select data from source table
+select * from SOURCE_TABLE;
+
+//Create an target table
+CREATE OR REPLACE TABLE TARGET_TABLE (
+  id INT,
+  name VARCHAR,
+  created_date DATE,
+  created_day VARCHAR,
+  created_month VARCHAR,
+  created_year VARCHAR
+);
+
+//Insert data into the target table
+INSERT INTO TARGET_TABLE
+SELECT
+a.id,
+a.name,
+a.created_date,
+DAY(a.created_date) AS created_day,
+MONTH(a.created_date) AS created_month,
+YEAR(a.created_date) AS created_year
+FROM SOURCE_TABLE a
+left join target_table b
+on a.id = b.id
+where b.id is null;
+
+//Select data from target table
+select * from TARGET_TABLE;
+
+
+
+
+
+
+
+
+
+
+
+
+
+//Create an target table
+CREATE OR REPLACE TABLE TARGET_TABLE (
+  id INT,
+  name VARCHAR,
+  created_date DATE,
+  created_day VARCHAR,
+  created_month VARCHAR,
+  created_year VARCHAR
+);
+
+//Insert data into the target table through task
+
+CREATE OR REPLACE TASK my_task
+  WAREHOUSE = COMPUTE_WH
+  SCHEDULE = '1 MINUTE'
+AS
+INSERT INTO TARGET_TABLE
+SELECT
+  a.id,
+  a.name,
+  a.created_date,
+  DAY(a.created_date) AS created_day,
+  MONTH(a.created_date) AS created_month,
+  YEAR(a.created_date) AS created_year
+FROM SOURCE_TABLE a
+left join target_table b
+  on a.id = b.id
+where b.id is null;
+
+//Show tasks
+SHOW TASKS;
+
+//Alter the task to execute
+ALTER TASK my_task RESUME;
+
+ALTER TASK my_task SUSPEND;
+
+
+//Check the task status
+select * from table(information_schema.TASK_HISTORY(TASK_NAME => 'my_task'));
+
+//Select data from target table
+select * from TARGET_TABLE;
+
+//Insert some records on the source table
+INSERT INTO SOURCE_TABLE VALUES
+(3, 'Elan', '2022-02-24');
+
+
+
+
+
+
+
+
+
+
+
+

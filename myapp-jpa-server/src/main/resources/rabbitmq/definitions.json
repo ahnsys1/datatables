@@ -1,0 +1,76 @@
+{
+    "users": [
+        {
+            "name": "myuser",
+            "password": "mypassword",
+            "tags": [
+                "administrator"
+            ]
+        }
+    ],
+    "permissions": [
+        {
+            "user": "myuser",
+            "vhost": "/",
+            "configure": ".*",
+            "write": ".*",
+            "read": ".*"
+        }
+    ],
+    "vhosts": [
+        {
+            "name": "/"
+        }
+    ],
+    "policies": [],
+    "queues": [
+        {
+            "name": "new-employee-queue",
+            "vhost": "/",
+            "durable": true,
+            "auto_delete": false,
+            "arguments": {}
+        },
+        {
+            "name": "updated-employee-queue",
+            "vhost": "/",
+            "durable": true,
+            "auto_delete": false,
+            "arguments": {}
+        }
+    ],
+    "exchanges": [
+        {
+            "name": "app-topic-exchange",
+            "vhost": "/",
+            "type": "topic",
+            "durable": true,
+            "auto_delete": false,
+            "internal": false,
+            "arguments": {}
+        }
+    ],
+    "bindings": [
+        {
+            "source": "app-topic-exchange",
+            "vhost": "/",
+            "destination": "new-employee-queue",
+            "destination_type": "queue",
+            "routing_key": "employee.new",
+            "arguments": {}
+        },
+        {
+            "source": "app-topic-exchange",
+            "vhost": "/",
+            "destination": "updated-employee-queue",
+            "destination_type": "queue",
+            "routing_key": "employee.updated",
+            "arguments": {}
+        }
+    ],
+    "enabled_plugins": [
+        "rabbitmq_management",
+        "rabbitmq_stomp",
+        "rabbitmq_web_stomp"
+    ]
+}

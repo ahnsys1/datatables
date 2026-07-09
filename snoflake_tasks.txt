@@ -1,0 +1,99 @@
+
+Tady je přepis textu z obrázku:
+
+
+//Create an storage integration with s3 and iam role
+CREATE OR REPLACE STORAGE INTEGRATION s3_snowpipe_int
+  TYPE = EXTERNAL_STAGE
+  STORAGE_PROVIDER = 'S3'
+  ENABLED = TRUE
+  STORAGE_AWS_ROLE_ARN = 'arn:aws:iam::294845879996:role/snowpipe'
+  STORAGE_ALLOWED_LOCATIONS = ('s3://de-academy-training-bucket/event/');
+
+//Describe the storage integration
+DESC INTEGRATION s3_snowpipe_int;
+
+//Create a file format
+CREATE OR REPLACE FILE FORMAT my_json_format
+  TYPE = 'JSON';
+
+//Create a external s3 stage
+CREATE OR REPLACE STAGE my_s3_snowpipe_stage
+  STORAGE_INTEGRATION = s3_snowpipe_int
+  URL = 's3://de-academy-training-bucket/event/'
+  FILE_FORMAT = my_json_format;
+
+//Access the external stage
+list @my_s3_snowpipe_stage;
+
+//Create a snowpipe to load the event data from s3
+create or replace pipe s3_pipe
+  auto_ingest = true AS
+  copy into event
+  from @my_s3_snowpipe_stage
+  FILE_FORMAT = (FORMAT_NAME = my_json_format);
+
+//Select the status of the pipe
+SELECT SYSTEM$PIPE_STATUS('s3_pipe');
+
+
+
+Vytvořím rychlý plán úkolů a začnu transkripci.
+
+Created 3 todos
+
+Tady je přesný přepis textu z obrázku:
+
+USE SCHEMA MYDB.MYSCHEMA;
+
+//===== Without Task =======
+
+//Create an source table
+CREATE OR REPLACE TABLE SOURCE_TABLE (
+  id INT,
+  name VARCHAR,
+  created_date DATE
+);
+
+//Insert some records on the source table
+INSERT INTO SOURCE_TABLE VALUES
+  (1, 'Chaos', '2023-12-11'),
+  (2, 'Genius', '2024-07-04');
+
+//Select data from source table
+select * from SOURCE_TABLE;
+
+//Create an target table
+CREATE OR REPLACE TABLE TARGET_TABLE (
+  id INT,
+  name VARCHAR,
+  created_date DATE,
+  created_day VARCHAR,
+  created_month VARCHAR,
+  created_year VARCHAR
+);
+
+//Insert data into the target table
+INSERT INTO TARGET_TABLE
+SELECT
+  a.id,
+  a.name, 
+  a.created_date,
+DAY(a.created_date) AS created_day,
+MONTH(a.created_date) AS created_month,
+YEAR(a.created_date) AS created_year
+FROM SOURCE_TABLE a
+a.created_date,
+DAY(a.created_date) AS created_day,
+MONTH(a.created_date) AS created_month,
+YEAR(a.created_date) AS created_year
+FROM SOURCE_TABLE a
+left join target_table b
+on a.id = b.id
+where b.id is null;
+
+//Select data from target table
+
+
+
+

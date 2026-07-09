@@ -1,0 +1,155 @@
+.example-tree-invisible {
+    display: none;
+}
+
+.example-tree ul,
+.example-tree li {
+    margin-top: 0;
+    margin-bottom: 0;
+    list-style-type: none;
+}
+
+.employee-tree-header {
+    align-items: center;
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 8px;
+}
+
+.employee-tree-header h2 {
+    margin: 0;
+}
+
+.undo-button {
+    font-weight: 700;
+    min-width: 88px;
+}
+
+.header-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.redo-button {
+    font-weight: 700;
+    min-width: 88px;
+    background-color: #198754;
+    color: #fff;
+    border: 1px solid #198754;
+}
+
+.redo-button:not([disabled]):hover {
+    background-color: #157347;
+}
+
+.employee-search {
+    align-items: center;
+    display: flex;
+    gap: 8px;
+    margin-bottom: 12px;
+    max-width: 560px;
+}
+
+.tree-node-toggle {
+    align-items: center;
+    border: 1px solid #ced4da;
+    border-radius: 6px;
+    color: #344054;
+    display: inline-flex;
+    height: 28px;
+    justify-content: center;
+    margin-right: 4px;
+    min-width: 28px;
+    width: 28px;
+}
+
+.tree-node-toggle-symbol {
+    font-size: 18px;
+    font-weight: 700;
+    line-height: 1;
+}
+
+.tree-node-spacer {
+    display: inline-block;
+    height: 28px;
+    margin-right: 4px;
+    width: 28px;
+}
+
+.employee-tree-node {
+    border-left: 4px solid #198754;
+    border-radius: 6px;
+    gap: 8px;
+    min-height: 44px;
+    padding-left: 6px;
+    padding-right: 8px;
+}
+
+.employee-tree-node.manager-node {
+    background-color: #f2f7ff;
+    border-left-color: #0d6efd;
+    box-shadow: inset 0 0 0 1px #d7e7ff;
+}
+
+.employee-tree-node.selected {
+    background-color: #e6f0ff;
+    box-shadow: inset 0 0 0 2px #7eb3ff;
+}
+
+.employee-node-label {
+    align-items: baseline;
+    background: transparent;
+    border: 0;
+    cursor: pointer;
+    display: inline-flex;
+    font-size: 16px;
+    font-weight: 700;
+    gap: 6px;
+    padding: 4px 8px;
+    text-align: left;
+}
+
+.employee-position {
+    font: inherit;
+}
+
+.employee-node-label:hover {
+    text-decoration: underline;
+}
+
+.move-actions {
+    align-items: center;
+    display: flex;
+    gap: 8px;
+    margin-left: auto;
+}
+
+.move-action {
+    white-space: nowrap;
+}
+
+/* Make action buttons visually prominent immediately (not only on hover) */
+.move-actions .move-action:not([disabled]) {
+    background-color: #0d6efd;
+    color: #ffffff;
+    border: 1px solid #0d6efd;
+    box-shadow: 0 1px 2px rgba(13,110,253,0.2);
+}
+
+.move-actions .move-action:not([disabled]):hover {
+    background-color: #0b5ed7;
+    border-color: #0b5ed7;
+}
+
+/* Make the UNDO button more prominent when enabled */
+.undo-button:not([disabled]) {
+    background-color: #ffc107;
+    color: #000;
+    border: 1px solid #ffc107;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.08);
+}
+
+.undo-button:not([disabled]):hover {
+    background-color: #e0a800;
+    border-color: #d39e00;
+}

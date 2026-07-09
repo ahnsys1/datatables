@@ -1,0 +1,21 @@
+<configuration>
+    <appender name="jsonConsole" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder class="net.logstash.logback.encoder.LogstashEncoder">
+            <throwableConverter class="net.logstash.logback.stacktrace.ShortenedThrowableConverter">
+                <maxDepthPerThrowable>30</maxDepthPerThrowable>
+                <maxLength>2048</maxLength>
+                <shortenedClassNameLength>20</shortenedClassNameLength>
+                <rootCauseFirst>true</rootCauseFirst>
+                <inlineHash>true</inlineHash>
+            </throwableConverter>
+        </encoder>
+    </appender>
+
+    <root level="INFO">
+        <appender-ref ref="jsonConsole" />
+    </root>
+    <!-- Enable verbose STOMP broker relay logging for debugging frame contents -->
+    <logger name="org.springframework.messaging.simp.stomp.StompBrokerRelayMessageHandler" level="DEBUG" />
+    <logger name="org.springframework.messaging.simp.stomp" level="DEBUG" />
+    <logger name="org.springframework.messaging.simp" level="DEBUG" />
+</configuration>

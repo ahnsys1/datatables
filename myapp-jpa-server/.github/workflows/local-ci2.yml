@@ -1,0 +1,39 @@
+name: myapp-jpa-server CI (local)
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ latest ]
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+#    runs-on: ubuntu-latest
+    runs-on: self-hosted
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+          cache: maven
+
+      - name: Build and test with Maven
+        working-directory: myapp-jpa-server
+        run: ./mvnw -B -V -U clean package
+
+      - name: Build local Docker image
+        working-directory: myapp-jpa-server
+        run: |
+          docker build -f Dockerfile -t myapp-jpa-server:latest .
+
+
+
+
+          
+          

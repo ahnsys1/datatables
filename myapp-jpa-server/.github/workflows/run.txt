@@ -1,0 +1,192 @@
+act -W myapp-jpa-server/.github/workflows/local-ci2.yml \
+  -j build \
+  -P ubuntu-latest=nektos/act-environments-ubuntu:18.04 \
+  --container-options "-v /var/run/docker.sock:/var/run/docker.sock -v /usr/bin/docker:/usr/bin/docker" \
+  --privileged
+
+
+act -W .github/workflows/local-ci2.yml \
+  -j build \
+  -P ubuntu-latest=nektos/act-environments-ubuntu:18.04 \
+  --container-options "-v /var/run/docker.sock:/var/run/docker.sock -v /usr/bin/docker:/usr/bin/docker" \
+  --privileged
+
+
+#Zkouska jestli nebude stahova ubuntu-latest znova
+act -W .github/workflows/local-ci2.yml \
+  -j build \
+  ubuntu-latest=nektos/act-environments-ubuntu:18.04 \
+  --container-options "-v /var/run/docker.sock:/var/run/docker.sock -v /usr/bin/docker:/usr/bin/docker" \
+  --privileged
+
+
+act -W .github/workflows/local-ci.yml \
+  -j build \
+  ubuntu-latest=nektos/act-environments-ubuntu:18.04 \
+  --container-options "-v /var/run/docker.sock:/var/run/docker.sock -v /usr/bin/docker:/usr/bin/docker" \
+  --privileged
+
+
+
+
+
+# nebo stáhnout binary act
+curl -s https://raw.githubusercontent.com/nektos/act/master/install.sh | sudo bash
+  
+
+
+
+
+
+
+
+
+#local-ci.yml
+name: myapp-jpa-server CI (local)
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ latest ]
+
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    container: maven:3.9.4-eclipse-temurin-17
+    defaults:
+      run:
+        working-directory: .
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+          cache: maven
+
+      - name: Run Maven tests
+        run: ./mvnw -B -V -U clean install -DskipTests
+
+      - name: Build local Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: Dockerfile
+          push: false
+          tags: myapp-jpa-server:local
+
+
+
+
+
+#local-ci2.yaml
+name: myapp-jpa-server CI (local)
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ latest ]
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+          cache: maven
+
+      - name: Build and test with Maven
+        working-directory: myapp-jpa-server
+        run: ./mvnw -B -V -U clean package
+
+      - name: Build local Docker image
+        working-directory: myapp-jpa-server
+        run: |
+          docker build -f Dockerfile -t myapp-jpa-server:latest .
+
+
+
+https://github.com/orgs/community/discussions/25534
+#CONTAINER IMAGE
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    container: maven:3.9.4-eclipse-temurin-17
+    defaults:
+      run:
+        working-directory: .
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+          cache: maven
+
+      - name: Run Maven tests
+        run: ./mvnw -B -V -U test
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      - name: Build local Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: Dockerfile
+          push: false
+          tags: myapp-jpa-server:local
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+runs-on defines the host virtual machine (OS) for a GitHub Actions job, while container defines a Docker container image that runs on top of that host. runs-on is required for all jobs to set the base environment (e.g., ubuntu-latest), whereas container is optional, offering a customized, portable environment for steps.This video explains the difference between low-level and high-level container runtimes:01:11SRKMasterStackYouTube• 14. 2. 2026Key Differences at a Glanceruns-on (Runner Host): Sets the physical or virtual machine (e.g., Ubuntu, Windows, macOS) where the action runner executes.container (Containerized Env): Sets a specific Docker image. Steps run inside this container instead of directly on the runs-on host.Detailed ComparisonFeatureruns-on (Host OS)container (Docker)PurposeDefines the base runner VM.Defines a custom isolated environment.Required?Yes.No (Optional).EnvironmentThe full OS (e.g., ubuntu-24.04).A Docker container running on the host.Default Shellbash (usually).sh (usually).Usageruns-on: ubuntu-latestcontainer: image: node:20.File AccessDirect access to runner file system.Mounted volume of runner workspace.When to use what?Use runs-on alone: When the pre-installed software on GitHub-hosted runners (like ubuntu-latest) is sufficient. It is simpler and faster because there is no container startup overhead.Use runs-on + container: When your project needs specific versions of tools, libraries, or languages (e.g., a specific database version) that are not on the host, ensuring consistent environments across local development and CI.Example: Combining Bothyamljobs:
+  build:
+    runs-on: ubuntu-latest  # The VM
+    container: node:20      # The Docker image running on the VM
+    steps:
+      - uses: actions/checkout@v4
+      - run: node --version # Runs inside the node:20 container
+Při použití kódu buďte obezřetní.Key Considerations:Permissions: Containers often run as root by default, which can cause file permission issues with the actions/checkout step, requiring careful handling.Performance: A container adds a slight overhead, but ensures total environment consistency.For in-depth guidance on choosing the right runner, refer to the official GitHub Actions documentation.
+
+
+act -W myapp-jpa-server/.github/workflows/local-ci2.yml   -j build   ubuntu-latest=nektos/act-environments-ubuntu:18.04   --privileged
