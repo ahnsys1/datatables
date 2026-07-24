@@ -28,3 +28,7 @@ mvn compile exec:java
 ```
 
 Trezor se ukládá do souboru `~/.password-vault/vault.dat`.
+
+##
+spousti se to java -jar target/password-vault-1.0.0.jar
+
