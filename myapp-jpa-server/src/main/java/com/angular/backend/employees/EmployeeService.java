@@ -1,6 +1,8 @@
 package com.angular.backend.employees;
 
 import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -183,6 +185,7 @@ public class EmployeeService {
         EmployeeJPA employeeToUpdate = employeeRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Employee not found with id: " + id));
         log.debug("Found employee to update: {}", employeeToUpdate.getName());
+        EmployeeJPA previousState = copyEmployeeState(employeeToUpdate);
 
         // Update fields from the incoming employee object
         employeeToUpdate.setName(employeeDetails.getName());
@@ -218,13 +221,22 @@ public class EmployeeService {
 
         employeeRepository.save(employeeToUpdate);
         log.debug("");
-        // Send the entire object. RabbitTemplate will convert it to JSON.
-        // Send to the topic exchange with the 'updated' routing key
         EmployeeJPA employeeWithManager = employeeRepository.findByIdWithManager(id);
+        Map<String, EmployeeJPA> updateEvent = Map.of(
+                "previousState", previousState,
+                "newState", employeeWithManager);
         rabbitTemplate.convertAndSend(RabbitMQConfig.TOPIC_EXCHANGE_NAME, RabbitMQConfig.ROUTING_KEY_UPDATED,
-                employeeWithManager);
+                updateEvent);
         log.info("Successfully updated employee with ID: {}", id);
         return employeeWithManager;
+    }
+
+    private EmployeeJPA copyEmployeeState(EmployeeJPA employee) {
+        EmployeeJPA copy = new EmployeeJPA(employee.getId(), employee.getName(), employee.getPosition(),
+                employee.getExtn(), employee.getSalary(), employee.getStart_date(), employee.getOffice(),
+                employee.getManager(), employee.isHasManagerRights());
+        copy.setChildren(List.copyOf(employee.getChildren()));
+        return copy;
     }
 
     public EmployeeJPA findByIdWithManager(String id) {
@@ -247,7 +259,13 @@ public class EmployeeService {
             throw new IllegalStateException("Cannot delete employee who is a manager with subordinates.");
         }
 
+        EmployeeJPA deletedEmployee = copyEmployeeState(employeeRepository.findByIdWithManager(id));
         employeeRepository.deleteById(id);
+        Map<String, Object> deleteEvent = new HashMap<>();
+        deleteEvent.put("previousState", deletedEmployee);
+        deleteEvent.put("newState", null);
+        rabbitTemplate.convertAndSend(RabbitMQConfig.TOPIC_EXCHANGE_NAME, RabbitMQConfig.ROUTING_KEY_DELETED,
+                deleteEvent);
         log.info("Successfully deleted employee with ID: {}", id);
         return true;
     }

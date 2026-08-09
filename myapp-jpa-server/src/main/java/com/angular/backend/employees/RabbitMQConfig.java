@@ -20,6 +20,8 @@ public class RabbitMQConfig {
     // A constant for the new queue for updated employees
     public static final String UPDATED_EMPLOYEE_QUEUE = "updated-employee-queue";
 
+    public static final String DELETED_EMPLOYEE_QUEUE = "deleted-employee-queue";
+
     // A constant for the exchange name
     public static final String TOPIC_EXCHANGE_NAME = "app-topic-exchange";
 
@@ -28,6 +30,8 @@ public class RabbitMQConfig {
 
     // A new routing key for updated employees
     public static final String ROUTING_KEY_UPDATED = "employee.updated";
+
+    public static final String ROUTING_KEY_DELETED = "employee.deleted";
 
     /**
      * Defines the queue. A queue is a buffer that stores messages.
@@ -50,6 +54,11 @@ public class RabbitMQConfig {
     Queue updatedEmployeeQueue() {
         // Durable queue
         return new Queue(UPDATED_EMPLOYEE_QUEUE, true);
+    }
+
+    @Bean
+    Queue deletedEmployeeQueue() {
+        return new Queue(DELETED_EMPLOYEE_QUEUE, true);
     }
 
     /**
@@ -89,6 +98,11 @@ public class RabbitMQConfig {
     @Bean
     Binding bindingUpdated(Queue updatedEmployeeQueue, TopicExchange exchange) {
         return BindingBuilder.bind(updatedEmployeeQueue).to(exchange).with(ROUTING_KEY_UPDATED);
+    }
+
+    @Bean
+    Binding bindingDeleted(Queue deletedEmployeeQueue, TopicExchange exchange) {
+        return BindingBuilder.bind(deletedEmployeeQueue).to(exchange).with(ROUTING_KEY_DELETED);
     }
 
     /**
