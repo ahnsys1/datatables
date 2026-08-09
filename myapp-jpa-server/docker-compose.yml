@@ -52,8 +52,12 @@ services:
       - SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI=http://localhost:8180/realms/myrealm
       - SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI=http://keycloak:8080/realms/myrealm/protocol/openid-connect/certs
       - KEYCLOAK_ADMIN_SERVER_URL=http://keycloak:8080
+      - APP_EMPLOYEE_EXPORT_DIRECTORY=/host-home
+      - APP_EMPLOYEE_EXPORT_TIME_ZONE=Europe/Prague
     extra_hosts:
       - "host.docker.internal:host-gateway"
+    volumes:
+      - ${HOME}:/host-home
 
     depends_on:
       postgres:

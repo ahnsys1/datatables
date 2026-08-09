@@ -21,12 +21,14 @@ public class EmployeeService {
     private final EmployeeRepository employeeRepository;
     private final TreeBuilder treeBuilder;
     private final RabbitTemplate rabbitTemplate;
+    private final EmployeeCsvExportService employeeCsvExportService;
 
     public EmployeeService(EmployeeRepository employeeRepository, TreeBuilder treeBuilder,
-            RabbitTemplate rabbitTemplate) {
+            RabbitTemplate rabbitTemplate, EmployeeCsvExportService employeeCsvExportService) {
         this.employeeRepository = employeeRepository;
         this.treeBuilder = treeBuilder;
         this.rabbitTemplate = rabbitTemplate;
+        this.employeeCsvExportService = employeeCsvExportService;
     }
 
     public boolean existsEmployeeByName(String name) {
@@ -70,6 +72,7 @@ public class EmployeeService {
         // Send to the topic exchange with the 'new' routing key
         rabbitTemplate.convertAndSend(RabbitMQConfig.TOPIC_EXCHANGE_NAME, RabbitMQConfig.ROUTING_KEY_NEW,
                 employeeWithManager);
+        employeeCsvExportService.recordChange("CREATE", null, employeeWithManager);
         return employeeWithManager;
     }
 
@@ -157,7 +160,9 @@ public class EmployeeService {
         }
 
         List<EmployeeJPA> children = employeeRepository.findByManagerId(employeeId);
+        Map<String, EmployeeJPA> previousStates = new HashMap<>();
         for (EmployeeJPA child : children) {
+            previousStates.put(child.getId(), copyEmployeeState(child));
             detectCycle(child, newManager);
             child.setManager(newManager);
         }
@@ -165,6 +170,7 @@ public class EmployeeService {
         List<EmployeeJPA> savedChildren = employeeRepository.saveAll(children);
         for (EmployeeJPA child : savedChildren) {
             rabbitTemplate.convertAndSend(RabbitMQConfig.TOPIC_EXCHANGE_NAME, RabbitMQConfig.ROUTING_KEY_UPDATED, child);
+            employeeCsvExportService.recordChange("UPDATE", previousStates.get(child.getId()), child);
         }
         log.info("Moved {} children from employee {} to manager {}", savedChildren.size(), employeeId, managerId);
         return savedChildren;
@@ -227,6 +233,7 @@ public class EmployeeService {
                 "newState", employeeWithManager);
         rabbitTemplate.convertAndSend(RabbitMQConfig.TOPIC_EXCHANGE_NAME, RabbitMQConfig.ROUTING_KEY_UPDATED,
                 updateEvent);
+        employeeCsvExportService.recordChange("UPDATE", previousState, employeeWithManager);
         log.info("Successfully updated employee with ID: {}", id);
         return employeeWithManager;
     }
@@ -266,6 +273,7 @@ public class EmployeeService {
         deleteEvent.put("newState", null);
         rabbitTemplate.convertAndSend(RabbitMQConfig.TOPIC_EXCHANGE_NAME, RabbitMQConfig.ROUTING_KEY_DELETED,
                 deleteEvent);
+        employeeCsvExportService.recordChange("DELETE", deletedEmployee, null);
         log.info("Successfully deleted employee with ID: {}", id);
         return true;
     }
