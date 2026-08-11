@@ -194,24 +194,25 @@ services:
     networks:
       - myapp-network
 
-  logstash:
-    image: docker.elastic.co/logstash/logstash:7.17.13
-    container_name: logstash
-    volumes:
-      - ../logstash/pipeline:/usr/share/logstash/pipeline:ro
-    ports:
-      - "5000:5000"
-      - "5044:5044"
-    depends_on:
-      - elasticsearch
-    healthcheck:
-      test: ["CMD-SHELL", "curl -sS --fail http://localhost:9600/ || exit 1"]
-      interval: 30s
-      timeout: 10s
-      retries: 10
-      start_period: 30s
-    networks:
-      - myapp-network
+
+#  logstash:
+#    image: docker.elastic.co/logstash/logstash:7.17.13
+#    container_name: logstash
+#    volumes:
+#      - ../logstash/pipeline:/usr/share/logstash/pipeline:ro
+#    ports:
+#      - "5000:5000"
+#      - "5044:5044"
+#    depends_on:
+#      - elasticsearch
+#    healthcheck:
+#      test: ["CMD-SHELL", "curl -sS --fail http://localhost:9600/ || exit 1"]
+#      interval: 30s
+#      timeout: 10s
+#      retries: 10
+#      start_period: 30s
+#    networks:
+#      - myapp-network
 
   filebeat:
     image: docker.elastic.co/beats/filebeat:7.17.13
@@ -223,8 +224,9 @@ services:
       - ../filebeat/filebeat.yml:/usr/share/filebeat/filebeat.yml:ro
       - ../filebeat/modules.d:/usr/share/filebeat/modules.d:ro
     depends_on:
-      - elasticsearch
-      - logstash
+      elasticsearch:
+        condition: service_healthy
+#      - logstash
     healthcheck:
       test: ["CMD-SHELL", "ls /usr/share/filebeat/filebeat.yml >/dev/null || exit 1"]
       interval: 30s

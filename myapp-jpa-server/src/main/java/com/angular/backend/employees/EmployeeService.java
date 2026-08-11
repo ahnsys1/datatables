@@ -278,4 +278,9 @@ public class EmployeeService {
         return true;
     }
 
+    public void deleteAllEmployees() {
+        employeeRepository.truncateEmployees();
+        log.info("Successfully deleted all employees");
+    }
+
 }

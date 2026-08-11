@@ -8,6 +8,9 @@
     mvn clean install -DskipTests
     
 
+    # Filebeat refuses configuration files writable by group or other users.
+    chmod go-w ../filebeat/filebeat.yml
+
     echo "Starting Docker Compose services with rebuild..."
     docker compose up --build
     if [ $? -eq 0 ]; then

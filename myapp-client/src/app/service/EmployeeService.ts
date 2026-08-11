@@ -79,4 +79,8 @@ export class EmployeeService {
     return this.http.delete<void>(deleteUrl);
   }
 
+  deleteAllEmployees(): Observable<void> {
+    return this.http.delete<void>(`${this.baseUrl}/employees/all`);
+  }
+
 }

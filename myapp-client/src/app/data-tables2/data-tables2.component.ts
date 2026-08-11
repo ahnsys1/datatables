@@ -10,7 +10,7 @@ import { MatDialog, MatDialogRef } from '@angular/material/dialog';
 import { TranslateService } from '@ngx-translate/core';
 import 'datatables.net-buttons-dt';
 import 'datatables.net-select-dt';
-import { forkJoin, map, Observable, of } from 'rxjs';
+import { concatMap, forkJoin, from, map, Observable, of, toArray } from 'rxjs';
 import { AddEmployeeComponent } from "../add-employee/add-employee.component";
 import { EmployeeService } from '../service/EmployeeService';
 import { ConfirmationDialogComponent, ConfirmationDialogData } from '../shared/confirmation-dialog/confirmation-dialog.component';
@@ -45,6 +45,25 @@ export class DataTables2Component implements OnInit {
     ]).subscribe(translations => {
       this.dtOptions = {
         layout: {
+          top1End: {
+            buttons: [
+              {
+                text: 'Import employees',
+                className: 'btn btn-outline-primary',
+                action: () => this.importEmployees()
+              },
+              {
+                text: 'Export employees',
+                className: 'btn btn-outline-secondary',
+                action: () => this.exportEmployees()
+              },
+              {
+                text: 'Delete employees',
+                className: 'btn btn-outline-danger',
+                action: () => this.deleteAllEmployees()
+              }
+            ]
+          },
           top1Start: {
             buttons: [
               {
@@ -139,6 +158,7 @@ export class DataTables2Component implements OnInit {
         ,
         pageLength: 100,
         lengthMenu: [5, 10, 20, 50, 100],
+        select: { style: 'multi' },
         rowId: "id",
       };
       this.table = new DataTable($('#jsonTable'), this.dtOptions);
@@ -348,6 +368,113 @@ export class DataTables2Component implements OnInit {
           });
         });
       }
+    });
+  }
+
+  private exportEmployees(): void {
+    const employees = this.sortEmployeesParentFirst(this.table.rows().data().toArray() as Employee[]);
+    const blob = new Blob([JSON.stringify(employees, null, 2)], { type: 'application/json' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = 'employees.json';
+    link.click();
+    URL.revokeObjectURL(link.href);
+  }
+
+  private importEmployees(): void {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.json,application/json';
+    input.onchange = () => {
+      const file = input.files?.[0];
+      if (!file) {
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = () => {
+        try {
+          const employees = JSON.parse(String(reader.result));
+          if (!Array.isArray(employees)) {
+            throw new Error('The file must contain an employee array.');
+          }
+          const importedIds = new Map<string, string>();
+          from(this.sortEmployeesParentFirst(employees)).pipe(
+            concatMap(employee => {
+              const managerId = this.getManagerId(employee);
+              const manager = managerId && importedIds.has(managerId)
+                ? { id: importedIds.get(managerId) } as Employee
+                : null;
+              const employeeToCreate = { ...employee, id: '', manager, children: [] } as Employee;
+              return this.employeeService.createEmployee(employeeToCreate).pipe(
+                map(createdEmployee => {
+                  importedIds.set(employee.id, createdEmployee.id);
+                  return createdEmployee;
+                })
+              );
+            }),
+            toArray()
+          ).subscribe({
+            next: () => this.getEmployees(),
+            error: error => alert(this.translate.instant('failed-to-add-employee') + ': ' + error.message)
+          });
+        } catch (error: any) {
+          alert('Could not import employees: ' + error.message);
+        }
+      };
+      reader.readAsText(file);
+    };
+    input.click();
+  }
+
+  private getManagerId(employee: Employee): string | null {
+    return employee.manager?.id ?? employee.managerId ?? null;
+  }
+
+  private sortEmployeesParentFirst(employees: Employee[]): Employee[] {
+    const byId = new Map(employees.map(employee => [employee.id, employee]));
+    const depths = new Map<string, number>();
+    const getDepth = (employee: Employee, path = new Set<string>()): number => {
+      if (depths.has(employee.id)) {
+        return depths.get(employee.id)!;
+      }
+      const managerId = this.getManagerId(employee);
+      if (!managerId || !byId.has(managerId) || path.has(employee.id)) {
+        depths.set(employee.id, 0);
+        return 0;
+      }
+      const depth = getDepth(byId.get(managerId)!, new Set(path).add(employee.id)) + 1;
+      depths.set(employee.id, depth);
+      return depth;
+    };
+    return [...employees].sort((left, right) => getDepth(left) - getDepth(right));
+  }
+
+  private deleteAllEmployees(): void {
+    const employees = this.table.rows().data().toArray() as Employee[];
+    if (employees.length === 0) {
+      return;
+    }
+
+    const dialogRef = this.dialog.open(ConfirmationDialogComponent, {
+      data: {
+        title: this.translate.instant('confirm-delete'),
+        message: this.translate.instant('confirm-delete-message'),
+        confirmText: this.translate.instant('delete'),
+        cancelText: this.translate.instant('cancel')
+      } as ConfirmationDialogData
+    });
+    dialogRef.afterClosed().subscribe((confirmed: boolean) => {
+      if (confirmed) {
+        this.deleteEmployeeLayers(employees);
+      }
+    });
+  }
+
+  private deleteEmployeeLayers(employees: Employee[]): void {
+    this.employeeService.deleteAllEmployees().subscribe({
+      next: () => this.getEmployees(),
+      error: error => alert('Could not delete employees: ' + error.message)
     });
   }
 }

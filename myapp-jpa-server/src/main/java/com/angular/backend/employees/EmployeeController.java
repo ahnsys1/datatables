@@ -218,5 +218,11 @@ public class EmployeeController {
         }
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
+
+    @DeleteMapping("/all")
+    public ResponseEntity<Void> deleteAllEmployees() {
+        employeeService.deleteAllEmployees();
+        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+    }
 }
 
