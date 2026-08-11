@@ -158,7 +158,6 @@ export class DataTables2Component implements OnInit {
         ,
         pageLength: 100,
         lengthMenu: [5, 10, 20, 50, 100],
-        select: { style: 'multi' },
         rowId: "id",
       };
       this.table = new DataTable($('#jsonTable'), this.dtOptions);
@@ -372,13 +371,20 @@ export class DataTables2Component implements OnInit {
   }
 
   private exportEmployees(): void {
-    const employees = this.sortEmployeesParentFirst(this.table.rows().data().toArray() as Employee[]);
-    const blob = new Blob([JSON.stringify(employees, null, 2)], { type: 'application/json' });
-    const link = document.createElement('a');
-    link.href = URL.createObjectURL(blob);
-    link.download = 'employees.json';
-    link.click();
-    URL.revokeObjectURL(link.href);
+    this.spinnerService.show();
+    setTimeout(() => {
+      try {
+        const employees = this.sortEmployeesParentFirst(this.table.rows().data().toArray() as Employee[]);
+        const blob = new Blob([JSON.stringify(employees, null, 2)], { type: 'application/json' });
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = 'employees.json';
+        link.click();
+        URL.revokeObjectURL(link.href);
+      } finally {
+        this.spinnerService.hide();
+      }
+    });
   }
 
   private importEmployees(): void {
@@ -393,6 +399,7 @@ export class DataTables2Component implements OnInit {
 
       const reader = new FileReader();
       reader.onload = () => {
+        this.spinnerService.show();
         try {
           const employees = JSON.parse(String(reader.result));
           if (!Array.isArray(employees)) {
@@ -416,11 +423,19 @@ export class DataTables2Component implements OnInit {
             toArray()
           ).subscribe({
             next: () => this.getEmployees(),
-            error: error => alert(this.translate.instant('failed-to-add-employee') + ': ' + error.message)
+            error: error => {
+              this.spinnerService.hide();
+              alert(this.translate.instant('failed-to-add-employee') + ': ' + error.message);
+            }
           });
         } catch (error: any) {
+          this.spinnerService.hide();
           alert('Could not import employees: ' + error.message);
         }
+      };
+      reader.onerror = () => {
+        this.spinnerService.hide();
+        alert('Could not read the employee file.');
       };
       reader.readAsText(file);
     };
