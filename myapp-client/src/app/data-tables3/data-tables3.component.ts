@@ -2,7 +2,6 @@ import { Component, OnInit, WritableSignal, signal } from '@angular/core';
 import { MatDialog, MatDialogRef } from '@angular/material/dialog';
 import { Config } from 'datatables.net';
 import 'datatables.net-buttons-dt';
-import 'datatables.net-select-dt';
 import DataTable from 'datatables.net-dt';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { AddEmployeeComponent } from '../add-employee/add-employee.component';
@@ -13,7 +12,7 @@ import { ConfirmationDialogComponent, ConfirmationDialogData } from '../shared/c
 import { ErrorDialogComponent, ErrorDialogData } from '../shared/error-dialog/error-dialog.component';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { TranslatePipe } from '@ngx-translate/core';
-import { concatMap, forkJoin, from, map, of, toArray } from 'rxjs';
+import { concatMap, forkJoin, from, map, toArray } from 'rxjs';
 import { SpinnerComponent } from '../shared/spinner/spinner.component';
 import { SpinnerService } from '../service/spinner.service';
 
@@ -204,26 +203,28 @@ export class DataTables3Component implements OnInit {
         ],
         pageLength: 100, // The rest of your config is fine
         lengthMenu: [5, 10, 20, 50, 100], // ...
+        deferRender: true,
+        autoWidth: false,
         lengthChange: true, // ...
         info: true, // ...
         infoCallback(settings, start, end, max, total, pre) { // ...
           return 'From ' + start + ' to ' + end + " of " + max + ' rows<br/>'; // ...
-        }, // ...
-        select: { // ...
-          style: 'single', // ...
-          info: false, // ...
         }, // ...
         rowId: "id" // ...
       };
       this.table = new DataTable($('#jsonTable3'), this.dtOptions);
       this.getEmployees();
 
-      // Event handlers are fine
-      this.table.on('page', () => { this.table.rows().deselect(); });
-      this.table.on('order', () => { this.table.rows().deselect(); });
-      this.table.on('search', () => { this.table.rows().deselect(); });
-      this.table.on('select', () => $('.my-button').removeClass("my-disabled-button"))
-        .on('deselect', () => $('.my-button').addClass("my-disabled-button"));
+      const tableBody = $('#jsonTable3 tbody');
+      tableBody.on('click', 'tr', event => {
+        tableBody.find('tr.selected').removeClass('selected');
+        $(event.currentTarget).addClass('selected');
+        $('.my-button').removeClass('my-disabled-button');
+      });
+      this.table.on('page order search', () => {
+        tableBody.find('tr.selected').removeClass('selected');
+        $('.my-button').addClass('my-disabled-button');
+      });
     });
     
   };
@@ -433,40 +434,29 @@ export class DataTables3Component implements OnInit {
           return;
         }
 
-        const employeeObservables = res.map(employeeData => {
-          if (employeeData instanceof Employee) {
-            return of(employeeData);
+        const directEmployees = res.filter(
+          (employee): employee is Employee => typeof employee === 'object' && employee !== null && 'id' in employee
+        );
+        const employeeIds = res.filter((employee): employee is string => typeof employee === 'string');
+
+        const finishLoading = (employees: Employee[]) => {
+          employees.forEach(employee => this.employeeIdToEmployeeMap.set(employee.id, employee));
+          if (employees.length > 0) {
+            this.table.rows.add(employees).draw(false);
+          } else {
+            this.table.draw(false);
           }
-          if (typeof employeeData === 'string') {
-            return this.employeeService.getEmployeeWithManager(employeeData);
-          }
-          // This handles plain objects from JSON that are not Employee instances
-          if (typeof employeeData === 'object' && employeeData !== null && 'id' in employeeData) {
-            return of(employeeData as Employee);
-          }
+          this.isLoading.set(false);
+          this.spinnerService.hide();
+        };
 
-          console.warn('Unknown data type in getEmployees response and will be ignored:', employeeData);
-          return of(null); // Return an observable of null for unknown types
-        });
+        if (employeeIds.length === 0) {
+          finishLoading(directEmployees);
+          return;
+        }
 
-        forkJoin(employeeObservables).subscribe({
-          next: (employees: (Employee | null)[]) => {
-            const validEmployees = employees.filter((e): e is Employee => e !== null);
-
-            validEmployees.forEach(employee => {
-              this.employeeIdToEmployeeMap.set(employee.id, employee);
-            });
-
-            if (validEmployees.length > 0) {
-              // Add data to the table's cache without drawing immediately.
-              this.table.rows.add(validEmployees);
-            }
-            // Invalidate all rows to force re-running render functions (e.g., for manager names)
-            // and then draw the table. This is the most reliable way to handle renderers with dependencies.
-            this.table.rows().invalidate().draw();
-            this.isLoading.set(false);
-            this.spinnerService.hide();
-          },
+        forkJoin(employeeIds.map(id => this.employeeService.getEmployeeWithManager(id))).subscribe({
+          next: loadedEmployees => finishLoading([...directEmployees, ...loadedEmployees]),
           error: (err: any) => {
             alert(this.translate.instant('failed-to-get-employees') + ': ' + err.message);
             this.isLoading.set(false);
