@@ -15,6 +15,16 @@ public interface EmployeeRepository extends JpaRepository<EmployeeJPA, String> {
     @Query(value = "TRUNCATE TABLE employees RESTART IDENTITY CASCADE", nativeQuery = true)
     void truncateEmployees();
 
+        @Modifying
+        @Query(value = "INSERT INTO employees (id, name, position, extn, salary, start_date, office, has_manager_rights, manager_id) "
+            + "VALUES (:id, :name, :position, :extn, :salary, :startDate, :office, :hasManagerRights, NULL)", nativeQuery = true)
+        void restoreEmployee(String id, String name, String position, String extn, String salary,
+            java.time.LocalDate startDate, String office, boolean hasManagerRights);
+
+        @Modifying
+        @Query(value = "UPDATE employees SET manager_id = :managerId WHERE id = :id", nativeQuery = true)
+        void restoreEmployeeManager(String id, String managerId);
+
     @Query("SELECT e FROM EmployeeJPA e LEFT JOIN FETCH e.manager")
     List<EmployeeJPA> findAllWithManagers();
 

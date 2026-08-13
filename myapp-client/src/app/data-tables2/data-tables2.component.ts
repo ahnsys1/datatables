@@ -10,7 +10,7 @@ import { MatDialog, MatDialogRef } from '@angular/material/dialog';
 import { TranslateService } from '@ngx-translate/core';
 import 'datatables.net-buttons-dt';
 import 'datatables.net-select-dt';
-import { concatMap, forkJoin, from, map, Observable, of, toArray } from 'rxjs';
+import { forkJoin, Observable, of } from 'rxjs';
 import { AddEmployeeComponent } from "../add-employee/add-employee.component";
 import { EmployeeService } from '../service/EmployeeService';
 import { ConfirmationDialogComponent, ConfirmationDialogData } from '../shared/confirmation-dialog/confirmation-dialog.component';
@@ -26,6 +26,28 @@ import { SpinnerComponent } from '../shared/spinner/spinner.component';
   styleUrl: './data-tables2.component.scss'
 })
 export class DataTables2Component implements OnInit {
+
+  private normalizeIntradayFields(fields: string[]): string[] {
+    if (fields[1] === 'UPDATE' && fields.length === 22) {
+      const normalized = fields.slice(0, 3);
+      for (let index = 0; index < 9; index++) {
+        normalized.push(fields[3 + index], fields[13 + index]);
+      }
+      return normalized;
+    }
+    if (fields[1] === 'CREATE' && fields.length === 21 && !fields[2]) {
+      const employeeIdIndex = fields.findIndex((value, index) => index >= 3 && value.length > 0);
+      if (employeeIdIndex > 2) {
+        const normalized = fields.slice(0, 2);
+        normalized.push(fields[employeeIdIndex]);
+        for (let index = 0; index < 9; index++) {
+          normalized.push('', fields[employeeIdIndex + 1 + index] ?? '');
+        }
+        return normalized;
+      }
+    }
+    return fields;
+  }
 
   private table!: any;
   public dtOptions: Config = {};
@@ -45,7 +67,7 @@ export class DataTables2Component implements OnInit {
     ]).subscribe(translations => {
       this.dtOptions = {
         layout: {
-          top1End: {
+          topEnd: {
             buttons: [
               {
                 text: 'Import employees',
@@ -58,13 +80,23 @@ export class DataTables2Component implements OnInit {
                 action: () => this.exportEmployees()
               },
               {
+                text: 'Import changes',
+                className: 'btn btn-outline-primary',
+                action: () => this.importIntradayChanges()
+              },
+              {
+                text: 'Export changes',
+                className: 'btn btn-outline-secondary',
+                action: () => this.exportIntradayChanges()
+              },
+              {
                 text: 'Delete employees',
                 className: 'btn btn-outline-danger',
                 action: () => this.deleteAllEmployees()
               }
             ]
           },
-          top1Start: {
+          topStart: {
             buttons: [
               {
                 text: translations['new-employee'],
@@ -405,23 +437,18 @@ export class DataTables2Component implements OnInit {
           if (!Array.isArray(employees)) {
             throw new Error('The file must contain an employee array.');
           }
-          const importedIds = new Map<string, string>();
-          from(this.sortEmployeesParentFirst(employees)).pipe(
-            concatMap(employee => {
-              const managerId = this.getManagerId(employee);
-              const manager = managerId && importedIds.has(managerId)
-                ? { id: importedIds.get(managerId) } as Employee
-                : null;
-              const employeeToCreate = { ...employee, id: '', manager, children: [] } as Employee;
-              return this.employeeService.createEmployee(employeeToCreate).pipe(
-                map(createdEmployee => {
-                  importedIds.set(employee.id, createdEmployee.id);
-                  return createdEmployee;
-                })
-              );
-            }),
-            toArray()
-          ).subscribe({
+          const restorePayload = this.sortEmployeesParentFirst(employees).map(employee => ({
+            id: employee.id,
+            name: employee.name,
+            position: employee.position,
+            extn: employee.extn,
+            salary: employee.salary,
+            start_date: employee.start_date,
+            office: employee.office,
+            hasManagerRights: employee.hasManagerRights,
+            managerId: this.getManagerId(employee)
+          }));
+          this.employeeService.restoreEmployees(restorePayload).subscribe({
             next: () => this.getEmployees(),
             error: error => {
               this.spinnerService.hide();
@@ -440,6 +467,126 @@ export class DataTables2Component implements OnInit {
       reader.readAsText(file);
     };
     input.click();
+  }
+
+  private exportIntradayChanges(): void {
+    this.spinnerService.show();
+    this.employeeService.getIntradayChanges().subscribe({
+      next: blob => {
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = 'intra_day_changes.csv';
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+        this.spinnerService.hide();
+      },
+      error: error => {
+        this.spinnerService.hide();
+        alert('Could not export intraday changes: ' + error.message);
+      }
+    });
+  }
+
+  private importIntradayChanges(): void {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.csv,text/csv';
+    input.onchange = () => {
+      const file = input.files?.[0];
+      if (!file) {
+        return;
+      }
+      const reader = new FileReader();
+      reader.onload = () => {
+        this.spinnerService.show();
+        try {
+          const changes = this.parseIntradayChanges(String(reader.result));
+          const creates = changes
+            .filter(change => change.action === 'CREATE')
+            .map(change => ({
+              id: change.employeeId,
+              name: change.newName,
+              position: change.newPosition,
+              extn: change.newExtn,
+              salary: change.newSalary,
+              start_date: change.newStartDate,
+              office: change.newOffice,
+              hasManagerRights: change.newHasManagerRights.toLowerCase() === 'true',
+              managerId: change.newManagerId || null
+            }));
+          this.employeeService.restoreEmployees(this.sortChangesParentFirst(creates)).subscribe({
+            next: () => this.getEmployees(),
+            error: error => {
+              this.spinnerService.hide();
+              alert('Could not import intraday changes: ' + error.message);
+            }
+          });
+        } catch (error: any) {
+          this.spinnerService.hide();
+          alert('Could not import intraday changes: ' + error.message);
+        }
+      };
+      reader.onerror = () => {
+        this.spinnerService.hide();
+        alert('Could not read the changes file.');
+      };
+      reader.readAsText(file);
+    };
+    input.click();
+  }
+
+  private parseIntradayChanges(content: string): any[] {
+    const lines = content.split(/\r?\n/).filter(line => line.trim().length > 0);
+    if (lines.length < 1 || !lines[0].startsWith('"timestamp"')) {
+      throw new Error('The file does not contain a valid intraday changes header.');
+    }
+    return lines.slice(1).map(line => {
+      const fields = this.normalizeIntradayFields(this.parseCsvLine(line));
+      if (fields.length !== 21) {
+        throw new Error('A changes row must contain 21 columns.');
+      }
+      return {
+        action: fields[1], employeeId: fields[2], newName: fields[4], newPosition: fields[6],
+        newExtn: fields[8], newSalary: fields[10], newStartDate: fields[12], newOffice: fields[14],
+        newHasManagerRights: fields[16], newManagerId: fields[18]
+      };
+    });
+  }
+
+  private parseCsvLine(line: string): string[] {
+    const fields: string[] = [];
+    let field = '';
+    let quoted = false;
+    for (let index = 0; index < line.length; index++) {
+      const character = line[index];
+      if (character === '"' && line[index + 1] === '"' && quoted) {
+        field += '"';
+        index++;
+      } else if (character === '"') {
+        quoted = !quoted;
+      } else if (character === ',' && !quoted) {
+        fields.push(field);
+        field = '';
+      } else {
+        field += character;
+      }
+    }
+    fields.push(field);
+    return fields;
+  }
+
+  private sortChangesParentFirst(changes: any[]): any[] {
+    const byId = new Map(changes.map(change => [change.id, change]));
+    const depth = (change: any, path = new Set<string>()): number => {
+      if (!change.managerId || !byId.has(change.managerId) || path.has(change.id)) {
+        return 0;
+      }
+      return depth(byId.get(change.managerId), new Set(path).add(change.id)) + 1;
+    };
+    return [...changes].sort((left, right) => depth(left) - depth(right));
   }
 
   private getManagerId(employee: Employee): string | null {

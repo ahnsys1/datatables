@@ -3,6 +3,9 @@ package com.angular.backend.employees;
 import java.util.List;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
+import java.util.HashSet;
+import java.util.Objects;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -88,6 +91,52 @@ public class EmployeeService {
         List<EmployeeJPA> employees = employeeRepository.findAllWithManagers();
         log.info("Found {} employees with manager data", employees.size());
         return employees;
+    }
+
+    public String readIntradayChanges() throws java.io.IOException {
+        return employeeCsvExportService.readIntradayChanges();
+    }
+
+    public List<EmployeeJPA> restoreEmployees(List<EmployeeRestoreRequest> requests) {
+        Map<String, EmployeeRestoreRequest> byId = new HashMap<>();
+        for (EmployeeRestoreRequest request : requests) {
+            if (request == null || request.id() == null || request.id().isBlank()
+                    || byId.put(request.id(), request) != null) {
+                throw new IllegalArgumentException("Restore data contains a missing or duplicate employee ID.");
+            }
+        }
+        for (EmployeeRestoreRequest request : requests) {
+            if (Objects.equals(request.id(), request.managerId())) {
+                throw new IllegalArgumentException("An employee cannot be their own manager.");
+            }
+            if (request.managerId() != null && !request.managerId().isBlank()
+                    && !byId.containsKey(request.managerId())) {
+                throw new IllegalArgumentException("Restore data references a missing manager ID: " + request.managerId());
+            }
+            validateRestorePath(request, byId, new HashSet<>());
+        }
+        for (EmployeeRestoreRequest request : requests) {
+            employeeRepository.restoreEmployee(request.id(), request.name(), request.position(), request.extn(),
+                    request.salary(), request.start_date(), request.office(), request.hasManagerRights());
+        }
+        for (EmployeeRestoreRequest request : requests) {
+            if (request.managerId() != null && !request.managerId().isBlank()) {
+                employeeRepository.restoreEmployeeManager(request.id(), request.managerId());
+            }
+        }
+        return employeeRepository.findAllWithManagers();
+    }
+
+    private void validateRestorePath(EmployeeRestoreRequest request,
+            Map<String, EmployeeRestoreRequest> byId, Set<String> path) {
+        if (request.managerId() == null || request.managerId().isBlank()) {
+            return;
+        }
+        if (!path.add(request.id())) {
+            throw new IllegalArgumentException("Restore data contains a hierarchy cycle.");
+        }
+        validateRestorePath(byId.get(request.managerId()), byId, path);
+        path.remove(request.id());
     }
 
     public EmployeeJPA getEmployeeById(String id) {

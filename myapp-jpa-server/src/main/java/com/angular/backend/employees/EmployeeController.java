@@ -5,6 +5,8 @@ import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -55,6 +57,12 @@ public class EmployeeController {
         return new ResponseEntity<>(newEmployee, HttpStatus.CREATED);
     }
 
+    @Operation(summary = "Restore employees with their original IDs")
+    @PostMapping("/restore")
+    public ResponseEntity<List<EmployeeJPA>> restoreEmployees(@RequestBody List<EmployeeRestoreRequest> employees) {
+        return ResponseEntity.ok(employeeService.restoreEmployees(employees));
+    }
+
     @Operation(summary = "Get all employees", description = "Returns a list of all employees. Manager information is not guaranteed to be present.")
     @ApiResponses(value = {
         @ApiResponse(responseCode = "200", description = "Successfully retrieved list",
@@ -65,6 +73,19 @@ public class EmployeeController {
     public ResponseEntity<Iterable<EmployeeJPA>> getAllEmployees() {
         List<EmployeeJPA> allEmployees = employeeService.getAllEmployees();
         return new ResponseEntity<>(allEmployees, HttpStatus.OK);
+    }
+
+    @Operation(summary = "Export intraday employee changes")
+    @GetMapping(value = "/changes", produces = "text/csv")
+    public ResponseEntity<String> exportIntradayChanges() {
+        try {
+            return ResponseEntity.ok()
+                    .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=intra_day_changes.csv")
+                    .contentType(MediaType.parseMediaType("text/csv"))
+                    .body(employeeService.readIntradayChanges());
+        } catch (java.io.IOException exception) {
+            return ResponseEntity.internalServerError().build();
+        }
     }
 
     @Operation(summary = "Get an employee by ID, including manager details", description = "Fetches a single employee by their ID, with their manager object included.")

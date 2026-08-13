@@ -6,9 +6,12 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.time.LocalDateTime;
+import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Comparator;
+import java.util.stream.Stream;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,7 +24,7 @@ public class EmployeeCsvExportService {
 
     private static final Logger log = LoggerFactory.getLogger(EmployeeCsvExportService.class);
     private static final DateTimeFormatter TIMESTAMP_FORMAT = DateTimeFormatter.ISO_LOCAL_DATE_TIME;
-    private static final String CHANGE_TITLE = "Intra-day employee changes";
+    private static final String LEGACY_CHANGE_TITLE = "Intra-day employee changes";
     private static final String[] CHANGE_HEADER = {
             "timestamp", "action", "employee_id", "old_name", "new_name", "old_position", "new_position",
             "old_extn", "new_extn", "old_salary", "new_salary", "old_start_date", "new_start_date",
@@ -61,6 +64,89 @@ public class EmployeeCsvExportService {
         appendLine(file, row.toString());
     }
 
+    public synchronized String readIntradayChanges() throws IOException {
+        if (!Files.exists(exportDirectory)) {
+            return joinCsv(List.of(CHANGE_HEADER)) + '\n';
+        }
+
+        String baseName = changesFileName;
+        int extensionIndex = baseName.lastIndexOf('.');
+        String archivePrefix = extensionIndex > 0 ? baseName.substring(0, extensionIndex) + "_" : baseName + "_";
+        try (Stream<Path> files = Files.list(exportDirectory)) {
+            List<Path> changeFiles = files
+                    .filter(Files::isRegularFile)
+                    .filter(path -> path.getFileName().toString().equals(baseName)
+                            || path.getFileName().toString().startsWith(archivePrefix))
+                    .sorted(Comparator.comparing(path -> path.getFileName().toString()))
+                    .toList();
+            StringBuilder content = new StringBuilder(joinCsv(List.of(CHANGE_HEADER))).append('\n');
+            for (Path changeFile : changeFiles) {
+                List<String> lines = Files.readAllLines(changeFile, StandardCharsets.UTF_8);
+                for (String line : lines) {
+                    if (!line.isBlank() && !line.equals(LEGACY_CHANGE_TITLE)
+                            && !line.equals(joinCsv(List.of(CHANGE_HEADER)))) {
+                        content.append(normalizeLegacyChangeLine(line)).append('\n');
+                    }
+                }
+            }
+            return content.toString();
+        }
+    }
+
+    private String normalizeLegacyChangeLine(String line) {
+        List<String> fields = parseCsvLine(line);
+        if ("UPDATE".equals(fields.get(1)) && fields.size() == CHANGE_HEADER.length + 1) {
+            List<String> normalized = new java.util.ArrayList<>(fields.subList(0, 3));
+            for (int index = 0; index < 9; index++) {
+                normalized.add(fields.get(3 + index));
+                normalized.add(fields.get(13 + index));
+            }
+            return joinCsv(normalized);
+        }
+        if ("CREATE".equals(fields.get(1)) && fields.size() >= CHANGE_HEADER.length) {
+            int employeeIdIndex = -1;
+            for (int index = 2; index < fields.size(); index++) {
+                if (!fields.get(index).isBlank()) {
+                    employeeIdIndex = index;
+                    break;
+                }
+            }
+            if (employeeIdIndex > 2) {
+                List<String> normalized = new java.util.ArrayList<>(fields.subList(0, 2));
+                normalized.add(fields.get(employeeIdIndex));
+                List<String> newFields = fields.subList(employeeIdIndex + 1, fields.size());
+                for (int index = 0; index < 9; index++) {
+                    normalized.add("");
+                    normalized.add(index < newFields.size() ? newFields.get(index) : "");
+                }
+                return joinCsv(normalized);
+            }
+        }
+        return line;
+    }
+
+    private List<String> parseCsvLine(String line) {
+        List<String> fields = new java.util.ArrayList<>();
+        StringBuilder field = new StringBuilder();
+        boolean quoted = false;
+        for (int index = 0; index < line.length(); index++) {
+            char character = line.charAt(index);
+            if (character == '"' && index + 1 < line.length() && line.charAt(index + 1) == '"' && quoted) {
+                field.append('"');
+                index++;
+            } else if (character == '"') {
+                quoted = !quoted;
+            } else if (character == ',' && !quoted) {
+                fields.add(field.toString());
+                field.setLength(0);
+            } else {
+                field.append(character);
+            }
+        }
+        fields.add(field.toString());
+        return fields;
+    }
+
     @Scheduled(cron = "${app.employee-export.cron:0 59 23 * * *}", zone = "${app.employee-export.time-zone:Europe/Prague}")
     public synchronized void exportCompleteEmployees() {
         Path file = exportDirectory.resolve(completeEmployeesFileName);
@@ -74,17 +160,41 @@ public class EmployeeCsvExportService {
             Files.writeString(file, content.toString(), StandardCharsets.UTF_8,
                     StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING, StandardOpenOption.WRITE);
             log.info("Exported {} employees to {}", employeeRepository.count(), file);
+            archiveChangesFile(LocalDateTime.now(zoneId).toLocalDate());
         } catch (IOException exception) {
             log.error("Could not write complete employee export to {}", file, exception);
         }
+    }
+
+    private void archiveChangesFile(LocalDate exportDate) throws IOException {
+        Path changesFile = exportDirectory.resolve(changesFileName);
+        if (!Files.exists(changesFile) || Files.size(changesFile) == 0) {
+            return;
+        }
+        appendChangeFileHeaderIfNeeded(changesFile);
+        String fileName = changesFile.getFileName().toString();
+        int extensionIndex = fileName.lastIndexOf('.');
+        String archivedName = extensionIndex > 0
+                ? fileName.substring(0, extensionIndex) + '_' + exportDate + fileName.substring(extensionIndex)
+                : fileName + '_' + exportDate;
+        Path archivedFile = changesFile.resolveSibling(archivedName);
+        Files.move(changesFile, archivedFile, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+        log.info("Archived employee changes to {}", archivedFile);
     }
 
     private void appendChangeFileHeaderIfNeeded(Path file) {
         try {
             Files.createDirectories(exportDirectory);
             if (!Files.exists(file) || Files.size(file) == 0) {
-                Files.writeString(file, CHANGE_TITLE + '\n' + joinCsv(List.of(CHANGE_HEADER)) + '\n', StandardCharsets.UTF_8,
+                Files.writeString(file, joinCsv(List.of(CHANGE_HEADER)) + '\n', StandardCharsets.UTF_8,
                         StandardOpenOption.CREATE, StandardOpenOption.APPEND);
+            } else {
+                String content = Files.readString(file, StandardCharsets.UTF_8);
+                String legacyPrefix = LEGACY_CHANGE_TITLE + '\n';
+                if (content.startsWith(legacyPrefix)) {
+                    Files.writeString(file, content.substring(legacyPrefix.length()), StandardCharsets.UTF_8,
+                            StandardOpenOption.TRUNCATE_EXISTING, StandardOpenOption.WRITE);
+                }
             }
         } catch (IOException exception) {
             throw new IllegalStateException("Could not initialize employee changes file " + file, exception);
@@ -101,23 +211,23 @@ public class EmployeeCsvExportService {
     }
 
     private void appendEmployeePair(StringBuilder row, EmployeeJPA oldEmployee, EmployeeJPA newEmployee) {
-        appendEmployeeFields(row, oldEmployee);
-        appendEmployeeFields(row, newEmployee);
+        EmployeeJPA employeeWithId = newEmployee != null ? newEmployee : oldEmployee;
+        row.append(',').append(csv(employeeWithId == null ? null : employeeWithId.getId()));
+        appendPairField(row, oldEmployee == null ? null : oldEmployee.getName(), newEmployee == null ? null : newEmployee.getName());
+        appendPairField(row, oldEmployee == null ? null : oldEmployee.getPosition(), newEmployee == null ? null : newEmployee.getPosition());
+        appendPairField(row, oldEmployee == null ? null : oldEmployee.getExtn(), newEmployee == null ? null : newEmployee.getExtn());
+        appendPairField(row, oldEmployee == null ? null : oldEmployee.getSalary(), newEmployee == null ? null : newEmployee.getSalary());
+        appendPairField(row, oldEmployee == null ? null : oldEmployee.getStart_date(), newEmployee == null ? null : newEmployee.getStart_date());
+        appendPairField(row, oldEmployee == null ? null : oldEmployee.getOffice(), newEmployee == null ? null : newEmployee.getOffice());
+        appendPairField(row, oldEmployee == null ? null : oldEmployee.isHasManagerRights(), newEmployee == null ? null : newEmployee.isHasManagerRights());
+        appendPairField(row, oldEmployee == null || oldEmployee.getManager() == null ? null : oldEmployee.getManager().getId(),
+                newEmployee == null || newEmployee.getManager() == null ? null : newEmployee.getManager().getId());
+        appendPairField(row, oldEmployee == null || oldEmployee.getManager() == null ? null : oldEmployee.getManager().getName(),
+                newEmployee == null || newEmployee.getManager() == null ? null : newEmployee.getManager().getName());
     }
 
-    private void appendEmployeeFields(StringBuilder row, EmployeeJPA employee) {
-        if (employee == null) {
-            for (int index = 0; index < 10; index++) {
-                row.append(',');
-            }
-            return;
-        }
-        row.append(',').append(csv(employee.getId())).append(',').append(csv(employee.getName()))
-                .append(',').append(csv(employee.getPosition())).append(',').append(csv(employee.getExtn()))
-                .append(',').append(csv(employee.getSalary())).append(',').append(csv(employee.getStart_date()))
-                .append(',').append(csv(employee.getOffice())).append(',').append(employee.isHasManagerRights())
-                .append(',').append(csv(employee.getManager() == null ? null : employee.getManager().getId()))
-                .append(',').append(csv(employee.getManager() == null ? null : employee.getManager().getName()));
+    private void appendPairField(StringBuilder row, Object oldValue, Object newValue) {
+        row.append(',').append(csv(oldValue)).append(',').append(csv(newValue));
     }
 
     private String employeeRow(EmployeeJPA employee) {

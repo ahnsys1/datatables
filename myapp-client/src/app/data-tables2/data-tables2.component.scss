@@ -23,3 +23,14 @@ td {
     align-items: center;
     z-index: 9999;
 }
+
+.dt-layout-cell.dt-layout-end {
+    display: flex;
+    justify-content: flex-end;
+}
+
+.dt-layout-cell.dt-layout-end .dt-buttons {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.35rem;
+}

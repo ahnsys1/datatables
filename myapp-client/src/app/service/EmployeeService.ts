@@ -36,6 +36,14 @@ export class EmployeeService {
     return this.http.get<Employee[]>(`${this.baseUrl}/employees/with-managers`);
   }
 
+  getIntradayChanges(): Observable<Blob> {
+    return this.http.get(`${this.baseUrl}/employees/changes`, { responseType: 'blob' });
+  }
+
+  restoreEmployees(employees: unknown[]): Observable<Employee[]> {
+    return this.http.post<Employee[]>(`${this.baseUrl}/employees/restore`, employees);
+  }
+
   getEmployeeWithManager(id: string): Observable<Employee> {
     return this.http.get<Employee>(`${this.baseUrl}/employees/with-manager/${id}`);
   }
