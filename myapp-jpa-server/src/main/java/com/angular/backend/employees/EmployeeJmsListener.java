@@ -13,19 +13,9 @@ import org.springframework.stereotype.Component;
 @Component
 public class EmployeeJmsListener {
 
-    @JmsListener(destination = RabbitMQConfig.NEW_EMPLOYEE_QUEUE, containerFactory = "employeeJmsListenerContainerFactory")
-    public void onEmployeeCreated(Message message) throws JMSException {
-        printEvent("employee.new", message);
-    }
-
-    @JmsListener(destination = RabbitMQConfig.UPDATED_EMPLOYEE_QUEUE, containerFactory = "employeeJmsListenerContainerFactory")
-    public void onEmployeeUpdated(Message message) throws JMSException {
-        printEvent("employee.updated", message);
-    }
-
-    @JmsListener(destination = RabbitMQConfig.DELETED_EMPLOYEE_QUEUE, containerFactory = "employeeJmsListenerContainerFactory")
-    public void onEmployeeDeleted(Message message) throws JMSException {
-        printEvent("employee.deleted", message);
+    @JmsListener(destination = RabbitMQConfig.EMPLOYEE_EVENTS_QUEUE, containerFactory = "employeeJmsListenerContainerFactory")
+    public void onEmployeeEvent(Message message) throws JMSException {
+        printEvent("employee event", message);
     }
 
     private void printEvent(String eventType, Message message) throws JMSException {

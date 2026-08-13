@@ -24,6 +24,7 @@ public class EmployeeCsvExportService {
 
     private static final Logger log = LoggerFactory.getLogger(EmployeeCsvExportService.class);
     private static final DateTimeFormatter TIMESTAMP_FORMAT = DateTimeFormatter.ISO_LOCAL_DATE_TIME;
+    private static final DateTimeFormatter ARCHIVE_DATE_FORMAT = DateTimeFormatter.ofPattern("dd-MM");
     private static final String LEGACY_CHANGE_TITLE = "Intra-day employee changes";
     private static final String[] CHANGE_HEADER = {
             "timestamp", "action", "employee_id", "old_name", "new_name", "old_position", "new_position",
@@ -174,9 +175,10 @@ public class EmployeeCsvExportService {
         appendChangeFileHeaderIfNeeded(changesFile);
         String fileName = changesFile.getFileName().toString();
         int extensionIndex = fileName.lastIndexOf('.');
+        String archiveSuffix = exportDate.format(ARCHIVE_DATE_FORMAT);
         String archivedName = extensionIndex > 0
-                ? fileName.substring(0, extensionIndex) + '_' + exportDate + fileName.substring(extensionIndex)
-                : fileName + '_' + exportDate;
+            ? fileName.substring(0, extensionIndex) + '_' + archiveSuffix + fileName.substring(extensionIndex)
+            : fileName + '_' + archiveSuffix;
         Path archivedFile = changesFile.resolveSibling(archivedName);
         Files.move(changesFile, archivedFile, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
         log.info("Archived employee changes to {}", archivedFile);
@@ -192,13 +194,25 @@ public class EmployeeCsvExportService {
                 String content = Files.readString(file, StandardCharsets.UTF_8);
                 String legacyPrefix = LEGACY_CHANGE_TITLE + '\n';
                 if (content.startsWith(legacyPrefix)) {
-                    Files.writeString(file, content.substring(legacyPrefix.length()), StandardCharsets.UTF_8,
-                            StandardOpenOption.TRUNCATE_EXISTING, StandardOpenOption.WRITE);
+                    content = content.substring(legacyPrefix.length());
                 }
+                Files.writeString(file, normalizeChangeFile(content), StandardCharsets.UTF_8,
+                        StandardOpenOption.TRUNCATE_EXISTING, StandardOpenOption.WRITE);
             }
         } catch (IOException exception) {
             throw new IllegalStateException("Could not initialize employee changes file " + file, exception);
         }
+    }
+
+    private String normalizeChangeFile(String content) {
+        String header = joinCsv(List.of(CHANGE_HEADER));
+        StringBuilder normalized = new StringBuilder(header).append('\n');
+        for (String line : content.split("\\R")) {
+            if (!line.isBlank() && !line.equals(header) && !line.equals(LEGACY_CHANGE_TITLE)) {
+                normalized.append(normalizeLegacyChangeLine(line)).append('\n');
+            }
+        }
+        return normalized.toString();
     }
 
     private void appendLine(Path file, String line) {

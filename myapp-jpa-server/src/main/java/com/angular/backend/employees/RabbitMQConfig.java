@@ -14,13 +14,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 @Configuration
 public class RabbitMQConfig {
 
-    // A constant for the queue name, used by both producer (EmployeeService) and this config
-    public static final String NEW_EMPLOYEE_QUEUE = "new-employee-queue";
-
-    // A constant for the new queue for updated employees
-    public static final String UPDATED_EMPLOYEE_QUEUE = "updated-employee-queue";
-
-    public static final String DELETED_EMPLOYEE_QUEUE = "deleted-employee-queue";
+    public static final String EMPLOYEE_EVENTS_QUEUE = "employee-events-queue";
 
     // A constant for the exchange name
     public static final String TOPIC_EXCHANGE_NAME = "app-topic-exchange";
@@ -39,26 +33,8 @@ public class RabbitMQConfig {
      * @return A new Queue bean.
      */
     @Bean
-    Queue newEmployeeQueue() {
-        // The second argument 'true' makes the queue durable.
-        // A durable queue survives a broker restart.
-        return new Queue(NEW_EMPLOYEE_QUEUE, true);
-    }
-
-    /**
-     * Defines the queue for updated employees.
-     *
-     * @return A new Queue bean.
-     */
-    @Bean
-    Queue updatedEmployeeQueue() {
-        // Durable queue
-        return new Queue(UPDATED_EMPLOYEE_QUEUE, true);
-    }
-
-    @Bean
-    Queue deletedEmployeeQueue() {
-        return new Queue(DELETED_EMPLOYEE_QUEUE, true);
+    Queue employeeEventsQueue() {
+        return new Queue(EMPLOYEE_EVENTS_QUEUE, true);
     }
 
     /**
@@ -82,27 +58,26 @@ public class RabbitMQConfig {
      * @return A new Binding bean.
      */
     @Bean
-    Binding bindingNew(Queue newEmployeeQueue, TopicExchange exchange) {
-        return BindingBuilder.bind(newEmployeeQueue).to(exchange).with(ROUTING_KEY_NEW);
+    Binding bindingNew(Queue employeeEventsQueue, TopicExchange exchange) {
+        return BindingBuilder.bind(employeeEventsQueue).to(exchange).with(ROUTING_KEY_NEW);
     }
 
     /**
-     * Defines the binding for the updated employee queue. This tells the
-     * exchange to send messages with the 'employee.updated' routing key to our
-     * updated-employee-queue.
+     * Defines the binding for the updated employee routing key on the shared
+     * employee events queue.
      *
-     * @param updatedEmployeeQueue The queue bean for updated employees.
+     * @param employeeEventsQueue The shared employee events queue.
      * @param exchange The exchange bean.
      * @return A new Binding bean.
      */
     @Bean
-    Binding bindingUpdated(Queue updatedEmployeeQueue, TopicExchange exchange) {
-        return BindingBuilder.bind(updatedEmployeeQueue).to(exchange).with(ROUTING_KEY_UPDATED);
+    Binding bindingUpdated(Queue employeeEventsQueue, TopicExchange exchange) {
+        return BindingBuilder.bind(employeeEventsQueue).to(exchange).with(ROUTING_KEY_UPDATED);
     }
 
     @Bean
-    Binding bindingDeleted(Queue deletedEmployeeQueue, TopicExchange exchange) {
-        return BindingBuilder.bind(deletedEmployeeQueue).to(exchange).with(ROUTING_KEY_DELETED);
+    Binding bindingDeleted(Queue employeeEventsQueue, TopicExchange exchange) {
+        return BindingBuilder.bind(employeeEventsQueue).to(exchange).with(ROUTING_KEY_DELETED);
     }
 
     /**

@@ -13,6 +13,7 @@ import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -56,6 +57,7 @@ public class EmployeeJPA {
     @JsonFormat(pattern = "yyyy-MM-dd")
     public LocalDate start_date;
     public String office;
+    @JsonProperty("hasManagerRights")
     @JsonDeserialize(using = StringToBooleanDeserializer.class)
     private boolean hasManagerRights = false;
     @ManyToOne(fetch = FetchType.LAZY)
@@ -79,14 +81,23 @@ public class EmployeeJPA {
 
         @Override
         public Boolean deserialize(JsonParser p, DeserializationContext ctxt) throws IOException {
-            String value = p.getText();
-            if ("true".equalsIgnoreCase(value)
-                    || "1".equals(value)
-                    || "yes".equalsIgnoreCase(value)) {
-                return Boolean.TRUE;
+            return switch (p.currentToken()) {
+                case VALUE_TRUE -> Boolean.TRUE;
+                case VALUE_FALSE, VALUE_NULL -> Boolean.FALSE;
+                case VALUE_NUMBER_INT -> p.getIntValue() != 0;
+                case VALUE_STRING -> parseText(p.getText());
+                default -> (Boolean) ctxt.handleUnexpectedToken(Boolean.class, p);
+            };
+        }
+
+        private Boolean parseText(String value) {
+            if (value == null) {
+                return Boolean.FALSE;
             }
-            // Treat "false", "0", null, or any other value as false.
-            return Boolean.FALSE;
+            String normalized = value.trim();
+            return "true".equalsIgnoreCase(normalized)
+                    || "1".equals(normalized)
+                    || "yes".equalsIgnoreCase(normalized);
         }
     }
 

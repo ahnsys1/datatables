@@ -25,14 +25,7 @@
     "policies": [],
     "queues": [
         {
-            "name": "new-employee-queue",
-            "vhost": "/",
-            "durable": true,
-            "auto_delete": false,
-            "arguments": {}
-        },
-        {
-            "name": "updated-employee-queue",
+            "name": "employee-events-queue",
             "vhost": "/",
             "durable": true,
             "auto_delete": false,
@@ -54,7 +47,7 @@
         {
             "source": "app-topic-exchange",
             "vhost": "/",
-            "destination": "new-employee-queue",
+            "destination": "employee-events-queue",
             "destination_type": "queue",
             "routing_key": "employee.new",
             "arguments": {}
@@ -62,9 +55,17 @@
         {
             "source": "app-topic-exchange",
             "vhost": "/",
-            "destination": "updated-employee-queue",
+            "destination": "employee-events-queue",
             "destination_type": "queue",
             "routing_key": "employee.updated",
+            "arguments": {}
+        },
+        {
+            "source": "app-topic-exchange",
+            "vhost": "/",
+            "destination": "employee-events-queue",
+            "destination_type": "queue",
+            "routing_key": "employee.deleted",
             "arguments": {}
         }
     ],
