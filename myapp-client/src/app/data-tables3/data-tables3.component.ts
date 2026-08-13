@@ -12,7 +12,8 @@ import { ConfirmationDialogComponent, ConfirmationDialogData } from '../shared/c
 import { ErrorDialogComponent, ErrorDialogData } from '../shared/error-dialog/error-dialog.component';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { TranslatePipe } from '@ngx-translate/core';
-import { forkJoin } from 'rxjs';
+import { forkJoin, from } from 'rxjs';
+import { concatMap, toArray } from 'rxjs/operators';
 import { SpinnerComponent } from '../shared/spinner/spinner.component';
 import { SpinnerService } from '../service/spinner.service';
 
@@ -98,6 +99,9 @@ export class DataTables3Component implements OnInit {
             ]
           },
           topStart: {
+            search: {
+              placeholder: 'Search employees'
+            },
             buttons: [
               {
                 text: translations['new-employee'],
@@ -441,8 +445,24 @@ export class DataTables3Component implements OnInit {
               hasManagerRights: change.newHasManagerRights.toLowerCase() === 'true',
               managerId: change.newManagerId || null
             }));
-          this.employeeService.restoreEmployees(this.sortChangesParentFirst(creates)).subscribe({
-            next: () => this.getEmployees(),
+          const deletes = this.sortChangesChildrenFirst(changes.filter(change => change.action === 'DELETE'));
+          from(deletes).pipe(
+            concatMap(change => this.employeeService.deleteEmployee(change.employeeId)),
+            toArray()
+          ).subscribe({
+            next: () => {
+              if (creates.length === 0) {
+                this.getEmployees();
+                return;
+              }
+              this.employeeService.restoreEmployees(this.sortChangesParentFirst(creates)).subscribe({
+                next: () => this.getEmployees(),
+                error: error => {
+                  this.spinnerService.hide();
+                  alert('Could not import intraday changes: ' + error.message);
+                }
+              });
+            },
             error: error => {
               this.spinnerService.hide();
               alert('Could not import intraday changes: ' + error.message);
@@ -475,7 +495,7 @@ export class DataTables3Component implements OnInit {
       return {
         action: fields[1], employeeId: fields[2], newName: fields[4], newPosition: fields[6],
         newExtn: fields[8], newSalary: fields[10], newStartDate: fields[12], newOffice: fields[14],
-        newHasManagerRights: fields[16], newManagerId: fields[18]
+        newHasManagerRights: fields[16], newManagerId: fields[18], oldManagerId: fields[17]
       };
     });
   }
@@ -505,6 +525,15 @@ export class DataTables3Component implements OnInit {
       return depth(byId.get(change.managerId), new Set(path).add(change.id)) + 1;
     };
     return [...changes].sort((left, right) => depth(left) - depth(right));
+  }
+
+  private sortChangesChildrenFirst(changes: any[]): any[] {
+    const byId = new Map(changes.map(change => [change.employeeId, change]));
+    const depth = (change: any, path = new Set<string>()): number => {
+      if (!change.oldManagerId || !byId.has(change.oldManagerId) || path.has(change.employeeId)) return 0;
+      return depth(byId.get(change.oldManagerId), new Set(path).add(change.employeeId)) + 1;
+    };
+    return [...changes].sort((left, right) => depth(right) - depth(left));
   }
 
   private getManagerId(employee: Employee): string | null {
