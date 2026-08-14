@@ -1,0 +1,105 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "java",
+            "name": "Attach to Docker Backend",
+            "request": "attach",
+            "hostName": "localhost",
+            "port": 5005
+        },
+        {
+            "type": "java",
+            "name": "Current File",
+            "request": "launch",
+            "mainClass": "${file}"
+        },
+        {
+            "type": "java",
+            "name": "ElkApplication",
+            "request": "launch",
+            "mainClass": "com.angular.elk.ElkApplication",
+            "projectName": "elk"
+        },
+        {
+            "type": "java",
+            "name": "MyCommandRunner",
+            "request": "launch",
+            "mainClass": "MyCommandRunner",
+            "projectName": "films"
+        },
+        {
+            "type": "java",
+            "name": "PasswordGenerator",
+            "request": "launch",
+            "mainClass": "PasswordGenerator",
+            "projectName": "films"
+        },
+        {
+            "type": "java",
+            "name": "SpringFileWatcher",
+            "request": "launch",
+            "mainClass": "com.peta.films.SpringFileWatcher",
+            "projectName": "films"
+        },
+        {
+            "type": "java",
+            "name": "BitOpsDemo",
+            "request": "launch",
+            "mainClass": "com.example.json.BitOpsDemo",
+            "projectName": "json"
+        },
+        {
+            "type": "java",
+            "name": "JsonApplication",
+            "request": "launch",
+            "mainClass": "com.example.json.JsonApplication",
+            "projectName": "json"
+        },
+        {
+            "type": "java",
+            "name": "JsonLoggingApp",
+            "request": "launch",
+            "mainClass": "com.example.json.JsonLoggingApp",
+            "projectName": "json"
+        },
+        {
+            "type": "java",
+            "name": "BackendApplication",
+            "request": "launch",
+            "mainClass": "com.angular.backend.BackendApplication",
+            "projectName": "myapp-jpa-server"
+        },
+        {
+            "type": "java",
+            "name": "TestMock",
+            "request": "launch",
+            "mainClass": "com.angular.backend.taskmanagement.TestMock",
+            "projectName": "myapp-jpa-server"
+        },
+        {
+            "type": "java",
+            "name": "TestStatus",
+            "request": "launch",
+            "mainClass": "com.angular.backend.taskmanagement.TestStatus",
+            "projectName": "myapp-jpa-server"
+        },
+        {
+            "type": "java",
+            "name": "PasswordVaultApp",
+            "request": "launch",
+            "mainClass": "cz.ahanys.passwordvault.PasswordVaultApp",
+            "projectName": "password-manager2"
+        },
+        {
+            "type": "java",
+            "name": "PasswordVaultApp(1)",
+            "request": "launch",
+            "mainClass": "cz.ahanys.passwordvault.PasswordVaultApp",
+            "projectName": "password-vault"
+        }
+    ]
+}
