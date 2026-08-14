@@ -444,7 +444,7 @@ export class DataTables3Component implements OnInit {
             rowCount: changes.length,
             actions: changes.map(change => change.action)
           });
-          const operations = this.orderIntradayChanges(changes);
+          const operations = changes;
           console.debug('[employee-import] Prepared import operations', {
             operations: operations.map(change => ({ action: change.action, employeeId: change.employeeId }))
           });
@@ -553,37 +553,6 @@ export class DataTables3Component implements OnInit {
     }
     fields.push(field);
     return fields;
-  }
-
-  private sortChangesParentFirst(changes: any[]): any[] {
-    const byId = new Map(changes.map(change => [change.employeeId, change]));
-    const ordered: any[] = [];
-    const visited = new Set<string>();
-    const stack = changes.filter(change => !change.managerId || !byId.has(change.managerId)).reverse();
-    while (stack.length > 0) {
-      const change = stack.pop();
-      if (!change || visited.has(change.employeeId)) continue;
-      visited.add(change.employeeId);
-      ordered.push(change);
-      stack.push(...changes.filter(candidate => candidate.managerId === change.id).reverse());
-    }
-    return [...ordered, ...changes.filter(change => !visited.has(change.employeeId))];
-  }
-
-  private orderIntradayChanges(changes: any[]): any[] {
-    const creates = this.sortChangesParentFirst(changes.filter(change => change.action === 'CREATE'));
-    const updates = changes.filter(change => change.action === 'UPDATE');
-    const deletes = this.sortChangesChildrenFirst(changes.filter(change => change.action === 'DELETE'));
-    return [...creates, ...updates, ...deletes];
-  }
-
-  private sortChangesChildrenFirst(changes: any[]): any[] {
-    const byId = new Map(changes.map(change => [change.employeeId, change]));
-    const depth = (change: any, path = new Set<string>()): number => {
-      if (!change.oldManagerId || !byId.has(change.oldManagerId) || path.has(change.employeeId)) return 0;
-      return depth(byId.get(change.oldManagerId), new Set(path).add(change.employeeId)) + 1;
-    };
-    return [...changes].sort((left, right) => depth(right) - depth(left));
   }
 
   private getManagerId(employee: Employee): string | null {

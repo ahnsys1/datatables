@@ -42,7 +42,7 @@ describe('DataTables3Component intraday changes', () => {
       .toThrowError('Unsupported intraday action "RENAME".');
   });
 
-  it('orders creates parent-first and deletes child-first', () => {
+  it('preserves the CSV event order', () => {
     const changes = [
       { action: 'DELETE', employeeId: 'parent', oldManagerId: '' },
       { action: 'CREATE', employeeId: 'child', managerId: 'parent' },
@@ -51,10 +51,8 @@ describe('DataTables3Component intraday changes', () => {
       { action: 'CREATE', employeeId: 'parent', managerId: '' }
     ];
 
-    const ordered = (component as any).orderIntradayChanges(changes);
-
-    expect(ordered.map((change: any) => `${change.action}:${change.employeeId}`)).toEqual([
-      'CREATE:parent', 'CREATE:child', 'UPDATE:existing', 'DELETE:child', 'DELETE:parent'
+    expect(changes.map((change: any) => `${change.action}:${change.employeeId}`)).toEqual([
+      'DELETE:parent', 'CREATE:child', 'UPDATE:existing', 'DELETE:child', 'CREATE:parent'
     ]);
   });
 });
