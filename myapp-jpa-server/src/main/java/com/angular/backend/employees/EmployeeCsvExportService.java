@@ -15,7 +15,6 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Stream;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -70,61 +69,15 @@ public class EmployeeCsvExportService {
     }
 
     public synchronized String readIntradayChanges() throws IOException {
-        if (!Files.exists(exportDirectory)) {
+        Path changesFile = exportDirectory.resolve(changesFileName);
+        if (!Files.exists(changesFile)) {
             return joinCsv(List.of(CHANGE_HEADER)) + '\n';
         }
 
-        String baseName = changesFileName;
-        int extensionIndex = baseName.lastIndexOf('.');
-        String archivePrefix = extensionIndex > 0 ? baseName.substring(0, extensionIndex) + "_" : baseName + "_";
-        try (Stream<Path> files = Files.list(exportDirectory)) {
-            List<Path> changeFiles = files
-                    .filter(Files::isRegularFile)
-                    .filter(path -> path.getFileName().toString().equals(baseName)
-                            || path.getFileName().toString().startsWith(archivePrefix))
-                    .sorted(Comparator.comparing(path -> path.getFileName().toString()))
-                    .toList();
-            StringBuilder content = new StringBuilder(joinCsv(List.of(CHANGE_HEADER))).append('\n');
-            Map<String, Boolean> employeePresent = new HashMap<>();
-            for (Path changeFile : changeFiles) {
-                List<String> lines = Files.readAllLines(changeFile, StandardCharsets.UTF_8);
-                for (String line : lines) {
-                    if (line.isBlank() || line.equals(LEGACY_CHANGE_TITLE)
-                            || line.equals(joinCsv(List.of(CHANGE_HEADER)))) {
-                        continue;
-                    }
-                    String normalizedLine = normalizeLegacyChangeLine(line);
-                    List<String> fields = parseCsvLine(normalizedLine);
-                    if (fields.size() < 3) {
-                        log.warn("Skipping malformed employee change line: {}", line);
-                        continue;
-                    }
-                    String action = fields.get(1);
-                    String employeeId = fields.get(2);
-                    boolean present = employeePresent.getOrDefault(employeeId, false);
-                    if ("CREATE".equals(action)) {
-                        if (present) {
-                            log.warn("Skipping duplicate CREATE for employee {}", employeeId);
-                            continue;
-                        }
-                        employeePresent.put(employeeId, true);
-                    } else if ("UPDATE".equals(action)) {
-                        if (!present) {
-                            log.warn("Skipping UPDATE for absent employee {}", employeeId);
-                            continue;
-                        }
-                    } else if ("DELETE".equals(action)) {
-                        if (!present) {
-                            log.warn("Skipping DELETE for absent employee {}", employeeId);
-                            continue;
-                        }
-                        employeePresent.put(employeeId, false);
-                    }
-                    content.append(normalizedLine).append('\n');
-                }
-            }
-            return content.toString();
-        }
+        String content = normalizeChangeFile(Files.readString(changesFile, StandardCharsets.UTF_8));
+        Files.delete(changesFile);
+        log.info("Exported and cleared employee changes from {}", changesFile);
+        return content;
     }
 
         private List<EmployeeJPA> depthFirstEmployees(List<EmployeeJPA> employees) {
