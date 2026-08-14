@@ -153,13 +153,13 @@ export class DataTables2Component implements OnInit {
 
                 // If `data` is a string, it's a manager's ID. Look it up in the map.
                 if (typeof data === 'string') {
-                  return this.employeeIdToEmployeeMap.get(data)?.name || '';
+                  return this.employeeIdToEmployeeMap.get(data)?.name || data;
                 }
 
                 // If `data` is an object, it should have a `name` property.
                 // This handles both Employee instances and plain objects from JSON.
                 if (typeof data === 'object' && data.name) {
-                  return data.name;
+                  return this.employeeIdToEmployeeMap.get(data.id)?.name || data.name;
                 }
               }
 
@@ -370,15 +370,18 @@ export class DataTables2Component implements OnInit {
   editEmployee(emp: Employee, rowToUpdate: any): void {
     this.employeeService.updateEmployee(emp).subscribe({
       next: (res: Employee) => {
-        const oldData = rowToUpdate.data() || {};
-        const newData = { ...oldData, ...res };
-
-        this.employeeIdToEmployeeMap.set(newData.id, newData);
-
-        rowToUpdate.data(newData);
-
-        // Invalidate all rows to re-run render functions (e.g., for manager names)
-        // and redraw the table without changing pagination. This is more efficient.
+        this.employeeIdToEmployeeMap.set(res.id, res);
+        this.table.rows().every(function (this: any) {
+          const rowData = this.data();
+          const managerId = rowData?.manager?.id ?? rowData?.managerId;
+          const managerName = typeof rowData?.manager === 'object'
+            ? rowData.manager?.name
+            : typeof rowData?.manager === 'string' ? rowData.manager : null;
+          if (managerId === res.id || managerName === emp.name) {
+            this.data({ ...rowData, manager: res });
+          }
+        });
+        rowToUpdate.data({ ...rowToUpdate.data(), ...res });
         this.table.rows().invalidate().draw(false);
       },
       error: (err: any) => {

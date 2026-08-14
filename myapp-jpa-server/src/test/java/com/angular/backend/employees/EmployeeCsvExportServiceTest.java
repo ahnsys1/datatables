@@ -6,6 +6,8 @@ import static org.mockito.Mockito.when;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.List;
 
 import org.junit.jupiter.api.Test;
@@ -27,6 +29,13 @@ class EmployeeCsvExportServiceTest {
 
 		service.recordChange("UPDATE", oldEmployee, employee("employee-1", "55000"));
 		service.exportCompleteEmployees();
+
+		String exportDate = LocalDate.now(ZoneId.of("Europe/Prague"))
+				.format(java.time.format.DateTimeFormatter.ofPattern("dd-MM-yyyy"));
+		assertTrue(java.nio.file.Files.exists(exportDirectory.resolve("complete_employees_" + exportDate + ".csv")));
+		assertTrue(java.nio.file.Files.readString(exportDirectory.resolve("intra_day_changes_" + exportDate + ".csv"))
+				.contains("\"50000\",\"55000\""));
+
 		service.recordChange("UPDATE", oldEmployee, newEmployee);
 
 		String changes = service.readIntradayChanges();

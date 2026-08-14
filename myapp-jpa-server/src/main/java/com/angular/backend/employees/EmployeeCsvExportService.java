@@ -26,6 +26,7 @@ public class EmployeeCsvExportService {
 
     private static final Logger log = LoggerFactory.getLogger(EmployeeCsvExportService.class);
     private static final DateTimeFormatter TIMESTAMP_FORMAT = DateTimeFormatter.ISO_LOCAL_DATE_TIME;
+    private static final DateTimeFormatter EXPORT_DATE_FORMAT = DateTimeFormatter.ofPattern("dd-MM-yyyy");
     private static final String LEGACY_CHANGE_TITLE = "Intra-day employee changes";
     private static final String[] CHANGE_HEADER = {
             "timestamp", "action", "employee_id", "old_name", "new_name", "old_position", "new_position",
@@ -170,7 +171,8 @@ public class EmployeeCsvExportService {
 
     @Scheduled(cron = "${app.employee-export.cron:0 59 23 * * *}", zone = "${app.employee-export.time-zone:Europe/Prague}")
     public synchronized void exportCompleteEmployees() {
-        Path file = exportDirectory.resolve(completeEmployeesFileName);
+        String exportDate = LocalDateTime.now(zoneId).format(EXPORT_DATE_FORMAT);
+        Path file = exportDirectory.resolve(datedFileName(completeEmployeesFileName, exportDate));
         StringBuilder content = new StringBuilder();
         content.append(joinCsv(List.of(EMPLOYEE_HEADER))).append('\n');
         for (EmployeeJPA employee : depthFirstEmployees(employeeRepository.findAllWithManagers())) {
@@ -180,18 +182,31 @@ public class EmployeeCsvExportService {
             Files.createDirectories(exportDirectory);
             Files.writeString(file, content.toString(), StandardCharsets.UTF_8,
                     StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING, StandardOpenOption.WRITE);
+            exportDailyChanges(exportDate);
             log.info("Exported {} employees to {}", employeeRepository.count(), file);
-            clearPendingChanges();
         } catch (IOException exception) {
             log.error("Could not write complete employee export to {}", file, exception);
         }
     }
 
-    private void clearPendingChanges() throws IOException {
+    private void exportDailyChanges(String exportDate) throws IOException {
         Path changesFile = exportDirectory.resolve(changesFileName);
-        if (Files.deleteIfExists(changesFile)) {
-            log.info("Cleared employee changes included in the complete export from {}", changesFile);
+        String content = Files.exists(changesFile)
+                ? normalizeChangeFile(Files.readString(changesFile, StandardCharsets.UTF_8))
+                : joinCsv(List.of(CHANGE_HEADER)) + '\n';
+        Path dailyChangesFile = exportDirectory.resolve(datedFileName(changesFileName, exportDate));
+        Files.writeString(dailyChangesFile, content, StandardCharsets.UTF_8,
+                StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING, StandardOpenOption.WRITE);
+        Files.deleteIfExists(changesFile);
+        log.info("Exported daily employee changes to {}", dailyChangesFile);
+    }
+
+    private String datedFileName(String fileName, String exportDate) {
+        int extensionIndex = fileName.lastIndexOf('.');
+        if (extensionIndex <= 0) {
+            return fileName + '_' + exportDate;
         }
+        return fileName.substring(0, extensionIndex) + '_' + exportDate + fileName.substring(extensionIndex);
     }
 
     private void appendChangeFileHeaderIfNeeded(Path file) {

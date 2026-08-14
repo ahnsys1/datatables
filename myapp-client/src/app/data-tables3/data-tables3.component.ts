@@ -211,13 +211,13 @@ export class DataTables3Component implements OnInit {
 
                 // If `data` is a string, it's a manager's ID. Look it up in the map.
                 if (typeof data === 'string') {
-                  return this.employeeIdToEmployeeMap.get(data)?.name || '';
+                  return this.employeeIdToEmployeeMap.get(data)?.name || data;
                 }
 
                 // If `data` is an object, it should have a `name` property.
                 // This handles both Employee instances and plain objects from JSON.
                 if (typeof data === 'object' && data.name) {
-                  return data.name;
+                  return this.employeeIdToEmployeeMap.get(data.id)?.name || data.name;
                 }
               }
 
@@ -285,16 +285,19 @@ export class DataTables3Component implements OnInit {
   editEmployee(emp: Employee): void {
     this.employeeService.updateEmployee(emp).subscribe({
       next: (res: Employee) => {
+        this.employeeIdToEmployeeMap.set(res.id, res);
+        this.table.rows().every(function (this: any) {
+          const rowData = this.data();
+          const managerId = rowData?.manager?.id ?? rowData?.managerId;
+          const managerName = typeof rowData?.manager === 'object'
+            ? rowData.manager?.name
+            : typeof rowData?.manager === 'string' ? rowData.manager : null;
+          if (managerId === res.id || managerName === emp.name) {
+            this.data({ ...rowData, manager: res });
+          }
+        });
         const rowToUpdate = this.table.row('.selected');
-        const oldData = rowToUpdate.data() || {}; // Safely get old data
-        const newData = { ...oldData, ...res };
-
-        // Update the map to prevent stale manager data for other rows
-        this.employeeIdToEmployeeMap.set(newData.id, newData);
-
-        rowToUpdate.data(newData);
-
-        // Invalidate all rows to re-run render functions (e.g., for manager names) and redraw.
+        rowToUpdate.data({ ...rowToUpdate.data(), ...res });
         this.table.rows().invalidate().draw(false);
       },
       error: (err: any) => {
