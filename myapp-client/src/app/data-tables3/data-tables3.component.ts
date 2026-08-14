@@ -444,7 +444,7 @@ export class DataTables3Component implements OnInit {
             rowCount: changes.length,
             actions: changes.map(change => change.action)
           });
-          const operations = changes.filter(change => ['CREATE', 'UPDATE', 'DELETE'].includes(change.action));
+          const operations = this.orderIntradayChanges(changes);
           console.debug('[employee-import] Prepared import operations', {
             operations: operations.map(change => ({ action: change.action, employeeId: change.employeeId }))
           });
@@ -526,6 +526,9 @@ export class DataTables3Component implements OnInit {
       if (fields.length !== 21) {
         throw new Error('A changes row must contain 21 columns.');
       }
+      if (!['CREATE', 'UPDATE', 'DELETE'].includes(fields[1])) {
+        throw new Error(`Unsupported intraday action "${fields[1]}".`);
+      }
       return {
         action: fields[1], employeeId: fields[2], newName: fields[4], newPosition: fields[6],
         newExtn: fields[8], newSalary: fields[10], newStartDate: fields[12], newOffice: fields[14],
@@ -553,18 +556,25 @@ export class DataTables3Component implements OnInit {
   }
 
   private sortChangesParentFirst(changes: any[]): any[] {
-    const byId = new Map(changes.map(change => [change.id, change]));
+    const byId = new Map(changes.map(change => [change.employeeId, change]));
     const ordered: any[] = [];
     const visited = new Set<string>();
     const stack = changes.filter(change => !change.managerId || !byId.has(change.managerId)).reverse();
     while (stack.length > 0) {
       const change = stack.pop();
-      if (!change || visited.has(change.id)) continue;
-      visited.add(change.id);
+      if (!change || visited.has(change.employeeId)) continue;
+      visited.add(change.employeeId);
       ordered.push(change);
       stack.push(...changes.filter(candidate => candidate.managerId === change.id).reverse());
     }
-    return [...ordered, ...changes.filter(change => !visited.has(change.id))];
+    return [...ordered, ...changes.filter(change => !visited.has(change.employeeId))];
+  }
+
+  private orderIntradayChanges(changes: any[]): any[] {
+    const creates = this.sortChangesParentFirst(changes.filter(change => change.action === 'CREATE'));
+    const updates = changes.filter(change => change.action === 'UPDATE');
+    const deletes = this.sortChangesChildrenFirst(changes.filter(change => change.action === 'DELETE'));
+    return [...creates, ...updates, ...deletes];
   }
 
   private sortChangesChildrenFirst(changes: any[]): any[] {

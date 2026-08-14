@@ -49,6 +49,18 @@ public class EmployeeRepositoryTest extends AbstractIntegrationTest {
     }
 
     @Test
+    void testEmployeeNamesMustBeUnique() {
+        EmployeeJPA firstEmployee = new EmployeeJPA();
+        firstEmployee.setName("Unique Name");
+        employeeRepository.saveAndFlush(firstEmployee);
+
+        EmployeeJPA duplicateEmployee = new EmployeeJPA();
+        duplicateEmployee.setName("Unique Name");
+
+        assertThrows(RuntimeException.class, () -> employeeRepository.saveAndFlush(duplicateEmployee));
+    }
+
+    @Test
     void testDeleteEmployee() {
         EmployeeJPA employee = new EmployeeJPA();
         employee.setName("Delete Me");

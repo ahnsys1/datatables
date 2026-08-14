@@ -25,11 +25,12 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import jakarta.persistence.Transient;
+import jakarta.persistence.UniqueConstraint;
 import lombok.Data;
 
 @Data
 @Entity
-@Table(name = "employees")
+@Table(name = "employees", uniqueConstraints = @UniqueConstraint(name = "uk_employees_name", columnNames = "name"))
 public class EmployeeJPA {
 
     public EmployeeJPA(String id, String name, String position,
@@ -49,6 +50,7 @@ public class EmployeeJPA {
     @UuidGenerator
     @GeneratedValue(strategy = GenerationType.UUID)
     public String id;
+    @Column(unique = true)
     public String name;
     public String position;
     public String extn;
