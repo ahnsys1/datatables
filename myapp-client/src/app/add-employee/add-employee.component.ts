@@ -96,6 +96,11 @@ export class AddEmployeeComponent implements OnInit, AfterViewInit, OnDestroy {
     this.employeeObject.managerId = null;
     this.cdr.markForCheck();
   }
+
+  openStartDatePicker(): void {
+    this.startDatePicker?.open();
+  }
+
   ngAfterViewInit(): void {
     const input = this.startDateInputRef?.nativeElement;
     if (input == null) {
@@ -109,6 +114,7 @@ export class AddEmployeeComponent implements OnInit, AfterViewInit, OnDestroy {
       dateFormat: 'd.m.Y',
       allowInput: true,
       disableMobile: true,
+      static: true,
       defaultDate: this.parseStoredStartDate(this.employeeObject.start_date) ?? undefined,
       onChange: selectedDates => {
         const selectedDate = selectedDates[0];
@@ -117,6 +123,9 @@ export class AddEmployeeComponent implements OnInit, AfterViewInit, OnDestroy {
         }
 
         this.applyStartDate(selectedDate);
+      },
+      onOpen: (_selectedDates, _dateStr, instance) => {
+        instance.calendarContainer.style.zIndex = '10000';
       },
       onClose: (_selectedDates, dateStr) => {
         const normalized = dateStr.trim();

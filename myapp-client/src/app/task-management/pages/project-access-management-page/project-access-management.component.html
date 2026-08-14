@@ -69,7 +69,7 @@
               <button
                 type="button"
                 class="btn btn-sm btn-outline-danger admin-user-delete"
-                [disabled]="adminSaving || currentUser?.id === user.id"
+                [disabled]="adminSaving || currentUser.id === user.id"
                 (click)="deleteAdminUser(user)">
                 Smazat
               </button>

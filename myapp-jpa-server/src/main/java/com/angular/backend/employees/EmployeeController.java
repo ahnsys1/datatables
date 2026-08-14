@@ -59,8 +59,10 @@ public class EmployeeController {
 
     @Operation(summary = "Restore employees with their original IDs")
     @PostMapping("/restore")
-    public ResponseEntity<List<EmployeeJPA>> restoreEmployees(@RequestBody List<EmployeeRestoreRequest> employees) {
-        return ResponseEntity.ok(employeeService.restoreEmployees(employees));
+    public ResponseEntity<List<EmployeeJPA>> restoreEmployees(
+            @RequestBody List<EmployeeRestoreRequest> employees,
+            @RequestParam(defaultValue = "true") boolean recordChanges) {
+        return ResponseEntity.ok(employeeService.restoreEmployees(employees, recordChanges));
     }
 
     @Operation(summary = "Get all employees", description = "Returns a list of all employees. Manager information is not guaranteed to be present.")
@@ -194,8 +196,9 @@ public class EmployeeController {
     public ResponseEntity<EmployeeJPA> updateEmployee(
             @Parameter(description = "ID of the employee to update") @PathVariable String id,
             @RequestBody EmployeeJPA employee,
-            @Parameter(description = "ID of the new manager. Optional. Send 'null' or blank to remove manager.") @RequestParam(required = false) String managerId) {
-        EmployeeJPA updatedEmployee = employeeService.updateEmployee(id, employee, managerId);
+            @Parameter(description = "ID of the new manager. Optional. Send 'null' or blank to remove manager.") @RequestParam(required = false) String managerId,
+            @RequestParam(defaultValue = "true") boolean recordChanges) {
+        EmployeeJPA updatedEmployee = employeeService.updateEmployee(id, employee, managerId, recordChanges);
         if (updatedEmployee == null) {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
@@ -232,8 +235,9 @@ public class EmployeeController {
     })
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteEmployee(
-            @Parameter(description = "ID of the employee to delete") @PathVariable String id) {
-        boolean deleted = employeeService.deleteEmployee(id);
+            @Parameter(description = "ID of the employee to delete") @PathVariable String id,
+            @RequestParam(defaultValue = "true") boolean recordChanges) {
+        boolean deleted = employeeService.deleteEmployee(id, recordChanges);
         if (!deleted) {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }

@@ -1,5 +1,5 @@
 import { provideHttpClient, withInterceptors } from '@angular/common/http';
-import { APP_INITIALIZER, ApplicationConfig, provideExperimentalZonelessChangeDetection } from '@angular/core';
+import { APP_INITIALIZER, ApplicationConfig, provideZonelessChangeDetection } from '@angular/core';
 import { provideAnimations } from '@angular/platform-browser/animations';
 import { provideRouter } from '@angular/router';
 import { provideTranslateService } from "@ngx-translate/core";
@@ -24,7 +24,7 @@ export const appConfig: ApplicationConfig = {
     ),
     provideOAuthClient(),
     provideAnimations(),
-    provideExperimentalZonelessChangeDetection(),
+    provideZonelessChangeDetection(),
     {
       provide: APP_INITIALIZER,
       multi: true,

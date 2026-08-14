@@ -1,7 +1,7 @@
 # Multistage Dockerfile: build Angular app in Node and serve with Nginx
 
 # --- Build stage ---
-FROM node:20-alpine AS build-stage
+FROM node:24-alpine AS build-stage
 
 WORKDIR /app
 

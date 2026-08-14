@@ -82,6 +82,10 @@ public class EmployeeServiceTest extends AbstractIntegrationTest {
         EmployeeJPA employee = new EmployeeJPA();
         employee.setName("New Employee");
         employee.setPosition("Tester");
+        employee.setOffice("IT");
+        employee.setExtn("E789");
+        employee.setSalary("90000");
+        employee.setStart_date(LocalDate.parse("2023-03-03", fmt));
 
         // When
         // The createEmployee method now requires a managerId, which can be null.
@@ -99,6 +103,11 @@ public class EmployeeServiceTest extends AbstractIntegrationTest {
         // Given
         EmployeeJPA employee = new EmployeeJPA();
         employee.setName("Find Me");
+        employee.setPosition("Tester");
+        employee.setOffice("IT");
+        employee.setExtn("E790");
+        employee.setSalary("90000");
+        employee.setStart_date(LocalDate.parse("2023-03-03", fmt));
         EmployeeJPA savedEmployee = employeeRepository.save(employee);
 
         // When
@@ -124,11 +133,20 @@ public class EmployeeServiceTest extends AbstractIntegrationTest {
         // Given
         EmployeeJPA existingEmployee = new EmployeeJPA();
         existingEmployee.setName("Old Name");
+        existingEmployee.setPosition("Developer");
+        existingEmployee.setExtn("E791");
+        existingEmployee.setSalary("90000");
+        existingEmployee.setStart_date(LocalDate.parse("2023-03-03", fmt));
+        existingEmployee.setOffice("IT");
         existingEmployee = employeeRepository.save(existingEmployee);
 
         EmployeeJPA employeeDetailsToUpdate = new EmployeeJPA();
         employeeDetailsToUpdate.setName("New Name");
         employeeDetailsToUpdate.setPosition("Manager");
+        employeeDetailsToUpdate.setExtn("E792");
+        employeeDetailsToUpdate.setSalary("100000");
+        employeeDetailsToUpdate.setStart_date(LocalDate.parse("2023-04-04", fmt));
+        employeeDetailsToUpdate.setOffice("Management");
 
         // When
         EmployeeJPA updatedEmployee = employeeService.updateEmployee(existingEmployee.getId(), employeeDetailsToUpdate, null);

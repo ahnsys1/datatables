@@ -119,7 +119,7 @@ export class BrokerComponent implements OnInit, AfterViewInit, OnDestroy {
     requestAnimationFrame(() => this.onResize());
   }
 
-  @HostListener('window:resize', ['$event'])
+  @HostListener('window:resize')
   onResize(): void {
     if (this.chartStage?.nativeElement) {
       const { clientWidth, clientHeight } = this.chartStage.nativeElement as HTMLElement;

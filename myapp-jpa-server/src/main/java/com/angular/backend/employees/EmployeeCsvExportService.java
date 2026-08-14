@@ -9,8 +9,12 @@ import java.time.LocalDateTime;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
-import java.util.List;
+import java.util.ArrayDeque;
+import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.stream.Stream;
 
 import org.slf4j.Logger;
@@ -81,18 +85,76 @@ public class EmployeeCsvExportService {
                     .sorted(Comparator.comparing(path -> path.getFileName().toString()))
                     .toList();
             StringBuilder content = new StringBuilder(joinCsv(List.of(CHANGE_HEADER))).append('\n');
+            Map<String, Boolean> employeePresent = new HashMap<>();
             for (Path changeFile : changeFiles) {
                 List<String> lines = Files.readAllLines(changeFile, StandardCharsets.UTF_8);
                 for (String line : lines) {
-                    if (!line.isBlank() && !line.equals(LEGACY_CHANGE_TITLE)
-                            && !line.equals(joinCsv(List.of(CHANGE_HEADER)))) {
-                        content.append(normalizeLegacyChangeLine(line)).append('\n');
+                    if (line.isBlank() || line.equals(LEGACY_CHANGE_TITLE)
+                            || line.equals(joinCsv(List.of(CHANGE_HEADER)))) {
+                        continue;
                     }
+                    String normalizedLine = normalizeLegacyChangeLine(line);
+                    List<String> fields = parseCsvLine(normalizedLine);
+                    if (fields.size() < 3) {
+                        log.warn("Skipping malformed employee change line: {}", line);
+                        continue;
+                    }
+                    String action = fields.get(1);
+                    String employeeId = fields.get(2);
+                    boolean present = employeePresent.getOrDefault(employeeId, false);
+                    if ("CREATE".equals(action)) {
+                        if (present) {
+                            log.warn("Skipping duplicate CREATE for employee {}", employeeId);
+                            continue;
+                        }
+                        employeePresent.put(employeeId, true);
+                    } else if ("UPDATE".equals(action)) {
+                        if (!present) {
+                            log.warn("Skipping UPDATE for absent employee {}", employeeId);
+                            continue;
+                        }
+                    } else if ("DELETE".equals(action)) {
+                        if (!present) {
+                            log.warn("Skipping DELETE for absent employee {}", employeeId);
+                            continue;
+                        }
+                        employeePresent.put(employeeId, false);
+                    }
+                    content.append(normalizedLine).append('\n');
                 }
             }
             return content.toString();
         }
     }
+
+        private List<EmployeeJPA> depthFirstEmployees(List<EmployeeJPA> employees) {
+            Map<String, List<EmployeeJPA>> childrenByManager = new HashMap<>();
+            List<EmployeeJPA> roots = new ArrayList<>();
+            for (EmployeeJPA employee : employees) {
+                String managerId = employee.getManager() == null ? null : employee.getManager().getId();
+                if (managerId == null || employees.stream().noneMatch(candidate -> candidate.getId().equals(managerId))) {
+                    roots.add(employee);
+                } else {
+                    childrenByManager.computeIfAbsent(managerId, ignored -> new ArrayList<>()).add(employee);
+                }
+            }
+            roots.sort(Comparator.comparing(EmployeeJPA::getId));
+            childrenByManager.values().forEach(children -> children.sort(Comparator.comparing(EmployeeJPA::getId)));
+            List<EmployeeJPA> ordered = new ArrayList<>();
+            ArrayDeque<EmployeeJPA> stack = new ArrayDeque<>();
+            for (int index = roots.size() - 1; index >= 0; index--) {
+                stack.push(roots.get(index));
+            }
+            while (!stack.isEmpty()) {
+                EmployeeJPA employee = stack.pop();
+                ordered.add(employee);
+                List<EmployeeJPA> children = childrenByManager.getOrDefault(employee.getId(), List.of());
+                for (int index = children.size() - 1; index >= 0; index--) {
+                    stack.push(children.get(index));
+                }
+            }
+            return ordered;
+        }
 
     private String normalizeLegacyChangeLine(String line) {
         List<String> fields = parseCsvLine(line);
@@ -153,7 +215,7 @@ public class EmployeeCsvExportService {
         Path file = exportDirectory.resolve(completeEmployeesFileName);
         StringBuilder content = new StringBuilder();
         content.append(joinCsv(List.of(EMPLOYEE_HEADER))).append('\n');
-        for (EmployeeJPA employee : employeeRepository.findAllWithManagers()) {
+        for (EmployeeJPA employee : depthFirstEmployees(employeeRepository.findAllWithManagers())) {
             content.append(employeeRow(employee)).append('\n');
         }
         try {

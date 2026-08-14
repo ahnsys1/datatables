@@ -51,7 +51,10 @@ public class EmployeeJPAControllerTest extends AbstractIntegrationTest {
         EmployeeJPA employee = new EmployeeJPA();
         employee.setName("John Doe");
         employee.setPosition("Developer");
+        employee.setExtn("1234");
+        employee.setSalary("80000");
         employee.setStart_date(LocalDate.of(2023, 1, 15));
+        employee.setOffice("Prague");
 
         mockMvc.perform(post("/api/employees")
                 .with(bearerToken())
@@ -61,6 +64,23 @@ public class EmployeeJPAControllerTest extends AbstractIntegrationTest {
                 .andExpect(jsonPath("$.name", is("John Doe")))
                 .andExpect(jsonPath("$.position", is("Developer")))
                 .andExpect(jsonPath("$.start_date", is(employee.getStart_date().toString())));
+    }
+
+    @Test
+    void createEmployee_withoutRequiredField_shouldReturnBadRequest() throws Exception {
+        EmployeeJPA employee = new EmployeeJPA();
+        employee.setName("John Doe");
+        employee.setPosition("Developer");
+        employee.setSalary("80000");
+        employee.setStart_date(LocalDate.of(2023, 1, 15));
+        employee.setOffice("Prague");
+
+        mockMvc.perform(post("/api/employees")
+                .with(bearerToken())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(employee)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message", is("extn is required.")));
     }
 
     @Test

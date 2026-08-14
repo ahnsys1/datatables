@@ -59,6 +59,7 @@ public class EmployeeService {
     }
 
     public EmployeeJPA createEmployee(EmployeeJPA employee, String managerId) {
+        validateRequiredFields(employee);
         log.info("Attempting to create new employee '{}' with manager ID: {}", employee.getName(), managerId);
         employee.setId(null);
         if (managerId != null && !managerId.isBlank()) {
@@ -98,33 +99,62 @@ public class EmployeeService {
     }
 
     public List<EmployeeJPA> restoreEmployees(List<EmployeeRestoreRequest> requests) {
-        Map<String, EmployeeRestoreRequest> byId = new HashMap<>();
-        for (EmployeeRestoreRequest request : requests) {
-            if (request == null || request.id() == null || request.id().isBlank()
-                    || byId.put(request.id(), request) != null) {
-                throw new IllegalArgumentException("Restore data contains a missing or duplicate employee ID.");
+        return restoreEmployees(requests, true);
+    }
+
+    public List<EmployeeJPA> restoreEmployees(List<EmployeeRestoreRequest> requests, boolean recordChanges) {
+        log.debug("Starting employee import with {} records", requests == null ? null : requests.size());
+        try {
+            if (requests == null) {
+                throw new IllegalArgumentException("Restore data must not be null.");
             }
-        }
-        for (EmployeeRestoreRequest request : requests) {
-            if (Objects.equals(request.id(), request.managerId())) {
-                throw new IllegalArgumentException("An employee cannot be their own manager.");
+            Map<String, EmployeeRestoreRequest> byId = new HashMap<>();
+            for (EmployeeRestoreRequest request : requests) {
+                log.debug("Validating imported employee record: {}", request);
+                if (request == null || request.id() == null || request.id().isBlank()
+                        || byId.put(request.id(), request) != null) {
+                    throw new IllegalArgumentException("Restore data contains a missing or duplicate employee ID.");
+                }
+                validateRequiredFields(request);
             }
-            if (request.managerId() != null && !request.managerId().isBlank()
-                    && !byId.containsKey(request.managerId())) {
-                throw new IllegalArgumentException("Restore data references a missing manager ID: " + request.managerId());
+            for (EmployeeRestoreRequest request : requests) {
+                if (Objects.equals(request.id(), request.managerId())) {
+                    throw new IllegalArgumentException("An employee cannot be their own manager.");
+                }
+                if (request.managerId() != null && !request.managerId().isBlank()
+                        && !byId.containsKey(request.managerId())
+                        && !employeeRepository.existsById(request.managerId())) {
+                    throw new IllegalArgumentException("Restore data references a missing manager ID: " + request.managerId());
+                }
+                if (byId.containsKey(request.managerId())) {
+                    validateRestorePath(request, byId, new HashSet<>());
+                }
             }
-            validateRestorePath(request, byId, new HashSet<>());
-        }
-        for (EmployeeRestoreRequest request : requests) {
-            employeeRepository.restoreEmployee(request.id(), request.name(), request.position(), request.extn(),
-                    request.salary(), request.start_date(), request.office(), request.hasManagerRights());
-        }
-        for (EmployeeRestoreRequest request : requests) {
-            if (request.managerId() != null && !request.managerId().isBlank()) {
-                employeeRepository.restoreEmployeeManager(request.id(), request.managerId());
+            log.debug("Employee import validation completed for {} records", requests.size());
+            for (EmployeeRestoreRequest request : requests) {
+                log.debug("Importing employee {}", request.id());
+                employeeRepository.restoreEmployee(request.id(), request.name(), request.position(), request.extn(),
+                        request.salary(), request.start_date(), request.office(), request.hasManagerRights());
             }
+            for (EmployeeRestoreRequest request : requests) {
+                if (request.managerId() != null && !request.managerId().isBlank()) {
+                    log.debug("Assigning manager {} to imported employee {}", request.managerId(), request.id());
+                    employeeRepository.restoreEmployeeManager(request.id(), request.managerId());
+                }
+            }
+            List<EmployeeJPA> importedEmployees = employeeRepository.findAllWithManagers();
+            if (recordChanges) {
+                for (EmployeeRestoreRequest request : requests) {
+                    EmployeeJPA importedEmployee = employeeRepository.findByIdWithManager(request.id());
+                    employeeCsvExportService.recordChange("CREATE", null, importedEmployee);
+                }
+            }
+            log.debug("Employee import completed successfully; database contains {} employees", importedEmployees.size());
+            return importedEmployees;
+        } catch (RuntimeException exception) {
+            log.error("Employee import failed for {} records", requests == null ? null : requests.size(), exception);
+            throw exception;
         }
-        return employeeRepository.findAllWithManagers();
     }
 
     private void validateRestorePath(EmployeeRestoreRequest request,
@@ -236,9 +266,14 @@ public class EmployeeService {
      * with the given ID.
      */
     public EmployeeJPA updateEmployee(String id, EmployeeJPA employeeDetails, String managerId) {
+        return updateEmployee(id, employeeDetails, managerId, true);
+    }
+
+    public EmployeeJPA updateEmployee(String id, EmployeeJPA employeeDetails, String managerId, boolean recordChanges) {
         log.info("Attempting to update employee with ID: {}", id);
         EmployeeJPA employeeToUpdate = employeeRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Employee not found with id: " + id));
+        validateRequiredFields(employeeDetails);
         log.debug("Found employee to update: {}", employeeToUpdate.getName());
         EmployeeJPA previousState = copyEmployeeState(employeeToUpdate);
 
@@ -282,9 +317,45 @@ public class EmployeeService {
                 "newState", employeeWithManager);
         rabbitTemplate.convertAndSend(RabbitMQConfig.TOPIC_EXCHANGE_NAME, RabbitMQConfig.ROUTING_KEY_UPDATED,
                 updateEvent);
-        employeeCsvExportService.recordChange("UPDATE", previousState, employeeWithManager);
+        if (recordChanges) {
+            employeeCsvExportService.recordChange("UPDATE", previousState, employeeWithManager);
+        }
         log.info("Successfully updated employee with ID: {}", id);
         return employeeWithManager;
+    }
+
+    private void validateRequiredFields(EmployeeJPA employee) {
+        if (employee == null) {
+            throw new IllegalArgumentException("Employee data must not be null.");
+        }
+        validateRequiredField(employee.getName(), "name");
+        validateRequiredField(employee.getPosition(), "position");
+        validateRequiredField(employee.getExtn(), "extn");
+        validateRequiredField(employee.getSalary(), "salary");
+        if (employee.getStart_date() == null) {
+            throw new IllegalArgumentException("start_date is required.");
+        }
+        validateRequiredField(employee.getOffice(), "office");
+    }
+
+    private void validateRequiredFields(EmployeeRestoreRequest employee) {
+        if (employee == null) {
+            throw new IllegalArgumentException("Employee data must not be null.");
+        }
+        validateRequiredField(employee.name(), "name");
+        validateRequiredField(employee.position(), "position");
+        validateRequiredField(employee.extn(), "extn");
+        validateRequiredField(employee.salary(), "salary");
+        if (employee.start_date() == null) {
+            throw new IllegalArgumentException("start_date is required.");
+        }
+        validateRequiredField(employee.office(), "office");
+    }
+
+    private void validateRequiredField(String value, String fieldName) {
+        if (value == null || value.isBlank()) {
+            throw new IllegalArgumentException(fieldName + " is required.");
+        }
     }
 
     private EmployeeJPA copyEmployeeState(EmployeeJPA employee) {
@@ -306,7 +377,13 @@ public class EmployeeService {
     }
 
     public boolean deleteEmployee(String id) {
+        return deleteEmployee(id, true);
+    }
+
+    public boolean deleteEmployee(String id, boolean recordChanges) {
+        log.debug("Starting employee deletion for ID {}", id);
         if (!employeeRepository.existsById(id)) {
+            log.debug("Employee {} was not found during deletion", id);
             return false;
         }
 
@@ -315,14 +392,19 @@ public class EmployeeService {
             throw new IllegalStateException("Cannot delete employee who is a manager with subordinates.");
         }
 
+        log.debug("Loading employee {} before deletion", id);
         EmployeeJPA deletedEmployee = copyEmployeeState(employeeRepository.findByIdWithManager(id));
+        log.debug("Deleting employee {} from the database", id);
         employeeRepository.deleteById(id);
         Map<String, Object> deleteEvent = new HashMap<>();
         deleteEvent.put("previousState", deletedEmployee);
         deleteEvent.put("newState", null);
         rabbitTemplate.convertAndSend(RabbitMQConfig.TOPIC_EXCHANGE_NAME, RabbitMQConfig.ROUTING_KEY_DELETED,
                 deleteEvent);
-        employeeCsvExportService.recordChange("DELETE", deletedEmployee, null);
+        log.debug("Recording DELETE change for employee {}", id);
+        if (recordChanges) {
+            employeeCsvExportService.recordChange("DELETE", deletedEmployee, null);
+        }
         log.info("Successfully deleted employee with ID: {}", id);
         return true;
     }

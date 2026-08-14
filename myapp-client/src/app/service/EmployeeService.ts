@@ -40,8 +40,10 @@ export class EmployeeService {
     return this.http.get(`${this.baseUrl}/employees/changes`, { responseType: 'blob' });
   }
 
-  restoreEmployees(employees: unknown[]): Observable<Employee[]> {
-    return this.http.post<Employee[]>(`${this.baseUrl}/employees/restore`, employees);
+  restoreEmployees(employees: unknown[], recordChanges = true): Observable<Employee[]> {
+    return this.http.post<Employee[]>(`${this.baseUrl}/employees/restore`, employees, {
+      params: { recordChanges: recordChanges.toString() }
+    });
   }
 
   getEmployeeWithManager(id: string): Observable<Employee> {
@@ -63,14 +65,14 @@ export class EmployeeService {
     return this.http.post<Employee>(`${this.baseUrl}/employees`, employeeToSend, { params });
   }
 
-  updateEmployee(employee: Employee): Observable<Employee> {
+  updateEmployee(employee: Employee, recordChanges = true): Observable<Employee> {
     let params = new HttpParams();
     // When updating, we always specify the manager's status.
     // If employee.manager is an object, we use its ID to set/change the manager.
     // If employee.manager is null, it signifies that the manager should be removed.
     // The backend expects a 'null' string to process the removal.
     const managerId = employee.manager ? employee.manager.id : 'null';
-    params = params.append('managerId', managerId);
+    params = params.append('managerId', managerId).append('recordChanges', recordChanges.toString());
     // Create a clone without the manager to avoid issues with circular dependencies or object identity during JSON serialization.
     const employeeToSend = { ...employee, manager: undefined, children: undefined };
     return this.http.put<Employee>(`${this.baseUrl}/employees/${employee.id}`, employeeToSend, { params });
@@ -81,10 +83,11 @@ export class EmployeeService {
     return this.http.put<Employee[]>(`${this.baseUrl}/employees/${employeeId}/children/manager`, null, { params });
   }
 
-  deleteEmployee(empId: string): Observable<void> {
+  deleteEmployee(empId: string, recordChanges = true): Observable<void> {
     const deleteUrl = `${this.baseUrl}/employees/${empId}`;
-    //   alert(deleteUrl);
-    return this.http.delete<void>(deleteUrl);
+    return this.http.delete<void>(deleteUrl, {
+      params: { recordChanges: recordChanges.toString() }
+    });
   }
 
   deleteAllEmployees(): Observable<void> {

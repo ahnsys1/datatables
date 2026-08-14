@@ -10,8 +10,8 @@ import { MatDialog, MatDialogRef } from '@angular/material/dialog';
 import { TranslateService } from '@ngx-translate/core';
 import 'datatables.net-buttons-dt';
 import 'datatables.net-select-dt';
-import { forkJoin, from, Observable, of } from 'rxjs';
-import { concatMap, toArray } from 'rxjs/operators';
+import { forkJoin, from, Observable, of, throwError } from 'rxjs';
+import { catchError, concatMap, toArray } from 'rxjs/operators';
 import { AddEmployeeComponent } from "../add-employee/add-employee.component";
 import { EmployeeService } from '../service/EmployeeService';
 import { ConfirmationDialogComponent, ConfirmationDialogData } from '../shared/confirmation-dialog/confirmation-dialog.component';
@@ -507,49 +507,77 @@ export class DataTables2Component implements OnInit {
       reader.onload = () => {
         this.spinnerService.show();
         try {
+          console.debug('[employee-import] Reading intraday changes', {
+            fileName: file.name,
+            fileSize: file.size
+          });
           const changes = this.parseIntradayChanges(String(reader.result));
-          const creates = changes
-            .filter(change => change.action === 'CREATE')
-            .map(change => ({
-              id: change.employeeId,
-              name: change.newName,
-              position: change.newPosition,
-              extn: change.newExtn,
-              salary: change.newSalary,
-              start_date: change.newStartDate,
-              office: change.newOffice,
-              hasManagerRights: change.newHasManagerRights.toLowerCase() === 'true',
-              managerId: change.newManagerId || null
-            }));
-          const deletes = this.sortChangesChildrenFirst(changes.filter(change => change.action === 'DELETE'));
-          from(deletes).pipe(
-            concatMap(change => this.employeeService.deleteEmployee(change.employeeId)),
+          console.debug('[employee-import] Parsed intraday changes', {
+            rowCount: changes.length,
+            actions: changes.map(change => change.action)
+          });
+          const operations = changes.filter(change => ['CREATE', 'UPDATE', 'DELETE'].includes(change.action));
+          console.debug('[employee-import] Prepared import operations', {
+            operations: operations.map(change => ({ action: change.action, employeeId: change.employeeId }))
+          });
+          from(operations).pipe(
+            concatMap(change => {
+              const employee = {
+                id: change.employeeId,
+                name: change.newName,
+                position: change.newPosition,
+                extn: change.newExtn,
+                salary: change.newSalary,
+                start_date: change.newStartDate,
+                office: change.newOffice,
+                hasManagerRights: change.newHasManagerRights.toLowerCase() === 'true',
+                managerId: change.newManagerId || null,
+                manager: change.newManagerId ? ({ id: change.newManagerId } as Employee) : null
+              } as Employee;
+              if (change.action === 'CREATE') {
+                console.debug('[employee-import] Replaying CREATE in CSV order', { employeeId: change.employeeId });
+                return this.employeeService.restoreEmployees([employee], false);
+              }
+              if (change.action === 'UPDATE') {
+                console.debug('[employee-import] Replaying UPDATE', { employeeId: change.employeeId });
+                return this.employeeService.updateEmployee(employee, false);
+              }
+              console.debug('[employee-import] Replaying DELETE', { employeeId: change.employeeId });
+              return this.employeeService.deleteEmployee(change.employeeId, false).pipe(
+                catchError(error => {
+                  if (error.status === 404) {
+                    console.warn('[employee-import] DELETE skipped; employee is already absent', {
+                      employeeId: change.employeeId
+                    });
+                    return of(null);
+                  }
+                  return throwError(() => error);
+                })
+              );
+            }),
             toArray()
           ).subscribe({
             next: () => {
-              if (creates.length === 0) {
-                this.getEmployees();
-                return;
-              }
-              this.employeeService.restoreEmployees(this.sortChangesParentFirst(creates)).subscribe({
-                next: () => this.getEmployees(),
-                error: error => {
-                  this.spinnerService.hide();
-                  alert('Could not import intraday changes: ' + error.message);
-                }
-              });
+              console.debug('[employee-import] Change replay completed', { count: operations.length });
+              this.getEmployees();
             },
             error: error => {
+              console.error('[employee-import] Delete request failed', error);
               this.spinnerService.hide();
               alert('Could not import intraday changes: ' + error.message);
             }
           });
         } catch (error: any) {
+          console.error('[employee-import] Failed to parse or prepare changes', error);
           this.spinnerService.hide();
           alert('Could not import intraday changes: ' + error.message);
         }
       };
       reader.onerror = () => {
+        console.error('[employee-import] Could not read changes file', {
+          fileName: file.name,
+          error: reader.error
+        });
         this.spinnerService.hide();
         alert('Could not read the changes file.');
       };
@@ -560,7 +588,13 @@ export class DataTables2Component implements OnInit {
 
   private parseIntradayChanges(content: string): any[] {
     const lines = content.split(/\r?\n/).filter(line => line.trim().length > 0);
-    if (lines.length < 1 || !lines[0].startsWith('"timestamp"')) {
+    const headerLine = lines[0]?.replace(/^\uFEFF/, '').trim() ?? '';
+    const headerFields = this.parseCsvLine(headerLine);
+    console.debug('[employee-import] Intraday changes header', {
+      rawHeader: lines[0] ?? '',
+      parsedHeader: headerFields
+    });
+    if (headerFields[0] !== 'timestamp' || headerFields[1] !== 'action') {
       throw new Error('The file does not contain a valid intraday changes header.');
     }
     return lines.slice(1).map(line => {
@@ -600,13 +634,17 @@ export class DataTables2Component implements OnInit {
 
   private sortChangesParentFirst(changes: any[]): any[] {
     const byId = new Map(changes.map(change => [change.id, change]));
-    const depth = (change: any, path = new Set<string>()): number => {
-      if (!change.managerId || !byId.has(change.managerId) || path.has(change.id)) {
-        return 0;
-      }
-      return depth(byId.get(change.managerId), new Set(path).add(change.id)) + 1;
-    };
-    return [...changes].sort((left, right) => depth(left) - depth(right));
+    const ordered: any[] = [];
+    const visited = new Set<string>();
+    const stack = changes.filter(change => !change.managerId || !byId.has(change.managerId)).reverse();
+    while (stack.length > 0) {
+      const change = stack.pop();
+      if (!change || visited.has(change.id)) continue;
+      visited.add(change.id);
+      ordered.push(change);
+      stack.push(...changes.filter(candidate => candidate.managerId === change.id).reverse());
+    }
+    return [...ordered, ...changes.filter(change => !visited.has(change.id))];
   }
 
   private sortChangesChildrenFirst(changes: any[]): any[] {
@@ -626,21 +664,20 @@ export class DataTables2Component implements OnInit {
 
   private sortEmployeesParentFirst(employees: Employee[]): Employee[] {
     const byId = new Map(employees.map(employee => [employee.id, employee]));
-    const depths = new Map<string, number>();
-    const getDepth = (employee: Employee, path = new Set<string>()): number => {
-      if (depths.has(employee.id)) {
-        return depths.get(employee.id)!;
-      }
+    const ordered: Employee[] = [];
+    const visited = new Set<string>();
+    const stack = employees.filter(employee => {
       const managerId = this.getManagerId(employee);
-      if (!managerId || !byId.has(managerId) || path.has(employee.id)) {
-        depths.set(employee.id, 0);
-        return 0;
-      }
-      const depth = getDepth(byId.get(managerId)!, new Set(path).add(employee.id)) + 1;
-      depths.set(employee.id, depth);
-      return depth;
-    };
-    return [...employees].sort((left, right) => getDepth(left) - getDepth(right));
+      return !managerId || !byId.has(managerId);
+    }).reverse();
+    while (stack.length > 0) {
+      const employee = stack.pop();
+      if (!employee || visited.has(employee.id)) continue;
+      visited.add(employee.id);
+      ordered.push(employee);
+      stack.push(...employees.filter(candidate => this.getManagerId(candidate) === employee.id).reverse());
+    }
+    return [...ordered, ...employees.filter(employee => !visited.has(employee.id))];
   }
 
   private deleteAllEmployees(): void {

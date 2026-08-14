@@ -106,4 +106,9 @@ dialog::backdrop {
     --mdc-dialog-container-shape: 20px;
 }
 
+body > .flatpickr-calendar,
+.cdk-overlay-container .flatpickr-calendar {
+    z-index: 10000 !important;
+}
+
 @import '@angular/material/prebuilt-themes/deeppurple-amber.css';
