@@ -54,6 +54,7 @@ export class DataTables2Component implements OnInit {
   public dtOptions: Config = {};
   private employeeIdToEmployeeMap: Map<string, Employee> = new Map();
   isLoading: WritableSignal<boolean> = signal(false);
+  private initialTableLoadCompleted = false;
   constructor(private dialog: MatDialog, 
     private employeeService: EmployeeService, private translate: TranslateService, private spinnerService: SpinnerService) { }
 
@@ -283,6 +284,7 @@ export class DataTables2Component implements OnInit {
       next: (res: any[]) => {
         if (!res || res.length === 0) {
           this.table.draw();
+          this.clearChangesAfterInitialLoad();
           this.isLoading.set(false);
           this.spinnerService.hide();
           return;
@@ -320,9 +322,11 @@ export class DataTables2Component implements OnInit {
             // Invalidate all rows to force re-running render functions (e.g., for manager names)
             // and then draw the table. This is the most reliable way to handle renderers with dependencies.
             this.table.rows().invalidate().draw();
+            this.clearChangesAfterInitialLoad();
             this.isLoading.set(false);
             this.spinnerService.hide();
           },
+
           error: (err: any) => {
             alert(this.translate.instant('failed-to-get-employees') + ': ' + err.message);
             this.isLoading.set(false);
@@ -336,6 +340,16 @@ export class DataTables2Component implements OnInit {
         this.isLoading.set(false);
         this.spinnerService.hide();
       }
+    });
+  }
+
+  private clearChangesAfterInitialLoad(): void {
+    if (this.initialTableLoadCompleted) {
+      return;
+    }
+    this.initialTableLoadCompleted = true;
+    this.employeeService.clearIntradayChanges().subscribe({
+      error: error => console.error('Could not clear pre-load employee changes:', error)
     });
   }
 
@@ -452,7 +466,7 @@ export class DataTables2Component implements OnInit {
             hasManagerRights: employee.hasManagerRights,
             managerId: this.getManagerId(employee)
           }));
-          this.employeeService.restoreEmployees(restorePayload).subscribe({
+          this.employeeService.restoreEmployees(restorePayload, false).subscribe({
             next: () => this.getEmployees(),
             error: error => {
               this.spinnerService.hide();

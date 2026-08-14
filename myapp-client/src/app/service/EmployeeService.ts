@@ -40,6 +40,10 @@ export class EmployeeService {
     return this.http.get(`${this.baseUrl}/employees/changes`, { responseType: 'blob' });
   }
 
+  clearIntradayChanges(): Observable<void> {
+    return this.http.delete<void>(`${this.baseUrl}/employees/changes`);
+  }
+
   restoreEmployees(employees: unknown[], recordChanges = true): Observable<Employee[]> {
     return this.http.post<Employee[]>(`${this.baseUrl}/employees/restore`, employees, {
       params: { recordChanges: recordChanges.toString() }

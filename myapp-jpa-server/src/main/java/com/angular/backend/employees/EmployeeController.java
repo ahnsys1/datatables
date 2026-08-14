@@ -61,7 +61,7 @@ public class EmployeeController {
     @PostMapping("/restore")
     public ResponseEntity<List<EmployeeJPA>> restoreEmployees(
             @RequestBody List<EmployeeRestoreRequest> employees,
-            @RequestParam(defaultValue = "true") boolean recordChanges) {
+            @RequestParam(defaultValue = "false") boolean recordChanges) {
         return ResponseEntity.ok(employeeService.restoreEmployees(employees, recordChanges));
     }
 
@@ -85,6 +85,16 @@ public class EmployeeController {
                     .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=intra_day_changes.csv")
                     .contentType(MediaType.parseMediaType("text/csv"))
                     .body(employeeService.readIntradayChanges());
+        } catch (java.io.IOException exception) {
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+
+    @DeleteMapping("/changes")
+    public ResponseEntity<Void> clearIntradayChanges() {
+        try {
+            employeeService.clearIntradayChanges();
+            return ResponseEntity.noContent().build();
         } catch (java.io.IOException exception) {
             return ResponseEntity.internalServerError().build();
         }

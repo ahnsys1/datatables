@@ -6,7 +6,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.time.LocalDateTime;
-import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayDeque;
@@ -27,7 +26,6 @@ public class EmployeeCsvExportService {
 
     private static final Logger log = LoggerFactory.getLogger(EmployeeCsvExportService.class);
     private static final DateTimeFormatter TIMESTAMP_FORMAT = DateTimeFormatter.ISO_LOCAL_DATE_TIME;
-    private static final DateTimeFormatter ARCHIVE_DATE_FORMAT = DateTimeFormatter.ofPattern("dd-MM");
     private static final String LEGACY_CHANGE_TITLE = "Intra-day employee changes";
     private static final String[] CHANGE_HEADER = {
             "timestamp", "action", "employee_id", "old_name", "new_name", "old_position", "new_position",
@@ -78,6 +76,13 @@ public class EmployeeCsvExportService {
         Files.delete(changesFile);
         log.info("Exported and cleared employee changes from {}", changesFile);
         return content;
+    }
+
+    public synchronized void clearIntradayChanges() throws IOException {
+        Path changesFile = exportDirectory.resolve(changesFileName);
+        if (Files.deleteIfExists(changesFile)) {
+            log.info("Cleared pending employee changes from {}", changesFile);
+        }
     }
 
         private List<EmployeeJPA> depthFirstEmployees(List<EmployeeJPA> employees) {
@@ -176,27 +181,17 @@ public class EmployeeCsvExportService {
             Files.writeString(file, content.toString(), StandardCharsets.UTF_8,
                     StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING, StandardOpenOption.WRITE);
             log.info("Exported {} employees to {}", employeeRepository.count(), file);
-            archiveChangesFile(LocalDateTime.now(zoneId).toLocalDate());
+            clearPendingChanges();
         } catch (IOException exception) {
             log.error("Could not write complete employee export to {}", file, exception);
         }
     }
 
-    private void archiveChangesFile(LocalDate exportDate) throws IOException {
+    private void clearPendingChanges() throws IOException {
         Path changesFile = exportDirectory.resolve(changesFileName);
-        if (!Files.exists(changesFile) || Files.size(changesFile) == 0) {
-            return;
+        if (Files.deleteIfExists(changesFile)) {
+            log.info("Cleared employee changes included in the complete export from {}", changesFile);
         }
-        appendChangeFileHeaderIfNeeded(changesFile);
-        String fileName = changesFile.getFileName().toString();
-        int extensionIndex = fileName.lastIndexOf('.');
-        String archiveSuffix = exportDate.format(ARCHIVE_DATE_FORMAT);
-        String archivedName = extensionIndex > 0
-            ? fileName.substring(0, extensionIndex) + '_' + archiveSuffix + fileName.substring(extensionIndex)
-            : fileName + '_' + archiveSuffix;
-        Path archivedFile = changesFile.resolveSibling(archivedName);
-        Files.move(changesFile, archivedFile, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
-        log.info("Archived employee changes to {}", archivedFile);
     }
 
     private void appendChangeFileHeaderIfNeeded(Path file) {

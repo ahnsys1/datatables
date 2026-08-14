@@ -98,6 +98,10 @@ public class EmployeeService {
         return employeeCsvExportService.readIntradayChanges();
     }
 
+    public void clearIntradayChanges() throws java.io.IOException {
+        employeeCsvExportService.clearIntradayChanges();
+    }
+
     public List<EmployeeJPA> restoreEmployees(List<EmployeeRestoreRequest> requests) {
         return restoreEmployees(requests, true);
     }

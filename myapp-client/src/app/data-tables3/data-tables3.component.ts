@@ -53,6 +53,7 @@ export class DataTables3Component implements OnInit {
   // Create a writable signal for the loading state, initialized to false.
   //  loading: WritableSignal<boolean> = signal(false);
   isLoading: WritableSignal<boolean> = signal(false);
+  private initialTableLoadCompleted = false;
   constructor(private dialog: MatDialog, private employeeService: EmployeeService,
     private translate: TranslateService, private spinnerService: SpinnerService) { }
   ngOnInit(): void {
@@ -380,7 +381,7 @@ export class DataTables3Component implements OnInit {
             hasManagerRights: employee.hasManagerRights,
             managerId: this.getManagerId(employee)
           }));
-          this.employeeService.restoreEmployees(restorePayload).subscribe({
+          this.employeeService.restoreEmployees(restorePayload, false).subscribe({
             next: () => this.getEmployees(),
             error: error => {
               this.spinnerService.hide();
@@ -613,6 +614,7 @@ export class DataTables3Component implements OnInit {
       next: (res: any[]) => {
         if (!res || res.length === 0) {
           this.table.draw();
+          this.clearChangesAfterInitialLoad();
           this.isLoading.set(false);
           this.spinnerService.hide();
           return;
@@ -630,6 +632,7 @@ export class DataTables3Component implements OnInit {
           } else {
             this.table.draw(false);
           }
+          this.clearChangesAfterInitialLoad();
           this.isLoading.set(false);
           this.spinnerService.hide();
         };
@@ -654,6 +657,16 @@ export class DataTables3Component implements OnInit {
         this.isLoading.set(false);
         this.spinnerService.hide();
       }
+    });
+  }
+
+  private clearChangesAfterInitialLoad(): void {
+    if (this.initialTableLoadCompleted) {
+      return;
+    }
+    this.initialTableLoadCompleted = true;
+    this.employeeService.clearIntradayChanges().subscribe({
+      error: error => console.error('Could not clear pre-load employee changes:', error)
     });
   }
 
