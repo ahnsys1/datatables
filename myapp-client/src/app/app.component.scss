@@ -68,6 +68,26 @@ button[routerLink] {
     width: 200px;
 }
 
+.logout-button,
+.logout-button:hover,
+.logout-button:focus,
+.logout-button:active {
+    background-color: #dc3545 !important;
+    border-color: #dc3545 !important;
+    color: #fff !important;
+}
+
+.bottom-nav-button {
+    background-color: #198754 !important;
+    border-color: #198754 !important;
+    color: #fff !important;
+}
+
+.bottom-nav-button:hover {
+    background-color: #157347 !important;
+    border-color: #146c43 !important;
+}
+
 dialog::backdrop {
     background-color: salmon;
 }

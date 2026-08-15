@@ -1,5 +1,5 @@
 {
-  "name": "angular-19",
+  "name": "Demo application in Angular with Spring Boot and JPA",
   "version": "1.0.0",
   "scripts": {
     "ng": "ng",
