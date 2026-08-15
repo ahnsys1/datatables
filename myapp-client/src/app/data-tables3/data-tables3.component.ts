@@ -20,6 +20,8 @@ import { SpinnerService } from '../service/spinner.service';
 @Component({
   selector: 'app-data-tables3',
   templateUrl: './data-tables3.component.html',
+  imports: [MatProgressSpinnerModule, SpinnerComponent],
+  styleUrl: './data-tables3.component.scss'
 })
 export class DataTables3Component implements OnInit {
 
@@ -299,7 +301,6 @@ export class DataTables3Component implements OnInit {
         this.table.rows().invalidate().draw(false);
       },
       error: (err: any) => {
-        const hasSubordinatesMessage = err.message?.includes('Cannot remove manager rights');
         const dialogRef = this.dialog.open(ErrorDialogComponent, {
           data: {
             title: this.translate.instant('cycle-detected'),
