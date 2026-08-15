@@ -400,6 +400,9 @@ export class DataTables2Component implements OnInit {
         this.table.rows().invalidate().draw(false);
       },
       error: (err: any) => {
+        if (err.message?.includes('Cannot remove manager rights')) {
+          return;
+        }
         const dialogRef = this.dialog.open(ErrorDialogComponent, {
           data: {
             title: this.translate.instant('cycle-detected'),
