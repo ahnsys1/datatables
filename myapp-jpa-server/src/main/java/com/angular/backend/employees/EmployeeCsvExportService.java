@@ -173,16 +173,17 @@ public class EmployeeCsvExportService {
     public synchronized void exportCompleteEmployees() {
         String exportDate = LocalDateTime.now(zoneId).format(EXPORT_DATE_FORMAT);
         Path file = exportDirectory.resolve(datedFileName(completeEmployeesFileName, exportDate));
-        StringBuilder content = new StringBuilder();
-        content.append(joinCsv(List.of(EMPLOYEE_HEADER))).append('\n');
-        for (EmployeeJPA employee : depthFirstEmployees(employeeRepository.findAllWithManagers())) {
-            content.append(employeeRow(employee)).append('\n');
-        }
         try {
             Files.createDirectories(exportDirectory);
+            exportDailyChanges(exportDate);
+
+            StringBuilder content = new StringBuilder();
+            content.append(joinCsv(List.of(EMPLOYEE_HEADER))).append('\n');
+            for (EmployeeJPA employee : depthFirstEmployees(employeeRepository.findAllWithManagers())) {
+                content.append(employeeRow(employee)).append('\n');
+            }
             Files.writeString(file, content.toString(), StandardCharsets.UTF_8,
                     StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING, StandardOpenOption.WRITE);
-            exportDailyChanges(exportDate);
             log.info("Exported {} employees to {}", employeeRepository.count(), file);
         } catch (IOException exception) {
             log.error("Could not write complete employee export to {}", file, exception);
