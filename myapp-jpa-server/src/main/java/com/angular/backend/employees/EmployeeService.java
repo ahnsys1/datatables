@@ -278,6 +278,10 @@ public class EmployeeService {
         EmployeeJPA employeeToUpdate = employeeRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Employee not found with id: " + id));
         validateRequiredFields(employeeDetails);
+        if (!employeeDetails.isHasManagerRights() && employeeRepository.existsByManagerId(id)) {
+            throw new IllegalStateException(
+                "Cannot remove manager rights while the employee has subordinates.");
+        }
         log.debug("Found employee to update: {}", employeeToUpdate.getName());
         EmployeeJPA previousState = copyEmployeeState(employeeToUpdate);
 
