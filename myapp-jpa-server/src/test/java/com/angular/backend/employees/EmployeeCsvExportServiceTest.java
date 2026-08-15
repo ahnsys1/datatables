@@ -19,6 +19,22 @@ class EmployeeCsvExportServiceTest {
 	Path exportDirectory;
 
 	@Test
+	void recordChangeIncludesPositionUpdates() throws IOException {
+		EmployeeCsvExportService service = new EmployeeCsvExportService(mock(EmployeeRepository.class),
+				exportDirectory.toString(), "intra_day_changes.csv", "complete_employees.csv", "Europe/Prague");
+		EmployeeJPA oldEmployee = employee("employee-2", "50000");
+		EmployeeJPA newEmployee = employee("employee-2", "50000");
+		oldEmployee.setPosition("Developer");
+		newEmployee.setPosition("Senior Developer");
+
+		service.recordChange("UPDATE", oldEmployee, newEmployee);
+
+		String changes = service.readIntradayChanges();
+
+		assertTrue(changes.contains("\"Developer\",\"Senior Developer\""));
+	}
+
+	@Test
 	void readIntradayChangesContainsOnlyUpdatesAfterCompleteEmployeeExport() throws IOException {
 		EmployeeRepository employeeRepository = mock(EmployeeRepository.class);
 		when(employeeRepository.findAllWithManagers()).thenReturn(List.of());

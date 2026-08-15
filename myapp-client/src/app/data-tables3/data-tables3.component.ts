@@ -250,7 +250,7 @@ export class DataTables3Component implements OnInit {
         rowId: "id" // ...
       };
       this.table = new DataTable($('#jsonTable3'), this.dtOptions);
-      this.getEmployees();
+      this.clearChangesBeforeInitialLoad();
 
       const tableBody = $('#jsonTable3 tbody');
       tableBody.on('click', 'tr', event => {
@@ -670,6 +670,21 @@ export class DataTables3Component implements OnInit {
     this.initialTableLoadCompleted = true;
     this.employeeService.clearIntradayChanges().subscribe({
       error: error => console.error('Could not clear pre-load employee changes:', error)
+    });
+  }
+
+  private clearChangesBeforeInitialLoad(): void {
+    if (this.initialTableLoadCompleted) {
+      this.getEmployees();
+      return;
+    }
+    this.initialTableLoadCompleted = true;
+    this.employeeService.clearIntradayChanges().subscribe({
+      next: () => this.getEmployees(),
+      error: error => {
+        console.error('Could not clear pre-load employee changes:', error);
+        this.getEmployees();
+      }
     });
   }
 

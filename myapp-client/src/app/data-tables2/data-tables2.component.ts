@@ -248,7 +248,7 @@ export class DataTables2Component implements OnInit {
         });
       });
 
-      this.getEmployees();
+      this.clearChangesBeforeInitialLoad();
     });
 
   }
@@ -350,6 +350,21 @@ export class DataTables2Component implements OnInit {
     this.initialTableLoadCompleted = true;
     this.employeeService.clearIntradayChanges().subscribe({
       error: error => console.error('Could not clear pre-load employee changes:', error)
+    });
+  }
+
+  private clearChangesBeforeInitialLoad(): void {
+    if (this.initialTableLoadCompleted) {
+      this.getEmployees();
+      return;
+    }
+    this.initialTableLoadCompleted = true;
+    this.employeeService.clearIntradayChanges().subscribe({
+      next: () => this.getEmployees(),
+      error: error => {
+        console.error('Could not clear pre-load employee changes:', error);
+        this.getEmployees();
+      }
     });
   }
 
