@@ -134,7 +134,7 @@ export class DataTables3Component implements OnInit {
               },
               {
                 text: translations['edit-employee'],
-                className: "my-button my-disabled-button btn btn-primary",
+                className: "my-button my-disabled-button btn btn-warning",
                 name: "editButton",
                 action: () => {
                   const rowData = this.table.row(".selected").data();
@@ -170,7 +170,7 @@ export class DataTables3Component implements OnInit {
               },
               {
                 text: translations['remove-employee'],
-                className: "my-button my-disabled-button btn btn-primary",
+                className: "my-button my-disabled-button btn btn-danger",
                 name: "deleteButton",
                 action: () => {
                   const rowId = this.table.row('.selected').id();
