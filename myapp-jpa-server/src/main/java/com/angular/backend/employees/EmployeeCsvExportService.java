@@ -277,7 +277,7 @@ public class EmployeeCsvExportService {
                 employee.getManager() == null ? null : employee.getManager().getId(),
                 employee.getManager() == null ? null : employee.getManager().getName()
         };
-        return joinCsv(List.of(values));
+        return joinCsv(java.util.Arrays.asList(values));
     }
 
     private String joinCsv(List<String> values) {
