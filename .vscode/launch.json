@@ -6,6 +6,13 @@
     "configurations": [
         {
             "type": "java",
+            "name": "Lambdas",
+            "request": "launch",
+            "mainClass": "com.example.json.Lambdas",
+            "projectName": "json"
+        },
+        {
+            "type": "java",
             "name": "Attach to Docker Backend",
             "request": "attach",
             "hostName": "localhost",

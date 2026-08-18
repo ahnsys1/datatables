@@ -1,0 +1,11 @@
+{
+    "editor.definitionLinkOpensInPeek": false,
+    "java.configuration.runtimes": [
+        {
+            "name": "JavaSE-26",
+            "path": "/usr/lib/jvm/jdk-26.0.2-oracle-x64",
+            "sources": "/usr/lib/jvm/jdk-26.0.2-oracle-x64/lib/src.zip",
+            "default": true
+        }
+    ]
+}
