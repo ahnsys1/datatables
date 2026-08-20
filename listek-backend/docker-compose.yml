@@ -36,6 +36,8 @@ services:
     build:
       context: ../listek-frontend
       dockerfile: Dockerfile
+      args:
+        BACKEND_URL: http://listek-backend:8080
     container_name: listek-frontend
     environment:
       BACKEND_URL: http://listek-backend:8080
