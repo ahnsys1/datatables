@@ -14,6 +14,7 @@ import jakarta.validation.Valid;
 @RestController
 @RequestMapping("/api/v1/transfers")
 public class TransferController {
+
     private final AccountService accountService;
 
     public TransferController(AccountService accountService) {
@@ -23,6 +24,6 @@ public class TransferController {
     @PostMapping
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void transfer(@Valid @RequestBody TransferRequest request) {
-        accountService.transfer(request.fromAccountId(), request.toAccountId(), request.amount(), request.description());
+        accountService.transfer(request.fromAccountId(), request.toAccountNumber(), request.amount(), request.description());
     }
 }

@@ -58,11 +58,33 @@ public class AccountService {
 
     @Transactional
     public void transfer(UUID fromId, UUID toId, BigDecimal amount, String description) {
-        if (fromId.equals(toId)) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Zdrojovy a cilovy ucet musi byt rozdilne");
-        }
         var source = requireAccount(fromId);
         var target = requireAccount(toId);
+        transferBetweenAccounts(source, target, amount, description);
+    }
+
+    @Transactional
+    public void transfer(UUID fromId, String toAccountNumber, BigDecimal amount, String description) {
+        var source = requireAccount(fromId);
+        var target = accountRepository.findByAccountNumber(toAccountNumber.trim()).orElse(null);
+        if (target != null && source.getId().equals(target.getId())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Zdrojovy a cilovy ucet musi byt rozdilne");
+        }
+        if (target == null) {
+            if (source.getBalance().compareTo(amount) < 0) {
+                throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Na uctu neni dostatecny zustatek");
+            }
+            source.debit(amount);
+            transactionRepository.save(new Transaction(source, amount.negate(), TransactionType.DEBIT, description, toAccountNumber.trim()));
+            return;
+        }
+        transferBetweenAccounts(source, target, amount, description);
+    }
+
+    private void transferBetweenAccounts(Account source, Account target, BigDecimal amount, String description) {
+        if (source.getId() != null && source.getId().equals(target.getId())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Zdrojovy a cilovy ucet musi byt rozdilne");
+        }
         if (source.getCurrency() != target.getCurrency()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Prevod mezi ruznymi menami neni podporovan");
         }
@@ -71,8 +93,8 @@ public class AccountService {
         }
         source.debit(amount);
         target.credit(amount);
-        transactionRepository.save(new Transaction(source, amount.negate(), TransactionType.DEBIT, description));
-        transactionRepository.save(new Transaction(target, amount, TransactionType.CREDIT, description));
+        transactionRepository.save(new Transaction(source, amount.negate(), TransactionType.DEBIT, description, target.getAccountNumber()));
+        transactionRepository.save(new Transaction(target, amount, TransactionType.CREDIT, description, source.getAccountNumber()));
     }
 
     private Account requireAccount(UUID id) {
@@ -84,6 +106,6 @@ public class AccountService {
     }
 
     private TransactionResponse toResponse(Transaction transaction) {
-        return new TransactionResponse(transaction.getId(), transaction.getAccount().getId(), transaction.getAmount(), transaction.getType(), transaction.getDescription(), transaction.getCreatedAt());
+        return new TransactionResponse(transaction.getId(), transaction.getAccount().getId(), transaction.getAmount(), transaction.getType(), transaction.getDescription(), transaction.getCounterpartyAccountNumber(), transaction.getCreatedAt());
     }
 }

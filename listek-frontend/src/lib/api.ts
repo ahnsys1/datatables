@@ -14,6 +14,7 @@ export type BankTransaction = {
   amount: number;
   type: "CREDIT" | "DEBIT";
   description: string;
+  counterpartyAccountNumber?: string;
   createdAt: string;
 };
 
@@ -82,7 +83,7 @@ export function updateCard(cardId: string, input: Omit<BankCard, "id" | "account
 
 export function transferMoney(input: {
   fromAccountId: string;
-  toAccountId: string;
+  toAccountNumber: string;
   amount: number;
   description: string;
 }) {

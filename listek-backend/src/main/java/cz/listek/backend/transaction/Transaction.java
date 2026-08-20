@@ -39,6 +39,9 @@ public class Transaction {
     @Column(nullable = false, length = 120)
     private String description;
 
+    @Column(length = 34)
+    private String counterpartyAccountNumber;
+
     @Column(nullable = false)
     private OffsetDateTime createdAt;
 
@@ -46,17 +49,43 @@ public class Transaction {
     }
 
     public Transaction(Account account, BigDecimal amount, TransactionType type, String description) {
+        this(account, amount, type, description, null);
+    }
+
+    public Transaction(Account account, BigDecimal amount, TransactionType type, String description, String counterpartyAccountNumber) {
         this.account = account;
         this.amount = amount;
         this.type = type;
         this.description = description;
+        this.counterpartyAccountNumber = counterpartyAccountNumber;
         this.createdAt = OffsetDateTime.now();
     }
 
-    public UUID getId() { return id; }
-    public Account getAccount() { return account; }
-    public BigDecimal getAmount() { return amount; }
-    public TransactionType getType() { return type; }
-    public String getDescription() { return description; }
-    public OffsetDateTime getCreatedAt() { return createdAt; }
+    public UUID getId() {
+        return id;
+    }
+
+    public Account getAccount() {
+        return account;
+    }
+
+    public BigDecimal getAmount() {
+        return amount;
+    }
+
+    public TransactionType getType() {
+        return type;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public String getCounterpartyAccountNumber() {
+        return counterpartyAccountNumber;
+    }
+
+    public OffsetDateTime getCreatedAt() {
+        return createdAt;
+    }
 }
