@@ -18,6 +18,27 @@ export type BankTransaction = {
   createdAt: string;
 };
 
+export type StandingOrder = {
+  id: string;
+  accountId: string;
+  targetAccountNumber: string;
+  amount: number;
+  description: string;
+  dayOfMonth: number;
+  active: boolean;
+  createdAt: string;
+};
+
+export type PaymentTemplate = {
+  id: string;
+  accountId: string;
+  name: string;
+  targetAccountNumber: string;
+  amount: number;
+  description: string;
+  createdAt: string;
+};
+
 export type BankCard = {
   id: string;
   accountId: string;
@@ -43,8 +64,19 @@ async function request<T>(path: string, options?: RequestInit): Promise<T> {
   });
 
   if (!response.ok) {
-    const message = await response.text();
-    throw new Error(message || `Backend odpověděl stavem ${response.status}`);
+    const responseText = await response.text();
+    let responseBody: { message?: string; detail?: string; error?: string } | undefined;
+    try {
+      responseBody = JSON.parse(responseText) as typeof responseBody;
+    } catch {
+      responseBody = undefined;
+    }
+    const message = responseBody?.message ?? responseBody?.detail
+      ?? (response.status === 422 ? "Na účtu není dostatečný zůstatek." : undefined)
+      ?? responseBody?.error
+      ?? responseText
+      ?? `Backend odpověděl stavem ${response.status}`;
+    throw new Error(message);
   }
 
   if (response.status === 204) return undefined as T;
@@ -64,6 +96,34 @@ export function updateAccount(accountId: string, input: { ownerName: string }) {
 
 export function getTransactions(accountId: string) {
   return request<BankTransaction[]>(`/accounts/${accountId}/transactions`, { cache: "no-store" });
+}
+
+export function getStandingOrders(accountId: string) {
+  return request<StandingOrder[]>(`/accounts/${accountId}/standing-orders`, { cache: "no-store" });
+}
+
+export function createStandingOrder(accountId: string, input: Omit<StandingOrder, "id" | "accountId" | "active" | "createdAt">) {
+  return request<StandingOrder>(`/accounts/${accountId}/standing-orders`, { method: "POST", body: JSON.stringify(input) });
+}
+
+export function updateStandingOrder(orderId: string, input: Omit<StandingOrder, "id" | "accountId" | "active" | "createdAt">) {
+  return request<StandingOrder>(`/standing-orders/${orderId}`, { method: "PATCH", body: JSON.stringify(input) });
+}
+
+export function deleteStandingOrder(orderId: string) {
+  return request<void>(`/standing-orders/${orderId}`, { method: "DELETE" });
+}
+
+export function getPaymentTemplates(accountId: string) {
+  return request<PaymentTemplate[]>(`/accounts/${accountId}/payment-templates`, { cache: "no-store" });
+}
+
+export function createPaymentTemplate(accountId: string, input: Omit<PaymentTemplate, "id" | "accountId" | "createdAt">) {
+  return request<PaymentTemplate>(`/accounts/${accountId}/payment-templates`, { method: "POST", body: JSON.stringify(input) });
+}
+
+export function deletePaymentTemplate(templateId: string) {
+  return request<void>(`/payment-templates/${templateId}`, { method: "DELETE" });
 }
 
 export function getCards(accountId: string) {

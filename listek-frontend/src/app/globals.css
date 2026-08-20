@@ -168,6 +168,21 @@ button { color: inherit; }
 .payment-history-row:last-child { border-bottom: 0; }
 .payment-history-row:hover { background: #f8faf6; }
 .transaction-detail-modal { width: min(100%, 500px); }
+.automation-modal { max-height: calc(100vh - 40px); overflow-y: auto; }
+.automation-list { display: grid; gap: 8px; margin-top: 24px; padding-top: 18px; border-top: 1px solid var(--line); }
+.automation-list > strong { font-size: 12px; }
+.automation-list > div, .selectable-list > button { padding: 11px 0; display: grid; gap: 4px; border: 0; border-bottom: 1px solid #edf0eb; background: transparent; color: var(--ink); text-align: left; }
+.automation-list span, .selectable-list > button span { font-size: 11px; font-weight: 750; }
+.automation-list small, .selectable-list > button small { color: var(--muted); font-size: 10px; }
+.automation-item { position: relative; }
+.automation-actions { display: flex; gap: 8px; margin-top: 8px; }
+.automation-actions button { display: inline-flex; align-items: center; gap: 5px; padding: 5px 8px; border: 1px solid var(--line); border-radius: 5px; background: transparent; color: var(--ink); font: inherit; font-size: 11px; cursor: pointer; }
+.automation-actions button:last-child { color: #a43b32; }
+.selectable-list > button { width: 100%; cursor: pointer; }
+.selectable-list > button:hover { color: var(--green); }
+.selectable-list > div { grid-template-columns: minmax(0, 1fr) 32px; align-items: center; }
+.selectable-list > div > button:first-child { display: grid; gap: 4px; padding: 0; border: 0; background: transparent; color: var(--ink); text-align: left; cursor: pointer; }
+.template-delete { width: 32px; height: 32px; display: grid; place-items: center; border: 0; border-radius: 5px; background: #fff0ec; color: #a94b33; cursor: pointer; }
 .transaction-detail-amount { display: grid; gap: 5px; padding: 18px 0 20px; border-bottom: 1px solid var(--line); }
 .transaction-detail-amount span { font-size: 30px; font-weight: 800; }
 .transaction-detail-amount small { color: var(--muted); font-size: 11px; }
