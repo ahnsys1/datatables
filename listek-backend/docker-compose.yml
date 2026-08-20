@@ -1,0 +1,15 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: listek-postgres
+    environment:
+      POSTGRES_DB: listek
+      POSTGRES_USER: listek
+      POSTGRES_PASSWORD: listek
+    ports:
+      - "5433:5432"
+    volumes:
+      - listek-postgres-data:/var/lib/postgresql/data
+
+volumes:
+  listek-postgres-data:

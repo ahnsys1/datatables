@@ -1,0 +1,63 @@
+package cz.listek.backend.account;
+
+import java.math.BigDecimal;
+import java.util.Optional;
+import java.util.UUID;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+import org.springframework.web.server.ResponseStatusException;
+
+import cz.listek.backend.transaction.TransactionRepository;
+
+class AccountServiceTest {
+    private AccountRepository accountRepository;
+    private TransactionRepository transactionRepository;
+    private AccountService accountService;
+
+    @BeforeEach
+    void setUp() {
+        accountRepository = mock(AccountRepository.class);
+        transactionRepository = mock(TransactionRepository.class);
+        accountService = new AccountService(accountRepository, transactionRepository);
+    }
+
+    @Test
+    void transfersMoneyBetweenAccountsAndCreatesBothTransactions() {
+        var source = new Account("Jan Kral", "123456789", new BigDecimal("1000.00"), CurrencyCode.CZK);
+        var target = new Account("Eva Kralova", "987654321", new BigDecimal("200.00"), CurrencyCode.CZK);
+        var sourceId = UUID.randomUUID();
+        var targetId = UUID.randomUUID();
+        when(accountRepository.findById(sourceId)).thenReturn(Optional.of(source));
+        when(accountRepository.findById(targetId)).thenReturn(Optional.of(target));
+
+        accountService.transfer(sourceId, targetId, new BigDecimal("250.00"), "Test prevod");
+
+        assertEquals(new BigDecimal("750.00"), source.getBalance());
+        assertEquals(new BigDecimal("450.00"), target.getBalance());
+        verify(transactionRepository, org.mockito.Mockito.times(2)).save(any());
+    }
+
+    @Test
+    void rejectsTransferWhenBalanceIsTooLow() {
+        var source = new Account("Jan Kral", "123456789", new BigDecimal("100.00"), CurrencyCode.CZK);
+        var target = new Account("Eva Kralova", "987654321", new BigDecimal("200.00"), CurrencyCode.CZK);
+        var sourceId = UUID.randomUUID();
+        var targetId = UUID.randomUUID();
+        when(accountRepository.findById(sourceId)).thenReturn(Optional.of(source));
+        when(accountRepository.findById(targetId)).thenReturn(Optional.of(target));
+
+        assertThrows(ResponseStatusException.class, () -> accountService.transfer(sourceId, targetId, new BigDecimal("100.01"), "Test prevod"));
+
+        assertEquals(new BigDecimal("100.00"), source.getBalance());
+        assertEquals(new BigDecimal("200.00"), target.getBalance());
+        verify(transactionRepository, never()).save(any());
+    }
+}
