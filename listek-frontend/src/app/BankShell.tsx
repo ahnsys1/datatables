@@ -6,7 +6,8 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ReactNode, useState } from "react";
+import { FormEvent, ReactNode, useEffect, useState } from "react";
+import { Account, getAccounts, updateAccount } from "../lib/api";
 
 const navigation = [
   { label: "Přehled", href: "/", icon: Home },
@@ -20,6 +21,46 @@ const navigation = [
 export default function BankShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const [menuOpen, setMenuOpen] = useState(false);
+  const [account, setAccount] = useState<Account | null>(null);
+  const [profileOpen, setProfileOpen] = useState(false);
+  const [profileName, setProfileName] = useState("");
+  const [profileError, setProfileError] = useState("");
+  const [profileSaving, setProfileSaving] = useState(false);
+
+  useEffect(() => {
+    getAccounts().then((accounts) => {
+      if (accounts[0]) {
+        setAccount(accounts[0]);
+        setProfileName(accounts[0].ownerName);
+      }
+    }).catch(() => setProfileError("Profil se nepodařilo načíst."));
+  }, []);
+
+  function openProfile() {
+    setProfileName(account?.ownerName ?? "");
+    setProfileError("");
+    setProfileOpen(true);
+  }
+
+  async function saveProfile(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!account || !profileName.trim()) return;
+    setProfileSaving(true);
+    try {
+      const updatedAccount = await updateAccount(account.id, { ownerName: profileName.trim() });
+      setAccount(updatedAccount);
+      setProfileName(updatedAccount.ownerName);
+      setProfileOpen(false);
+      setProfileError("");
+    } catch (error) {
+      setProfileError(error instanceof Error ? error.message : "Profil se nepodařilo uložit.");
+    } finally {
+      setProfileSaving(false);
+    }
+  }
+
+  const displayName = account?.ownerName ?? "Načítám...";
+  const initials = displayName.split(" ").filter(Boolean).slice(0, 2).map((part) => part[0]).join("").toUpperCase() || "JK";
 
   return (
     <div className="bank-app">
@@ -44,11 +85,12 @@ export default function BankShell({ children }: { children: ReactNode }) {
           <div className="mobile-logo">Lístek</div>
           <div className="header-actions">
             <button className="icon-button notification" aria-label="Oznámení"><Bell size={20} /><span /></button>
-            <button className="profile-button"><span className="avatar">JK</span><span className="profile-name">Jan Král</span><ChevronDown size={16} /></button>
+            <button className="profile-button" onClick={openProfile}><span className="avatar">{initials}</span><span className="profile-name">{displayName}</span><ChevronDown size={16} /></button>
           </div>
         </header>
         {children}
       </main>
+      {profileOpen && <div className="modal-backdrop" role="presentation" onMouseDown={(event) => event.target === event.currentTarget && setProfileOpen(false)}><section className="payment-modal profile-modal" role="dialog" aria-modal="true" aria-labelledby="profile-title"><button className="modal-close" onClick={() => setProfileOpen(false)} aria-label="Zavřít"><X size={21} /></button><p className="modal-kicker">Váš profil</p><h2 id="profile-title">Údaje majitele účtu</h2>{profileError && <p className="api-notice">{profileError}</p>}<form onSubmit={saveProfile}><label>Jméno a příjmení<input required minLength={2} maxLength={120} value={profileName} onChange={(event) => setProfileName(event.target.value)} /></label><button className="pay-button payment-submit" type="submit" disabled={profileSaving}>{profileSaving ? "Ukládám..." : "Uložit profil"}</button></form></section></div>}
     </div>
   );
 }

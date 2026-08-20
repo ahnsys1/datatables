@@ -5,6 +5,7 @@ import java.util.UUID;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -14,12 +15,14 @@ import org.springframework.web.bind.annotation.RestController;
 
 import cz.listek.backend.account.AccountDtos.AccountResponse;
 import cz.listek.backend.account.AccountDtos.CreateAccountRequest;
+import cz.listek.backend.account.AccountDtos.UpdateAccountRequest;
 import cz.listek.backend.transaction.TransactionDtos.TransactionResponse;
 import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/api/v1/accounts")
 public class AccountController {
+
     private final AccountService accountService;
 
     public AccountController(AccountService accountService) {
@@ -35,6 +38,11 @@ public class AccountController {
     @ResponseStatus(HttpStatus.CREATED)
     public AccountResponse create(@Valid @RequestBody CreateAccountRequest request) {
         return accountService.create(request);
+    }
+
+    @PatchMapping("/{accountId}")
+    public AccountResponse update(@PathVariable UUID accountId, @Valid @RequestBody UpdateAccountRequest request) {
+        return accountService.update(accountId, request);
     }
 
     @GetMapping("/{accountId}/transactions")

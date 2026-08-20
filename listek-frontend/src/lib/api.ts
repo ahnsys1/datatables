@@ -54,6 +54,13 @@ export function getAccounts() {
   return request<Account[]>("/accounts", { cache: "no-store" });
 }
 
+export function updateAccount(accountId: string, input: { ownerName: string }) {
+  return request<Account>(`/accounts/${accountId}`, {
+    method: "PATCH",
+    body: JSON.stringify(input),
+  });
+}
+
 export function getTransactions(accountId: string) {
   return request<BankTransaction[]>(`/accounts/${accountId}/transactions`, { cache: "no-store" });
 }

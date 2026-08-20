@@ -43,11 +43,29 @@ public class Account {
         this.currency = currency;
     }
 
-    public UUID getId() { return id; }
-    public String getOwnerName() { return ownerName; }
-    public String getAccountNumber() { return accountNumber; }
-    public BigDecimal getBalance() { return balance; }
-    public CurrencyCode getCurrency() { return currency; }
+    public UUID getId() {
+        return id;
+    }
+
+    public String getOwnerName() {
+        return ownerName;
+    }
+
+    public String getAccountNumber() {
+        return accountNumber;
+    }
+
+    public BigDecimal getBalance() {
+        return balance;
+    }
+
+    public CurrencyCode getCurrency() {
+        return currency;
+    }
+
+    public void renameOwner(String ownerName) {
+        this.ownerName = ownerName;
+    }
 
     public void debit(BigDecimal amount) {
         this.balance = this.balance.subtract(amount);

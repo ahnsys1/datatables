@@ -1,9 +1,26 @@
 "use client";
 
-import { ArrowRight, Check, CreditCard, Eye, EyeOff, LockKeyhole, Settings, ShieldCheck, Wifi, X } from "lucide-react";
+import {
+  ArrowRight,
+  Check,
+  CreditCard,
+  Eye,
+  EyeOff,
+  LockKeyhole,
+  Settings,
+  ShieldCheck,
+  Wifi,
+  X,
+} from "lucide-react";
 import { FormEvent, useEffect, useState } from "react";
 import BankShell from "../BankShell";
-import { BankCard, createCard, getAccounts, getCards, updateCard } from "../../lib/api";
+import {
+  BankCard,
+  createCard,
+  getAccounts,
+  getCards,
+  updateCard,
+} from "../../lib/api";
 
 export default function CardsPage() {
   const [cards, setCards] = useState<BankCard[]>([]);
@@ -45,11 +62,30 @@ export default function CardsPage() {
           setCashWithdrawals(card.cashWithdrawals);
         }
       })
-      .catch((error) => setApiError(error instanceof Error ? error.message : "Karty se nepodařilo načíst."))
+      .catch((error) =>
+        setApiError(
+          error instanceof Error
+            ? error.message
+            : "Karty se nepodařilo načíst.",
+        ),
+      )
       .finally(() => setLoading(false));
   }, []);
 
-  async function saveSettings(overrides: Partial<Pick<BankCard, "locked" | "paymentLimit" | "onlinePaymentLimit" | "withdrawalLimit" | "onlinePayments" | "inStorePayments" | "cashWithdrawals">> = {}) {
+  async function saveSettings(
+    overrides: Partial<
+      Pick<
+        BankCard,
+        | "locked"
+        | "paymentLimit"
+        | "onlinePaymentLimit"
+        | "withdrawalLimit"
+        | "onlinePayments"
+        | "inStorePayments"
+        | "cashWithdrawals"
+      >
+    > = {},
+  ) {
     if (!activeCard) return;
     setSaving(true);
     try {
@@ -62,7 +98,11 @@ export default function CardsPage() {
         inStorePayments: overrides.inStorePayments ?? inStorePayments,
         cashWithdrawals: overrides.cashWithdrawals ?? cashWithdrawals,
       });
-      setCards((currentCards) => currentCards.map((card) => card.id === savedCard.id ? savedCard : card));
+      setCards((currentCards) =>
+        currentCards.map((card) =>
+          card.id === savedCard.id ? savedCard : card,
+        ),
+      );
       setLocked(savedCard.locked);
       setPaymentLimit(savedCard.paymentLimit);
       setOnlinePaymentLimit(savedCard.onlinePaymentLimit);
@@ -72,7 +112,11 @@ export default function CardsPage() {
       setCashWithdrawals(savedCard.cashWithdrawals);
       setApiError("");
     } catch (error) {
-      setApiError(error instanceof Error ? error.message : "Nastavení karty se nepodařilo uložit.");
+      setApiError(
+        error instanceof Error
+          ? error.message
+          : "Nastavení karty se nepodařilo uložit.",
+      );
     } finally {
       setSaving(false);
     }
@@ -88,7 +132,11 @@ export default function CardsPage() {
       setOrderSent(true);
       setApiError("");
     } catch (error) {
-      setApiError(error instanceof Error ? error.message : "Kartu se nepodařilo objednat.");
+      setApiError(
+        error instanceof Error
+          ? error.message
+          : "Kartu se nepodařilo objednat.",
+      );
     } finally {
       setSaving(false);
     }
@@ -99,13 +147,256 @@ export default function CardsPage() {
     setOrderSent(false);
   }
 
-  return <BankShell><div className="bank-content section-page">
-    {loading && <p className="api-notice">Načítám karty z databáze...</p>}
-    {apiError && <p className="api-notice">{apiError}</p>}
-    <div className="page-hero"><div><p className="date-label">Plaťte podle sebe</p><h1>Moje karty</h1><p className="page-lead">Karty máte pod kontrolou. Včetně limitů, bezpečnosti a nastavení.</p></div><button className="pay-button" onClick={() => setModal("order")}><CreditCard size={18} /> Objednat kartu</button></div>
-    <div className="cards-page-grid"><article className={`card-large ${locked ? "is-locked" : ""}`}><div className="card-chip" /><Wifi className="card-contactless" size={19} /><span className="card-brand">Lístek</span><p>••••&nbsp; ••••&nbsp; ••••&nbsp; 2841</p><div className="card-owner"><span>JAN KRÁL</span><b>VISA</b></div>{locked && <div className="card-lock-label"><LockKeyhole size={15} /> Zamknuto</div>}</article><section className="card-info"><p className={`card-status ${locked ? "locked" : ""}`}><i /> {locked ? "Dočasně zamknutá" : "Aktivní karta"}</p><h2>Visa Classic</h2><p>Platná do 08/29</p><div className="card-number-row"><span>Číslo karty</span><b>•••• 2841</b></div><button className="text-button" onClick={() => setDetailsVisible((visible) => !visible)}>{detailsVisible ? "Skrýt detaily" : "Zobrazit detaily"} {detailsVisible ? <EyeOff size={16} /> : <Eye size={16} />}</button>{detailsVisible && <div className="card-details"><span>Držitel<b>Jan Král</b></span><span>Účet<b>123456789 / 3030</b></span><span>Typ<b>Debetní karta</b></span></div>}</section></div>
-    <div className="card-tools"><button onClick={() => { const nextLocked = !locked; setLocked(nextLocked); void saveSettings({ locked: nextLocked }); }} disabled={saving}><span><LockKeyhole size={20} /></span><strong>{locked ? "Odemknout kartu" : "Dočasně zamknout"}</strong><small>{locked ? "Kartu znovu aktivujete jedním kliknutím." : "Kartu můžete kdykoliv odemknout."}</small></button><button onClick={() => setModal("limits")} disabled={saving}><span><Settings size={20} /></span><strong>Limity a nastavení</strong><small>Upravte platby na internetu i výběry.</small></button></div>
-    {modal && <div className="modal-backdrop" role="presentation" onMouseDown={(event) => event.target === event.currentTarget && closeModal()}><section className="payment-modal card-modal" role="dialog" aria-modal="true" aria-labelledby="card-modal-title"><button className="modal-close" onClick={closeModal} aria-label="Zavřít"><X size={21} /></button>{modal === "limits" ? <><p className="modal-kicker">Nastavení karty</p><h2 id="card-modal-title">Limity a bezpečnost</h2><div className="card-limit-list"><label><span><strong>Platby kartou</strong><small>Maximálně za den</small></span><input type="number" value={paymentLimit} onChange={(event) => setPaymentLimit(Number(event.target.value))} min="0" step="1000" /> Kč</label><label><span><strong>Platby na internetu</strong><small>Maximálně za den</small></span><input type="number" value={onlinePaymentLimit} onChange={(event) => setOnlinePaymentLimit(Number(event.target.value))} min="0" step="1000" /> Kč</label><label><span><strong>Výběry z bankomatu</strong><small>Maximálně za den</small></span><input type="number" value={withdrawalLimit} onChange={(event) => setWithdrawalLimit(Number(event.target.value))} min="0" step="500" /> Kč</label></div><div className="card-switches"><button className={onlinePayments ? "is-on" : ""} onClick={() => setOnlinePayments((value) => !value)}><span>{onlinePayments ? <Check size={14} /> : null}</span><b>Platby na internetu</b></button><button className={cashWithdrawals ? "is-on" : ""} onClick={() => setCashWithdrawals((value) => !value)}><span>{cashWithdrawals ? <Check size={14} /> : null}</span><b>Výběry z bankomatů</b></button></div><button className="pay-button payment-submit" onClick={() => { void saveSettings(); closeModal(); }} disabled={saving}>Uložit nastavení</button><p className="secure-note"><ShieldCheck size={16} /> Změny se projeví okamžitě.</p></> : orderSent ? <div className="payment-success"><span><Check size={30} /></span><h2 id="card-modal-title">Karta je na cestě</h2><p>Novou kartu vám doručíme do 5 pracovních dnů.</p><button className="pay-button" onClick={closeModal}>Hotovo</button></div> : <><p className="modal-kicker">Nová karta</p><h2 id="card-modal-title">Objednat kartu</h2><p className="card-order-copy">Visa Classic k běžnému účtu bez měsíčního poplatku.</p><form onSubmit={submitOrder}><label>Adresa doručení<input required defaultValue="Dlouhá 12, Praha 1" /></label><label>Typ doručení<select defaultValue="standard"><option value="standard">Standardní (zdarma)</option><option value="express">Expresní (99 Kč)</option></select></label><button className="pay-button payment-submit" type="submit" disabled={saving}>Objednat kartu <ArrowRight size={18} /></button></form></>}</section></div>}
-    <label className="card-store-checkbox"><input type="checkbox" checked={inStorePayments} onChange={(event) => { const enabled = event.target.checked; setInStorePayments(enabled); void saveSettings({ inStorePayments: enabled }); }} disabled={saving} /><span><strong>Placení v obchodech</strong><small>Povolí platby kartou u obchodníků.</small></span></label>
-  </div></BankShell>;
+  return (
+    <BankShell>
+      <div className="bank-content section-page">
+        {loading && <p className="api-notice">Načítám karty z databáze...</p>}
+        {apiError && <p className="api-notice">{apiError}</p>}
+        <div className="page-hero">
+          <div>
+            <p className="date-label">Plaťte podle sebe</p>
+            <h1>Moje karty</h1>
+            <p className="page-lead">
+              Karty máte pod kontrolou. Včetně limitů, bezpečnosti a nastavení.
+            </p>
+          </div>
+          <button className="pay-button" onClick={() => setModal("order")}>
+            <CreditCard size={18} /> Objednat kartu
+          </button>
+        </div>
+        <div className="cards-page-grid">
+          <article className={`card-large ${locked ? "is-locked" : ""}`}>
+            <div className="card-chip" />
+            <Wifi className="card-contactless" size={19} />
+            <span className="card-brand">Lístek</span>
+            <p>••••&nbsp; ••••&nbsp; ••••&nbsp; 2841</p>
+            <div className="card-owner">
+              <span>JAN KRÁL</span>
+              <b>VISA</b>
+            </div>
+            {locked && (
+              <div className="card-lock-label">
+                <LockKeyhole size={15} /> Zamknuto
+              </div>
+            )}
+          </article>
+          <section className="card-info">
+            <p className={`card-status ${locked ? "locked" : ""}`}>
+              <i /> {locked ? "Dočasně zamknutá" : "Aktivní karta"}
+            </p>
+            <h2>Visa Classic</h2>
+            <p>Platná do 08/29</p>
+            <div className="card-number-row">
+              <span>Číslo karty</span>
+              <b>•••• 2841</b>
+            </div>
+            <button
+              className="text-button"
+              onClick={() => setDetailsVisible((visible) => !visible)}
+            >
+              {detailsVisible ? "Skrýt detaily" : "Zobrazit detaily"}{" "}
+              {detailsVisible ? <EyeOff size={16} /> : <Eye size={16} />}
+            </button>
+            {detailsVisible && (
+              <div className="card-details">
+                <span>
+                  Držitel<b>Jan Král</b>
+                </span>
+                <span>
+                  Účet<b>123456789 / 3030</b>
+                </span>
+                <span>
+                  Typ<b>Debetní karta</b>
+                </span>
+              </div>
+            )}
+          </section>
+        </div>
+        <div className="card-tools">
+          <button
+            onClick={() => {
+              const nextLocked = !locked;
+              setLocked(nextLocked);
+              void saveSettings({ locked: nextLocked });
+            }}
+            disabled={saving}
+          >
+            <span>
+              <LockKeyhole size={20} />
+            </span>
+            <strong>{locked ? "Odemknout kartu" : "Dočasně zamknout"}</strong>
+            <small>
+              {locked
+                ? "Kartu znovu aktivujete jedním kliknutím."
+                : "Kartu můžete kdykoliv odemknout."}
+            </small>
+          </button>
+          <button onClick={() => setModal("limits")} disabled={saving}>
+            <span>
+              <Settings size={20} />
+            </span>
+            <strong>Limity a nastavení</strong>
+            <small>Upravte platby na internetu i výběry.</small>
+          </button>
+        </div>
+        {modal && (
+          <div
+            className="modal-backdrop"
+            role="presentation"
+            onMouseDown={(event) =>
+              event.target === event.currentTarget && closeModal()
+            }
+          >
+            <section
+              className="payment-modal card-modal"
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="card-modal-title"
+            >
+              <button
+                className="modal-close"
+                onClick={closeModal}
+                aria-label="Zavřít"
+              >
+                <X size={21} />
+              </button>
+              {modal === "limits" ? (
+                <>
+                  <p className="modal-kicker">Nastavení karty</p>
+                  <h2 id="card-modal-title">Limity a bezpečnost</h2>
+                  <div className="card-limit-list">
+                    <label>
+                      <span>
+                        <strong>Platby kartou</strong>
+                        <small>Maximálně za den</small>
+                      </span>
+                      <input
+                        type="number"
+                        value={paymentLimit}
+                        onChange={(event) =>
+                          setPaymentLimit(Number(event.target.value))
+                        }
+                        min="0"
+                        step="1000"
+                      />{" "}
+                      Kč
+                    </label>
+                    <label>
+                      <span>
+                        <strong>Platby na internetu</strong>
+                        <small>Maximálně za den</small>
+                      </span>
+                      <input
+                        type="number"
+                        value={onlinePaymentLimit}
+                        onChange={(event) =>
+                          setOnlinePaymentLimit(Number(event.target.value))
+                        }
+                        min="0"
+                        step="1000"
+                      />{" "}
+                      Kč
+                    </label>
+                    <label>
+                      <span>
+                        <strong>Výběry z bankomatu</strong>
+                        <small>Maximálně za den</small>
+                      </span>
+                      <input
+                        type="number"
+                        value={withdrawalLimit}
+                        onChange={(event) =>
+                          setWithdrawalLimit(Number(event.target.value))
+                        }
+                        min="0"
+                        step="500"
+                      />{" "}
+                      Kč
+                    </label>
+                  </div>
+                  <div className="card-switches">
+                    <button
+                      className={onlinePayments ? "is-on" : ""}
+                      onClick={() => setOnlinePayments((value) => !value)}
+                    >
+                      <span>{onlinePayments ? <Check size={14} /> : null}</span>
+                      <b>Platby na internetu</b>
+                    </button>
+                    <button
+                      className={inStorePayments ? "is-on" : ""}
+                      onClick={() => setInStorePayments((value) => !value)}
+                    >
+                      <span>{inStorePayments ? <Check size={14} /> : null}</span>
+                      <b>Placení v obchodech</b>
+                    </button>
+                    <button
+                      className={cashWithdrawals ? "is-on" : ""}
+                      onClick={() => setCashWithdrawals((value) => !value)}
+                    >
+                      <span>
+                        {cashWithdrawals ? <Check size={14} /> : null}
+                      </span>
+                      <b>Výběry z bankomatů</b>
+                    </button>
+                  </div>
+                  <button
+                    className="pay-button payment-submit"
+                    onClick={() => {
+                      void saveSettings();
+                      closeModal();
+                    }}
+                    disabled={saving}
+                  >
+                    Uložit nastavení
+                  </button>
+                  <p className="secure-note">
+                    <ShieldCheck size={16} /> Změny se projeví okamžitě.
+                  </p>
+                </>
+              ) : orderSent ? (
+                <div className="payment-success">
+                  <span>
+                    <Check size={30} />
+                  </span>
+                  <h2 id="card-modal-title">Karta je na cestě</h2>
+                  <p>Novou kartu vám doručíme do 5 pracovních dnů.</p>
+                  <button className="pay-button" onClick={closeModal}>
+                    Hotovo
+                  </button>
+                </div>
+              ) : (
+                <>
+                  <p className="modal-kicker">Nová karta</p>
+                  <h2 id="card-modal-title">Objednat kartu</h2>
+                  <p className="card-order-copy">
+                    Visa Classic k běžnému účtu bez měsíčního poplatku.
+                  </p>
+                  <form onSubmit={submitOrder}>
+                    <label>
+                      Adresa doručení
+                      <input required defaultValue="Dlouhá 12, Praha 1" />
+                    </label>
+                    <label>
+                      Typ doručení
+                      <select defaultValue="standard">
+                        <option value="standard">Standardní (zdarma)</option>
+                        <option value="express">Expresní (99 Kč)</option>
+                      </select>
+                    </label>
+                    <button
+                      className="pay-button payment-submit"
+                      type="submit"
+                      disabled={saving}
+                    >
+                      Objednat kartu <ArrowRight size={18} />
+                    </button>
+                  </form>
+                </>
+              )}
+            </section>
+          </div>
+        )}
+      </div>
+    </BankShell>
+  );
 }

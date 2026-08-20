@@ -11,6 +11,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import cz.listek.backend.account.AccountDtos.AccountResponse;
 import cz.listek.backend.account.AccountDtos.CreateAccountRequest;
+import cz.listek.backend.account.AccountDtos.UpdateAccountRequest;
 import cz.listek.backend.transaction.Transaction;
 import cz.listek.backend.transaction.TransactionDtos.TransactionResponse;
 import cz.listek.backend.transaction.TransactionRepository;
@@ -18,6 +19,7 @@ import cz.listek.backend.transaction.TransactionType;
 
 @Service
 public class AccountService {
+
     private final AccountRepository accountRepository;
     private final TransactionRepository transactionRepository;
 
@@ -39,6 +41,13 @@ public class AccountService {
         }
         var currency = request.currency() == null ? CurrencyCode.CZK : request.currency();
         return toResponse(accountRepository.save(new Account(request.ownerName(), request.accountNumber(), initialBalance, currency)));
+    }
+
+    @Transactional
+    public AccountResponse update(UUID accountId, UpdateAccountRequest request) {
+        Account account = requireAccount(accountId);
+        account.renameOwner(request.ownerName().trim());
+        return toResponse(account);
     }
 
     @Transactional(readOnly = true)

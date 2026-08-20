@@ -7,7 +7,7 @@ import {
   Sparkles, TrendingUp, X,
 } from "lucide-react";
 import Link from "next/link";
-import { getAccounts, getTransactions, Account, BankTransaction } from "../lib/api";
+import { getAccounts, getTransactions, Account, BankTransaction, updateAccount } from "../lib/api";
 import { FormEvent, useDeferredValue, useEffect, useState } from "react";
 
 type Transaction = {
@@ -53,6 +53,10 @@ export default function BankDashboard() {
   const [paymentOpen, setPaymentOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [paymentSent, setPaymentSent] = useState(false);
+  const [profileOpen, setProfileOpen] = useState(false);
+  const [profileName, setProfileName] = useState("");
+  const [profileSaving, setProfileSaving] = useState(false);
+  const [profileError, setProfileError] = useState("");
   const deferredSearch = useDeferredValue(search);
   const displayedTransactions: Transaction[] = apiTransactions.length > 0 ? apiTransactions.map((transaction, index) => ({
     id: index,
@@ -89,6 +93,28 @@ export default function BankDashboard() {
     setPaymentSent(true);
   }
 
+  function openProfile() {
+    setProfileName(currentAccount?.ownerName ?? "");
+    setProfileError("");
+    setProfileOpen(true);
+  }
+
+  async function submitProfile(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!currentAccount || !profileName.trim()) return;
+    setProfileSaving(true);
+    try {
+      const updatedAccount = await updateAccount(currentAccount.id, { ownerName: profileName.trim() });
+      setAccounts((currentAccounts) => currentAccounts.map((account) => account.id === updatedAccount.id ? updatedAccount : account));
+      setProfileOpen(false);
+      setProfileError("");
+    } catch (error) {
+      setProfileError(error instanceof Error ? error.message : "Profil se nepodařilo uložit.");
+    } finally {
+      setProfileSaving(false);
+    }
+  }
+
   return (
     <div className="bank-app">
       <aside className={`bank-sidebar ${menuOpen ? "is-open" : ""}`}>
@@ -113,7 +139,7 @@ export default function BankDashboard() {
           <div className="mobile-logo">Lístek</div>
           <div className="header-actions">
             <button className="icon-button notification" aria-label="Oznámení"><Bell size={20} /><span /></button>
-            <button className="profile-button"><span className="avatar">JK</span><span className="profile-name">Jan Král</span><ChevronDown size={16} /></button>
+            <button className="profile-button" onClick={openProfile}><span className="avatar">{(currentAccount?.ownerName ?? "Jan Král").split(" ").map((part) => part[0]).slice(0, 2).join("").toUpperCase()}</span><span className="profile-name">{currentAccount?.ownerName ?? "Jan Král"}</span><ChevronDown size={16} /></button>
           </div>
         </header>
 
@@ -198,6 +224,7 @@ export default function BankDashboard() {
           </section>
         </div>
       )}
+      {profileOpen && <div className="modal-backdrop" role="presentation" onMouseDown={(event) => event.target === event.currentTarget && setProfileOpen(false)}><section className="payment-modal profile-modal" role="dialog" aria-modal="true" aria-labelledby="dashboard-profile-title"><button className="modal-close" onClick={() => setProfileOpen(false)} aria-label="Zavřít"><X size={21} /></button><p className="modal-kicker">Váš profil</p><h2 id="dashboard-profile-title">Údaje majitele účtu</h2>{profileError && <p className="api-notice">{profileError}</p>}<form onSubmit={submitProfile}><label>Jméno a příjmení<input required minLength={2} maxLength={120} value={profileName} onChange={(event) => setProfileName(event.target.value)} /></label><button className="pay-button payment-submit" type="submit" disabled={profileSaving}>{profileSaving ? "Ukládám..." : "Uložit profil"}</button></form></section></div>}
     </div>
   );
 }
