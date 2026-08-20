@@ -17,6 +17,22 @@ export type BankTransaction = {
   createdAt: string;
 };
 
+export type BankCard = {
+  id: string;
+  accountId: string;
+  holderName: string;
+  cardType: string;
+  lastFour: string;
+  expirationDate: string;
+  locked: boolean;
+  paymentLimit: number;
+  onlinePaymentLimit: number;
+  withdrawalLimit: number;
+  onlinePayments: boolean;
+  inStorePayments: boolean;
+  cashWithdrawals: boolean;
+};
+
 const apiBase = process.env.NEXT_PUBLIC_API_BASE_URL ?? "/api/backend";
 
 async function request<T>(path: string, options?: RequestInit): Promise<T> {
@@ -40,6 +56,21 @@ export function getAccounts() {
 
 export function getTransactions(accountId: string) {
   return request<BankTransaction[]>(`/accounts/${accountId}/transactions`, { cache: "no-store" });
+}
+
+export function getCards(accountId: string) {
+  return request<BankCard[]>(`/accounts/${accountId}/cards`, { cache: "no-store" });
+}
+
+export function createCard(accountId: string) {
+  return request<BankCard>(`/accounts/${accountId}/cards`, { method: "POST" });
+}
+
+export function updateCard(cardId: string, input: Omit<BankCard, "id" | "accountId" | "holderName" | "cardType" | "lastFour" | "expirationDate">) {
+  return request<BankCard>(`/cards/${cardId}`, {
+    method: "PATCH",
+    body: JSON.stringify(input),
+  });
 }
 
 export function transferMoney(input: {
