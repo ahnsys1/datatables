@@ -10,6 +10,39 @@ services:
       - "5433:5432"
     volumes:
       - listek-postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U listek -d listek"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  listek-backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: listek-backend
+    environment:
+      DB_URL: jdbc:postgresql://postgres:5432/listek
+      DB_USERNAME: listek
+      DB_PASSWORD: listek
+      SERVER_PORT: 8080
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - "8080:8080"
+
+  listek-frontend:
+    build:
+      context: ../listek-frontend
+      dockerfile: Dockerfile
+    container_name: listek-frontend
+    environment:
+      BACKEND_URL: http://listek-backend:8080
+    depends_on:
+      - listek-backend
+    ports:
+      - "3000:3000"
 
 volumes:
   listek-postgres-data:
