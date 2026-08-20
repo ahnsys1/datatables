@@ -17,6 +17,7 @@ type Transaction = {
   date: string;
   amount: number;
   icon: "card" | "income" | "payment" | "mobile";
+  source?: BankTransaction;
 };
 
 const transactions: Transaction[] = [
@@ -57,6 +58,7 @@ export default function BankDashboard() {
   const [profileName, setProfileName] = useState("");
   const [profileSaving, setProfileSaving] = useState(false);
   const [profileError, setProfileError] = useState("");
+  const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
   const deferredSearch = useDeferredValue(search);
   const displayedTransactions: Transaction[] = apiTransactions.length > 0 ? apiTransactions.map((transaction, index) => ({
     id: index,
@@ -65,6 +67,7 @@ export default function BankDashboard() {
     date: new Intl.DateTimeFormat("cs-CZ", { day: "numeric", month: "long" }).format(new Date(transaction.createdAt)),
     amount: transaction.amount,
     icon: transaction.type === "CREDIT" ? "income" : "payment",
+    source: transaction,
   })) : transactions;
   const filteredTransactions = displayedTransactions.filter((transaction) =>
     `${transaction.title} ${transaction.detail}`.toLocaleLowerCase("cs").includes(deferredSearch.toLocaleLowerCase("cs")),
@@ -74,7 +77,8 @@ export default function BankDashboard() {
     getAccounts()
       .then(async (loadedAccounts) => {
         setAccounts(loadedAccounts);
-        if (loadedAccounts[0]) setApiTransactions(await getTransactions(loadedAccounts[0].id));
+        const accountTransactions = await Promise.all(loadedAccounts.map((account) => getTransactions(account.id)));
+        setApiTransactions(accountTransactions.flat().sort((first, second) => new Date(second.createdAt).getTime() - new Date(first.createdAt).getTime()));
       })
       .catch(() => setApiError("Backend není dostupný. Zobrazuji ukázková data."))
       .finally(() => setLoading(false));
@@ -82,6 +86,15 @@ export default function BankDashboard() {
 
   const currentAccount = accounts[0];
   const savingsAccount = accounts[1];
+  function counterpartyFor(transaction: Transaction) {
+    if (!transaction.source) return undefined;
+    return apiTransactions.find((candidate) => candidate.id !== transaction.source?.id
+      && candidate.accountId !== transaction.source?.accountId
+      && candidate.description === transaction.source?.description
+      && candidate.amount === -transaction.source?.amount);
+  }
+  const selectedAccount = selectedTransaction?.source ? accounts.find((account) => account.id === selectedTransaction.source?.accountId) : currentAccount;
+  const selectedCounterpartyAccount = selectedTransaction ? accounts.find((account) => account.id === counterpartyFor(selectedTransaction)?.accountId) : undefined;
 
   function closePayment() {
     setPaymentOpen(false);
@@ -179,7 +192,7 @@ export default function BankDashboard() {
               </div>
               <div className="transaction-list">
                 {filteredTransactions.map((transaction) => (
-                  <button className="transaction-row" key={transaction.id}>
+                  <button className="transaction-row" key={transaction.id} onClick={() => setSelectedTransaction(transaction)}>
                     <span className={`transaction-icon ${transaction.amount > 0 ? "incoming" : ""}`}><TransactionIcon type={transaction.icon} /></span>
                     <span className="transaction-copy"><strong>{transaction.title}</strong><small>{transaction.detail}</small></span>
                     <span className="transaction-date">{transaction.date}</span>
@@ -224,6 +237,7 @@ export default function BankDashboard() {
           </section>
         </div>
       )}
+      {selectedTransaction && <div className="modal-backdrop" role="presentation" onMouseDown={(event) => event.target === event.currentTarget && setSelectedTransaction(null)}><section className="payment-modal transaction-detail-modal" role="dialog" aria-modal="true" aria-labelledby="dashboard-transaction-detail-title"><button className="modal-close" onClick={() => setSelectedTransaction(null)} aria-label="Zavřít detail"><X size={21} /></button><p className="modal-kicker">Detail pohybu</p><h2 id="dashboard-transaction-detail-title">{selectedTransaction.title}</h2><div className="transaction-detail-amount"><span className={selectedTransaction.amount > 0 ? "incoming-amount" : ""}>{selectedTransaction.amount > 0 ? "+" : "−"}{currency.format(Math.abs(selectedTransaction.amount))}</span><small>{selectedTransaction.detail}</small></div><dl className="transaction-detail-list"><div><dt>Datum</dt><dd>{selectedTransaction.source ? new Intl.DateTimeFormat("cs-CZ", { dateStyle: "long", timeStyle: "short" }).format(new Date(selectedTransaction.source.createdAt)) : selectedTransaction.date}</dd></div><div><dt>Typ pohybu</dt><dd>{selectedTransaction.amount > 0 ? "Příchozí platba" : "Odchozí platba"}</dd></div><div><dt>Odchozí účet</dt><dd>{selectedTransaction.amount < 0 ? selectedAccount?.accountNumber ?? "Neuveden" : selectedCounterpartyAccount?.accountNumber ?? "Neuveden"}</dd></div><div><dt>Cílový účet</dt><dd>{selectedTransaction.amount > 0 ? selectedAccount?.accountNumber ?? "Neuveden" : selectedCounterpartyAccount?.accountNumber ?? "Neuveden"}</dd></div><div><dt>Zpráva</dt><dd>{selectedTransaction.source?.description ?? selectedTransaction.title}</dd></div>{selectedTransaction.source && <div><dt>ID transakce</dt><dd>{selectedTransaction.source.id}</dd></div>}</dl></section></div>}
       {profileOpen && <div className="modal-backdrop" role="presentation" onMouseDown={(event) => event.target === event.currentTarget && setProfileOpen(false)}><section className="payment-modal profile-modal" role="dialog" aria-modal="true" aria-labelledby="dashboard-profile-title"><button className="modal-close" onClick={() => setProfileOpen(false)} aria-label="Zavřít"><X size={21} /></button><p className="modal-kicker">Váš profil</p><h2 id="dashboard-profile-title">Údaje majitele účtu</h2>{profileError && <p className="api-notice">{profileError}</p>}<form onSubmit={submitProfile}><label>Jméno a příjmení<input required minLength={2} maxLength={120} value={profileName} onChange={(event) => setProfileName(event.target.value)} /></label><button className="pay-button payment-submit" type="submit" disabled={profileSaving}>{profileSaving ? "Ukládám..." : "Uložit profil"}</button></form></section></div>}
     </div>
   );
