@@ -24,6 +24,9 @@ export default function BankShell({ children }: { children: ReactNode }) {
   const [account, setAccount] = useState<Account | null>(null);
   const [profileOpen, setProfileOpen] = useState(false);
   const [profileName, setProfileName] = useState("");
+  const [profileEmail, setProfileEmail] = useState("");
+  const [profileAddress, setProfileAddress] = useState("");
+  const [profilePassword, setProfilePassword] = useState("");
   const [profileError, setProfileError] = useState("");
   const [profileSaving, setProfileSaving] = useState(false);
 
@@ -32,24 +35,32 @@ export default function BankShell({ children }: { children: ReactNode }) {
       if (accounts[0]) {
         setAccount(accounts[0]);
         setProfileName(accounts[0].ownerName);
+        setProfileEmail(accounts[0].email);
+        setProfileAddress(accounts[0].address);
       }
     }).catch(() => setProfileError("Profil se nepodařilo načíst."));
   }, []);
 
   function openProfile() {
     setProfileName(account?.ownerName ?? "");
+    setProfileEmail(account?.email ?? "");
+    setProfileAddress(account?.address ?? "");
+    setProfilePassword("");
     setProfileError("");
     setProfileOpen(true);
   }
 
   async function saveProfile(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (!account || !profileName.trim()) return;
+    if (!account || !profileName.trim() || !profileEmail.trim() || !profileAddress.trim()) return;
     setProfileSaving(true);
     try {
-      const updatedAccount = await updateAccount(account.id, { ownerName: profileName.trim() });
+      const updatedAccount = await updateAccount(account.id, { ownerName: profileName.trim(), email: profileEmail.trim(), address: profileAddress.trim(), password: profilePassword || undefined });
       setAccount(updatedAccount);
       setProfileName(updatedAccount.ownerName);
+      setProfileEmail(updatedAccount.email);
+      setProfileAddress(updatedAccount.address);
+      setProfilePassword("");
       setProfileOpen(false);
       setProfileError("");
     } catch (error) {
@@ -90,7 +101,7 @@ export default function BankShell({ children }: { children: ReactNode }) {
         </header>
         {children}
       </main>
-      {profileOpen && <div className="modal-backdrop" role="presentation" onMouseDown={(event) => event.target === event.currentTarget && setProfileOpen(false)}><section className="payment-modal profile-modal" role="dialog" aria-modal="true" aria-labelledby="profile-title"><button className="modal-close" onClick={() => setProfileOpen(false)} aria-label="Zavřít"><X size={21} /></button><p className="modal-kicker">Váš profil</p><h2 id="profile-title">Údaje majitele účtu</h2>{profileError && <p className="api-notice">{profileError}</p>}<form onSubmit={saveProfile}><label>Jméno a příjmení<input required minLength={2} maxLength={120} value={profileName} onChange={(event) => setProfileName(event.target.value)} /></label><button className="pay-button payment-submit" type="submit" disabled={profileSaving}>{profileSaving ? "Ukládám..." : "Uložit profil"}</button></form></section></div>}
+      {profileOpen && <div className="modal-backdrop" role="presentation" onMouseDown={(event) => event.target === event.currentTarget && setProfileOpen(false)}><section className="payment-modal profile-modal" role="dialog" aria-modal="true" aria-labelledby="profile-title"><button className="modal-close" onClick={() => setProfileOpen(false)} aria-label="Zavřít"><X size={21} /></button><p className="modal-kicker">Váš profil</p><h2 id="profile-title">Osobní údaje a přihlášení</h2>{profileError && <p className="api-notice">{profileError}</p>}<form onSubmit={saveProfile}><label>Jméno a příjmení<input required minLength={2} maxLength={120} value={profileName} onChange={(event) => setProfileName(event.target.value)} /></label><label>E-mail<input required type="email" value={profileEmail} onChange={(event) => setProfileEmail(event.target.value)} /></label><label>Adresa<input required maxLength={240} value={profileAddress} onChange={(event) => setProfileAddress(event.target.value)} /></label><label>Nové heslo<input type="password" minLength={8} placeholder="Ponechte prázdné, pokud ho neměníte" value={profilePassword} onChange={(event) => setProfilePassword(event.target.value)} /></label><button className="pay-button payment-submit" type="submit" disabled={profileSaving}>{profileSaving ? "Ukládám..." : "Uložit profil"}</button></form></section></div>}
     </div>
   );
 }

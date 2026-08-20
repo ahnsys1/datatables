@@ -3,6 +3,8 @@ export type CurrencyCode = "CZK" | "EUR";
 export type Account = {
   id: string;
   ownerName: string;
+  email: string;
+  address: string;
   accountNumber: string;
   balance: number;
   currency: CurrencyCode;
@@ -87,7 +89,11 @@ export function getAccounts() {
   return request<Account[]>("/accounts", { cache: "no-store" });
 }
 
-export function updateAccount(accountId: string, input: { ownerName: string }) {
+export function login(input: { email: string; password: string }) {
+  return request<Account>("/auth/login", { method: "POST", body: JSON.stringify(input) });
+}
+
+export function updateAccount(accountId: string, input: { ownerName: string; email: string; address: string; password?: string }) {
   return request<Account>(`/accounts/${accountId}`, {
     method: "PATCH",
     body: JSON.stringify(input),

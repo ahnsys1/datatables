@@ -22,6 +22,12 @@ public class Account {
 
     @Column(nullable = false, length = 120)
     private String ownerName;
+    @Column(nullable = false, length = 160)
+    private String email;
+    @Column(nullable = false, length = 240)
+    private String address;
+    @Column(nullable = false, length = 200)
+    private String passwordHash;
 
     @Column(nullable = false, unique = true, length = 34)
     private String accountNumber;
@@ -37,7 +43,14 @@ public class Account {
     }
 
     public Account(String ownerName, String accountNumber, BigDecimal balance, CurrencyCode currency) {
+        this(ownerName, "", "", "", accountNumber, balance, currency);
+    }
+
+    public Account(String ownerName, String email, String address, String passwordHash, String accountNumber, BigDecimal balance, CurrencyCode currency) {
         this.ownerName = ownerName;
+        this.email = email;
+        this.address = address;
+        this.passwordHash = passwordHash;
         this.accountNumber = accountNumber;
         this.balance = balance;
         this.currency = currency;
@@ -55,6 +68,18 @@ public class Account {
         return accountNumber;
     }
 
+    public String getEmail() {
+        return email;
+    }
+
+    public String getAddress() {
+        return address;
+    }
+
+    String getPasswordHash() {
+        return passwordHash;
+    }
+
     public BigDecimal getBalance() {
         return balance;
     }
@@ -65,6 +90,15 @@ public class Account {
 
     public void renameOwner(String ownerName) {
         this.ownerName = ownerName;
+    }
+
+    public void updateProfile(String ownerName, String email, String address, String passwordHash) {
+        this.ownerName = ownerName;
+        this.email = email;
+        this.address = address;
+        if (passwordHash != null) {
+            this.passwordHash = passwordHash;
+        }
     }
 
     public void debit(BigDecimal amount) {

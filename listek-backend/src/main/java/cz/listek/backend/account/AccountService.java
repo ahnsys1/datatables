@@ -40,13 +40,21 @@ public class AccountService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Pocatecni zustatek nesmi byt zaporny");
         }
         var currency = request.currency() == null ? CurrencyCode.CZK : request.currency();
-        return toResponse(accountRepository.save(new Account(request.ownerName(), request.accountNumber(), initialBalance, currency)));
+        return toResponse(accountRepository.save(new Account(request.ownerName().trim(), request.email().trim(), request.address().trim(), PasswordHasher.hash(request.password()), request.accountNumber(), initialBalance, currency)));
     }
 
     @Transactional
     public AccountResponse update(UUID accountId, UpdateAccountRequest request) {
         Account account = requireAccount(accountId);
-        account.renameOwner(request.ownerName().trim());
+        account.updateProfile(request.ownerName().trim(), request.email().trim(), request.address().trim(), request.password() == null || request.password().isBlank() ? null : PasswordHasher.hash(request.password()));
+        return toResponse(account);
+    }
+
+    @Transactional(readOnly = true)
+    public AccountResponse login(String email, String password) {
+        Account account = accountRepository.findByEmailIgnoreCase(email.trim())
+                .filter(candidate -> PasswordHasher.matches(password, candidate.getPasswordHash()))
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Nespravny e-mail nebo heslo"));
         return toResponse(account);
     }
 
@@ -102,7 +110,7 @@ public class AccountService {
     }
 
     private AccountResponse toResponse(Account account) {
-        return new AccountResponse(account.getId(), account.getOwnerName(), account.getAccountNumber(), account.getBalance(), account.getCurrency());
+        return new AccountResponse(account.getId(), account.getOwnerName(), account.getEmail(), account.getAddress(), account.getAccountNumber(), account.getBalance(), account.getCurrency());
     }
 
     private TransactionResponse toResponse(Transaction transaction) {

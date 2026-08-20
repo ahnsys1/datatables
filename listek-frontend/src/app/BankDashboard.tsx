@@ -56,6 +56,9 @@ export default function BankDashboard() {
   const [paymentSent, setPaymentSent] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const [profileName, setProfileName] = useState("");
+  const [profileEmail, setProfileEmail] = useState("");
+  const [profileAddress, setProfileAddress] = useState("");
+  const [profilePassword, setProfilePassword] = useState("");
   const [profileSaving, setProfileSaving] = useState(false);
   const [profileError, setProfileError] = useState("");
   const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
@@ -108,17 +111,23 @@ export default function BankDashboard() {
 
   function openProfile() {
     setProfileName(currentAccount?.ownerName ?? "");
+    setProfileEmail(currentAccount?.email ?? "");
+    setProfileAddress(currentAccount?.address ?? "");
+    setProfilePassword("");
     setProfileError("");
     setProfileOpen(true);
   }
 
   async function submitProfile(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (!currentAccount || !profileName.trim()) return;
+    if (!currentAccount || !profileName.trim() || !profileEmail.trim() || !profileAddress.trim()) return;
     setProfileSaving(true);
     try {
-      const updatedAccount = await updateAccount(currentAccount.id, { ownerName: profileName.trim() });
+      const updatedAccount = await updateAccount(currentAccount.id, { ownerName: profileName.trim(), email: profileEmail.trim(), address: profileAddress.trim(), password: profilePassword || undefined });
       setAccounts((currentAccounts) => currentAccounts.map((account) => account.id === updatedAccount.id ? updatedAccount : account));
+      setProfileEmail(updatedAccount.email);
+      setProfileAddress(updatedAccount.address);
+      setProfilePassword("");
       setProfileOpen(false);
       setProfileError("");
     } catch (error) {
@@ -238,7 +247,7 @@ export default function BankDashboard() {
         </div>
       )}
       {selectedTransaction && <div className="modal-backdrop" role="presentation" onMouseDown={(event) => event.target === event.currentTarget && setSelectedTransaction(null)}><section className="payment-modal transaction-detail-modal" role="dialog" aria-modal="true" aria-labelledby="dashboard-transaction-detail-title"><button className="modal-close" onClick={() => setSelectedTransaction(null)} aria-label="Zavřít detail"><X size={21} /></button><p className="modal-kicker">Detail pohybu</p><h2 id="dashboard-transaction-detail-title">{selectedTransaction.title}</h2><div className="transaction-detail-amount"><span className={selectedTransaction.amount > 0 ? "incoming-amount" : ""}>{selectedTransaction.amount > 0 ? "+" : "−"}{currency.format(Math.abs(selectedTransaction.amount))}</span><small>{selectedTransaction.detail}</small></div><dl className="transaction-detail-list"><div><dt>Datum</dt><dd>{selectedTransaction.source ? new Intl.DateTimeFormat("cs-CZ", { dateStyle: "long", timeStyle: "short" }).format(new Date(selectedTransaction.source.createdAt)) : selectedTransaction.date}</dd></div><div><dt>Typ pohybu</dt><dd>{selectedTransaction.amount > 0 ? "Příchozí platba" : "Odchozí platba"}</dd></div><div><dt>Odchozí účet</dt><dd>{selectedTransaction.amount < 0 ? selectedAccount?.accountNumber ?? "Neuveden" : selectedCounterpartyAccount?.accountNumber ?? "Neuveden"}</dd></div><div><dt>Cílový účet</dt><dd>{selectedTransaction.amount > 0 ? selectedAccount?.accountNumber ?? "Neuveden" : selectedCounterpartyAccount?.accountNumber ?? "Neuveden"}</dd></div><div><dt>Zpráva</dt><dd>{selectedTransaction.source?.description ?? selectedTransaction.title}</dd></div>{selectedTransaction.source && <div><dt>ID transakce</dt><dd>{selectedTransaction.source.id}</dd></div>}</dl></section></div>}
-      {profileOpen && <div className="modal-backdrop" role="presentation" onMouseDown={(event) => event.target === event.currentTarget && setProfileOpen(false)}><section className="payment-modal profile-modal" role="dialog" aria-modal="true" aria-labelledby="dashboard-profile-title"><button className="modal-close" onClick={() => setProfileOpen(false)} aria-label="Zavřít"><X size={21} /></button><p className="modal-kicker">Váš profil</p><h2 id="dashboard-profile-title">Údaje majitele účtu</h2>{profileError && <p className="api-notice">{profileError}</p>}<form onSubmit={submitProfile}><label>Jméno a příjmení<input required minLength={2} maxLength={120} value={profileName} onChange={(event) => setProfileName(event.target.value)} /></label><button className="pay-button payment-submit" type="submit" disabled={profileSaving}>{profileSaving ? "Ukládám..." : "Uložit profil"}</button></form></section></div>}
+      {profileOpen && <div className="modal-backdrop" role="presentation" onMouseDown={(event) => event.target === event.currentTarget && setProfileOpen(false)}><section className="payment-modal profile-modal" role="dialog" aria-modal="true" aria-labelledby="dashboard-profile-title"><button className="modal-close" onClick={() => setProfileOpen(false)} aria-label="Zavřít"><X size={21} /></button><p className="modal-kicker">Váš profil</p><h2 id="dashboard-profile-title">Osobní údaje a přihlášení</h2>{profileError && <p className="api-notice">{profileError}</p>}<form onSubmit={submitProfile}><label>Jméno a příjmení<input required minLength={2} maxLength={120} value={profileName} onChange={(event) => setProfileName(event.target.value)} /></label><label>E-mail<input required type="email" value={profileEmail} onChange={(event) => setProfileEmail(event.target.value)} /></label><label>Adresa<input required maxLength={240} value={profileAddress} onChange={(event) => setProfileAddress(event.target.value)} /></label><label>Nové heslo<input type="password" minLength={8} placeholder="Ponechte prázdné, pokud ho neměníte" value={profilePassword} onChange={(event) => setProfilePassword(event.target.value)} /></label><button className="pay-button payment-submit" type="submit" disabled={profileSaving}>{profileSaving ? "Ukládám..." : "Uložit profil"}</button></form></section></div>}
     </div>
   );
 }
