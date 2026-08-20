@@ -160,6 +160,22 @@ button { color: inherit; }
 .quick-actions h2 { margin: 0 0 13px; font-size: 16px; }
 .quick-actions button { width: 100%; padding: 13px 0; display: grid; grid-template-columns: 37px 1fr 16px; align-items: center; gap: 9px; border: 0; border-top: 1px solid var(--line); background: transparent; cursor: pointer; text-align: left; font-size: 11px; font-weight: 750; }
 .quick-actions button > span { width: 32px; height: 32px; display: grid; place-items: center; border-radius: 50%; background: var(--soft-green); color: var(--green); font-size: 18px; }
+.payment-history { margin-top: 22px; overflow: hidden; border: 1px solid var(--line); border-radius: 7px; background: white; }
+.payment-history > .section-heading { padding: 18px 22px; border-bottom: 1px solid var(--line); }
+.payment-history .section-heading p { margin: 4px 0 0; color: var(--muted); font-size: 10px; }
+.payment-count { color: var(--muted); font-size: 10px; }
+.payment-history-row { width: 100%; min-height: 69px; padding: 9px 22px; display: grid; grid-template-columns: 40px minmax(130px, 1fr) 105px 125px 16px; align-items: center; gap: 12px; border: 0; border-bottom: 1px solid #edf0eb; background: transparent; text-align: left; cursor: pointer; }
+.payment-history-row:last-child { border-bottom: 0; }
+.payment-history-row:hover { background: #f8faf6; }
+.transaction-detail-modal { width: min(100%, 500px); }
+.transaction-detail-amount { display: grid; gap: 5px; padding: 18px 0 20px; border-bottom: 1px solid var(--line); }
+.transaction-detail-amount span { font-size: 30px; font-weight: 800; }
+.transaction-detail-amount small { color: var(--muted); font-size: 11px; }
+.transaction-detail-list { margin: 0; }
+.transaction-detail-list > div { display: flex; justify-content: space-between; gap: 20px; padding: 14px 0; border-bottom: 1px solid #edf0eb; }
+.transaction-detail-list > div:last-child { border-bottom: 0; }
+.transaction-detail-list dt { color: var(--muted); font-size: 11px; }
+.transaction-detail-list dd { max-width: 62%; margin: 0; color: var(--ink); font-size: 11px; font-weight: 700; text-align: right; overflow-wrap: anywhere; }
 .cards-page-grid { display: grid; grid-template-columns: 390px minmax(0, 1fr); gap: 34px; align-items: center; }
 .card-large { position: relative; overflow: hidden; min-height: 245px; padding: 27px; border-radius: 10px; background: #263d35; color: white; box-shadow: 0 16px 30px rgba(24,33,28,.15); }
 .card-large.is-locked { background: #46514b; }
