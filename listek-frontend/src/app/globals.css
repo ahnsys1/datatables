@@ -149,6 +149,13 @@ button { color: inherit; }
 .page-hero h1 { margin: 6px 0 10px; font-size: clamp(32px, 4vw, 52px); line-height: 1; }
 .page-lead { max-width: 450px; margin: 0; color: var(--muted); font-size: 14px; line-height: 1.6; }
 .account-page-grid { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(280px, .8fr); gap: 18px; margin-top: 14px; }
+.account-management-bar { display: flex; justify-content: space-between; align-items: center; margin: -22px 0 12px; color: var(--muted); font-size: 11px; }
+.account-management-bar strong { color: var(--ink); }
+.account-modal { max-height: calc(100vh - 40px); overflow-y: auto; }
+.account-detail-list { display: grid; gap: 0; margin: 0; }
+.account-detail-list div { display: flex; justify-content: space-between; gap: 18px; padding: 12px 0; border-bottom: 1px solid var(--line); font-size: 12px; }
+.account-detail-list dt { color: var(--muted); }
+.account-detail-list dd { margin: 0; text-align: right; font-weight: 750; }
 .account-detail-card { min-height: 240px; }
 .settings-panel { margin-top: 28px; padding: 22px 24px; display: flex; justify-content: space-between; align-items: center; gap: 20px; border: 1px solid var(--line); border-radius: 7px; background: white; }
 .settings-panel h2, .settings-panel p { margin: 0; }

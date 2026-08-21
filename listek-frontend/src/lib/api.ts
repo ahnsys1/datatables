@@ -89,6 +89,18 @@ export function getAccounts() {
   return request<Account[]>("/accounts", { cache: "no-store" });
 }
 
+export function createAccount(input: {
+  ownerName: string;
+  email: string;
+  address: string;
+  password: string;
+  accountNumber: string;
+  initialBalance?: number;
+  currency?: CurrencyCode;
+}) {
+  return request<Account>("/accounts", { method: "POST", body: JSON.stringify(input) });
+}
+
 export function login(input: { email: string; password: string }) {
   return request<Account>("/auth/login", { method: "POST", body: JSON.stringify(input) });
 }
