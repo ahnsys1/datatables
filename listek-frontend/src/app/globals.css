@@ -159,8 +159,8 @@ button { color: inherit; }
 .payment-form-card form { max-width: 560px; }
 .quick-actions { padding: 22px; border: 1px solid var(--line); border-radius: 7px; background: white; }
 .quick-actions h2 { margin: 0 0 13px; font-size: 16px; }
-.quick-actions button { width: 100%; padding: 13px 0; display: grid; grid-template-columns: 37px 1fr 16px; align-items: center; gap: 9px; border: 0; border-top: 1px solid var(--line); background: transparent; cursor: pointer; text-align: left; font-size: 11px; font-weight: 750; }
-.quick-actions button > span { width: 32px; height: 32px; display: grid; place-items: center; border-radius: 50%; background: var(--soft-green); color: var(--green); font-size: 18px; }
+.quick-actions button, .quick-actions a { width: 100%; padding: 13px 0; display: grid; grid-template-columns: 37px 1fr 16px; align-items: center; gap: 9px; border: 0; border-top: 1px solid var(--line); background: transparent; color: inherit; cursor: pointer; text-align: left; text-decoration: none; font-size: 11px; font-weight: 750; }
+.quick-actions button > span, .quick-actions a > span { width: 32px; height: 32px; display: grid; place-items: center; border-radius: 50%; background: var(--soft-green); color: var(--green); font-size: 18px; }
 .payment-history { margin-top: 22px; overflow: hidden; border: 1px solid var(--line); border-radius: 7px; background: white; }
 .payment-history > .section-heading { padding: 18px 22px; border-bottom: 1px solid var(--line); }
 .payment-history .section-heading p { margin: 4px 0 0; color: var(--muted); font-size: 10px; }
@@ -172,17 +172,17 @@ button { color: inherit; }
 .automation-modal { max-height: calc(100vh - 40px); overflow-y: auto; }
 .automation-list { display: grid; gap: 8px; margin-top: 24px; padding-top: 18px; border-top: 1px solid var(--line); }
 .automation-list > strong { font-size: 12px; }
-.automation-list > div, .selectable-list > button { padding: 11px 0; display: grid; gap: 4px; border: 0; border-bottom: 1px solid #edf0eb; background: transparent; color: var(--ink); text-align: left; }
+.automation-list > div, .selectable-list > button, .selectable-list > a { padding: 11px 0; display: grid; gap: 4px; border: 0; border-bottom: 1px solid #edf0eb; background: transparent; color: var(--ink); text-align: left; text-decoration: none; }
 .automation-list span, .selectable-list > button span { font-size: 11px; font-weight: 750; }
 .automation-list small, .selectable-list > button small { color: var(--muted); font-size: 10px; }
 .automation-item { position: relative; }
 .automation-actions { display: flex; gap: 8px; margin-top: 8px; }
-.automation-actions button { display: inline-flex; align-items: center; gap: 5px; padding: 5px 8px; border: 1px solid var(--line); border-radius: 5px; background: transparent; color: var(--ink); font: inherit; font-size: 11px; cursor: pointer; }
-.automation-actions button:last-child { color: #a43b32; }
-.selectable-list > button { width: 100%; cursor: pointer; }
-.selectable-list > button:hover { color: var(--green); }
+.automation-actions button, .automation-actions a { display: inline-flex; align-items: center; gap: 5px; padding: 5px 8px; border: 1px solid var(--line); border-radius: 5px; background: transparent; color: var(--ink); font: inherit; font-size: 11px; cursor: pointer; text-decoration: none; }
+.automation-actions button:last-child, .automation-actions a:last-child { color: #a43b32; }
+.selectable-list > button, .selectable-list > a { width: 100%; cursor: pointer; }
+.selectable-list > button:hover, .selectable-list > a:hover { color: var(--green); }
 .selectable-list > div { grid-template-columns: minmax(0, 1fr); align-items: stretch; min-width: 0; }
-.selectable-list > div > button:first-child { width: 100%; min-width: 0; display: grid; gap: 4px; padding: 0; border: 0; background: transparent; color: var(--ink); text-align: left; cursor: pointer; }
+.selectable-list > div > button:first-child, .selectable-list > div > a:first-child { width: 100%; min-width: 0; display: grid; gap: 4px; padding: 0; border: 0; background: transparent; color: var(--ink); text-align: left; cursor: pointer; text-decoration: none; }
 .template-delete { width: 32px; height: 32px; display: grid; place-items: center; border: 0; border-radius: 5px; background: #fff0ec; color: #a94b33; cursor: pointer; }
 .transaction-detail-amount { display: grid; gap: 5px; padding: 18px 0 20px; border-bottom: 1px solid var(--line); }
 .transaction-detail-amount span { font-size: 30px; font-weight: 800; }
@@ -192,6 +192,10 @@ button { color: inherit; }
 .transaction-detail-list > div:last-child { border-bottom: 0; }
 .transaction-detail-list dt { color: var(--muted); font-size: 11px; }
 .transaction-detail-list dd { max-width: 62%; margin: 0; color: var(--ink); font-size: 11px; font-weight: 700; text-align: right; overflow-wrap: anywhere; }
+.standalone-page { width: min(100%, 860px); max-width: none; margin: 24px auto 0; }
+.standalone-page form { max-width: none; }
+.standalone-page h1 { margin: 0 0 24px; font-size: 28px; }
+.standalone-page .section-heading h1 { margin: 0; }
 .cards-page-grid { display: grid; grid-template-columns: 390px minmax(0, 1fr); gap: 34px; align-items: center; }
 .card-large { position: relative; overflow: hidden; min-height: 245px; padding: 27px; border-radius: 10px; background: #263d35; color: white; box-shadow: 0 16px 30px rgba(24,33,28,.15); }
 .card-large.is-locked { background: #46514b; }

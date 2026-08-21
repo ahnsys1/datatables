@@ -31,7 +31,7 @@ const transactions: Transaction[] = [
 
 const navigation = [
   { label: "Přehled", href: "/", icon: Home }, { label: "Účty", href: "/ucty", icon: Landmark },
-  { label: "Platby", href: "/platby", icon: Send }, { label: "Karty", href: "/karty", icon: CreditCard },
+  { label: "Platby", href: "/payments", icon: Send }, { label: "Karty", href: "/karty", icon: CreditCard },
   { label: "Spoření", href: "/sporeni", icon: TrendingUp }, { label: "Dokumenty", href: "/dokumenty", icon: FileText },
 ];
 
