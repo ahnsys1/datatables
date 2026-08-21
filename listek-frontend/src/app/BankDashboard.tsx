@@ -2,7 +2,7 @@
 
 import {
   ArrowDownLeft, ArrowRight, ArrowUpRight, Bell, ChevronDown,
-  CreditCard, Eye, EyeOff, FileText, HelpCircle, Home, Landmark,
+  CreditCard, Eye, EyeOff, FileText, HandCoins, HelpCircle, Home, Landmark,
   LogOut, Menu, Plus, Search, Send, Settings, Smartphone,
   Sparkles, TrendingUp, X,
 } from "lucide-react";
@@ -34,7 +34,8 @@ const transactions: Transaction[] = [
 const navigation = [
   { label: "Přehled", href: "/", icon: Home }, { label: "Účty", href: "/ucty", icon: Landmark },
   { label: "Platby", href: "/payments", icon: Send }, { label: "Karty", href: "/karty", icon: CreditCard },
-  { label: "Spoření", href: "/sporeni", icon: TrendingUp }, { label: "Dokumenty", href: "/dokumenty", icon: FileText },
+  { label: "Spoření", href: "/sporeni", icon: TrendingUp }, { label: "Půjčky", href: "/pujcky", icon: HandCoins },
+  { label: "Dokumenty", href: "/dokumenty", icon: FileText },
 ];
 
 const currency = new Intl.NumberFormat("cs-CZ", {

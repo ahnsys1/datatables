@@ -57,6 +57,18 @@ export type BankCard = {
   cashWithdrawals: boolean;
 };
 
+export type LoanApplication = {
+  id: string;
+  type: "PERSONAL" | "HOME";
+  amount: number;
+  repaymentMonths: number;
+  annualRate: number;
+  monthlyPayment: number;
+  purpose: string;
+  status: "PENDING" | "APPROVED" | "REJECTED";
+  createdAt: string;
+};
+
 const apiBase = process.env.NEXT_PUBLIC_API_BASE_URL ?? "/api/backend";
 
 async function request<T>(path: string, options?: RequestInit): Promise<T> {
@@ -107,6 +119,22 @@ export function login(input: { email: string; password: string }) {
 
 export function register(input: { ownerName: string; email: string; address: string; password: string }) {
   return request<Account>("/auth/register", { method: "POST", body: JSON.stringify(input) });
+}
+
+export function getLoanApplications(accountId: string) {
+  return request<LoanApplication[]>(`/accounts/${accountId}/loan-applications`, { cache: "no-store" });
+}
+
+export function createLoanApplication(accountId: string, input: {
+  type: LoanApplication["type"];
+  amount: number;
+  repaymentMonths: number;
+  purpose: string;
+}) {
+  return request<LoanApplication>(`/accounts/${accountId}/loan-applications`, {
+    method: "POST",
+    body: JSON.stringify(input),
+  });
 }
 
 export function updateAccount(accountId: string, input: { ownerName: string; email: string; address: string; password?: string }) {
