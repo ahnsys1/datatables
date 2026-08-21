@@ -5,9 +5,10 @@ import {
   LogOut, Menu, Send, Settings, TrendingUp, X,
 } from "lucide-react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { FormEvent, ReactNode, useEffect, useState } from "react";
 import { Account, getAccounts, updateAccount } from "../lib/api";
+import { clearSession, getSession, setSession } from "../lib/session";
 
 const navigation = [
   { label: "Přehled", href: "/", icon: Home },
@@ -20,6 +21,7 @@ const navigation = [
 
 export default function BankShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
+  const router = useRouter();
   const [menuOpen, setMenuOpen] = useState(false);
   const [account, setAccount] = useState<Account | null>(null);
   const [profileOpen, setProfileOpen] = useState(false);
@@ -29,17 +31,26 @@ export default function BankShell({ children }: { children: ReactNode }) {
   const [profilePassword, setProfilePassword] = useState("");
   const [profileError, setProfileError] = useState("");
   const [profileSaving, setProfileSaving] = useState(false);
+  const [noticeOpen, setNoticeOpen] = useState<"notifications" | "logout" | null>(null);
+  const [sessionReady, setSessionReady] = useState(false);
 
   useEffect(() => {
+    const session = getSession();
+    if (!session) {
+      router.replace("/login");
+      return;
+    }
     getAccounts().then((accounts) => {
-      if (accounts[0]) {
-        setAccount(accounts[0]);
-        setProfileName(accounts[0].ownerName);
-        setProfileEmail(accounts[0].email);
-        setProfileAddress(accounts[0].address);
-      }
-    }).catch(() => setProfileError("Profil se nepodařilo načíst."));
-  }, []);
+      const currentAccount = accounts.find((candidate) => candidate.id === session.id) ?? session;
+      setAccount(currentAccount);
+      setProfileName(currentAccount.ownerName);
+      setProfileEmail(currentAccount.email);
+      setProfileAddress(currentAccount.address);
+    }).catch(() => {
+      setAccount(session);
+      setProfileError("Profil se nepodařilo obnovit.");
+    }).finally(() => setSessionReady(true));
+  }, [router]);
 
   function openProfile() {
     setProfileName(account?.ownerName ?? "");
@@ -57,6 +68,7 @@ export default function BankShell({ children }: { children: ReactNode }) {
     try {
       const updatedAccount = await updateAccount(account.id, { ownerName: profileName.trim(), email: profileEmail.trim(), address: profileAddress.trim(), password: profilePassword || undefined });
       setAccount(updatedAccount);
+      setSession(updatedAccount);
       setProfileName(updatedAccount.ownerName);
       setProfileEmail(updatedAccount.email);
       setProfileAddress(updatedAccount.address);
@@ -73,6 +85,8 @@ export default function BankShell({ children }: { children: ReactNode }) {
   const displayName = account?.ownerName ?? "Načítám...";
   const initials = displayName.split(" ").filter(Boolean).slice(0, 2).map((part) => part[0]).join("").toUpperCase() || "JK";
 
+  if (!sessionReady) return <div className="session-loading">Načítám bankovnictví...</div>;
+
   return (
     <div className="bank-app">
       <aside className={`bank-sidebar ${menuOpen ? "is-open" : ""}`}>
@@ -84,9 +98,9 @@ export default function BankShell({ children }: { children: ReactNode }) {
           ))}
         </nav>
         <div className="sidebar-bottom">
-          <button><HelpCircle size={20} /><span>Pomoc a kontakt</span></button>
-          <button><Settings size={20} /><span>Nastavení</span></button>
-          <button><LogOut size={20} /><span>Odhlásit se</span></button>
+          <Link href="/help" onClick={() => setMenuOpen(false)}><HelpCircle size={20} /><span>Pomoc a kontakt</span></Link>
+          <Link href="/settings" onClick={() => setMenuOpen(false)}><Settings size={20} /><span>Nastavení</span></Link>
+          <button onClick={() => setNoticeOpen("logout")}><LogOut size={20} /><span>Odhlásit se</span></button>
         </div>
       </aside>
       {menuOpen && <button className="menu-scrim" onClick={() => setMenuOpen(false)} aria-label="Zavřít nabídku" />}
@@ -95,13 +109,14 @@ export default function BankShell({ children }: { children: ReactNode }) {
           <button className="mobile-menu" onClick={() => setMenuOpen(true)} aria-label="Otevřít nabídku"><Menu /></button>
           <div className="mobile-logo">Lístek</div>
           <div className="header-actions">
-            <button className="icon-button notification" aria-label="Oznámení"><Bell size={20} /><span /></button>
+            <button className="icon-button notification" onClick={() => setNoticeOpen("notifications")} aria-label="Oznámení"><Bell size={20} /><span /></button>
             <button className="profile-button" onClick={openProfile}><span className="avatar">{initials}</span><span className="profile-name">{displayName}</span><ChevronDown size={16} /></button>
           </div>
         </header>
         {children}
       </main>
       {profileOpen && <div className="modal-backdrop" role="presentation" onMouseDown={(event) => event.target === event.currentTarget && setProfileOpen(false)}><section className="payment-modal profile-modal" role="dialog" aria-modal="true" aria-labelledby="profile-title"><button className="modal-close" onClick={() => setProfileOpen(false)} aria-label="Zavřít"><X size={21} /></button><p className="modal-kicker">Váš profil</p><h2 id="profile-title">Osobní údaje a přihlášení</h2>{profileError && <p className="api-notice">{profileError}</p>}<form onSubmit={saveProfile}><label>Jméno a příjmení<input required minLength={2} maxLength={120} value={profileName} onChange={(event) => setProfileName(event.target.value)} /></label><label>E-mail<input required type="email" value={profileEmail} onChange={(event) => setProfileEmail(event.target.value)} /></label><label>Adresa<input required maxLength={240} value={profileAddress} onChange={(event) => setProfileAddress(event.target.value)} /></label><label>Nové heslo<input type="password" minLength={8} placeholder="Ponechte prázdné, pokud ho neměníte" value={profilePassword} onChange={(event) => setProfilePassword(event.target.value)} /></label><button className="pay-button payment-submit" type="submit" disabled={profileSaving}>{profileSaving ? "Ukládám..." : "Uložit profil"}</button></form></section></div>}
+      {noticeOpen && <div className="modal-backdrop" role="presentation" onMouseDown={(event) => event.target === event.currentTarget && setNoticeOpen(null)}><section className="payment-modal compact-modal" role="dialog" aria-modal="true" aria-labelledby="notice-title"><button className="modal-close" onClick={() => setNoticeOpen(null)} aria-label="Zavřít"><X size={21} /></button><p className="modal-kicker">{noticeOpen === "notifications" ? "Oznámení" : "Přihlášení"}</p><h2 id="notice-title">{noticeOpen === "notifications" ? "Vše je v pořádku" : "Odhlásit se?"}</h2><p className="modal-copy">{noticeOpen === "notifications" ? "Nemáte žádná nová oznámení." : "Pro další práci s účtem se budete muset znovu přihlásit."}</p><button className="pay-button payment-submit" onClick={() => { if (noticeOpen === "logout") { clearSession(); router.replace("/login"); } else setNoticeOpen(null); }}>{noticeOpen === "logout" ? "Odhlásit se" : "Rozumím"}</button></section></div>}
     </div>
   );
 }

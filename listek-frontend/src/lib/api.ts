@@ -105,6 +105,10 @@ export function login(input: { email: string; password: string }) {
   return request<Account>("/auth/login", { method: "POST", body: JSON.stringify(input) });
 }
 
+export function register(input: { ownerName: string; email: string; address: string; password: string }) {
+  return request<Account>("/auth/register", { method: "POST", body: JSON.stringify(input) });
+}
+
 export function updateAccount(accountId: string, input: { ownerName: string; email: string; address: string; password?: string }) {
   return request<Account>(`/accounts/${accountId}`, {
     method: "PATCH",

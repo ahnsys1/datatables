@@ -1,13 +1,15 @@
 "use client";
 
 import {
-  ArrowDownLeft, ArrowRight, ArrowUpRight, Bell, Check, ChevronDown,
+  ArrowDownLeft, ArrowRight, ArrowUpRight, Bell, ChevronDown,
   CreditCard, Eye, EyeOff, FileText, HelpCircle, Home, Landmark,
-  LogOut, Menu, Plus, Search, Send, Settings, ShieldCheck, Smartphone,
+  LogOut, Menu, Plus, Search, Send, Settings, Smartphone,
   Sparkles, TrendingUp, X,
 } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { getAccounts, getTransactions, Account, BankTransaction, updateAccount } from "../lib/api";
+import { clearSession, getSession, setSession } from "../lib/session";
 import { FormEvent, useDeferredValue, useEffect, useState } from "react";
 
 type Transaction = {
@@ -45,15 +47,14 @@ function TransactionIcon({ type }: { type: Transaction["icon"] }) {
 }
 
 export default function BankDashboard() {
+  const router = useRouter();
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [apiTransactions, setApiTransactions] = useState<BankTransaction[]>([]);
   const [loading, setLoading] = useState(true);
   const [apiError, setApiError] = useState("");
   const [balanceVisible, setBalanceVisible] = useState(true);
   const [search, setSearch] = useState("");
-  const [paymentOpen, setPaymentOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
-  const [paymentSent, setPaymentSent] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const [profileName, setProfileName] = useState("");
   const [profileEmail, setProfileEmail] = useState("");
@@ -61,6 +62,8 @@ export default function BankDashboard() {
   const [profilePassword, setProfilePassword] = useState("");
   const [profileSaving, setProfileSaving] = useState(false);
   const [profileError, setProfileError] = useState("");
+  const [noticeOpen, setNoticeOpen] = useState<"notifications" | "logout" | "spending" | null>(null);
+  const [sessionReady, setSessionReady] = useState(false);
   const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
   const deferredSearch = useDeferredValue(search);
   const displayedTransactions: Transaction[] = apiTransactions.length > 0 ? apiTransactions.map((transaction, index) => ({
@@ -77,15 +80,24 @@ export default function BankDashboard() {
   );
 
   useEffect(() => {
+    const session = getSession();
+    if (!session) {
+      router.replace("/login");
+      return;
+    }
     getAccounts()
       .then(async (loadedAccounts) => {
-        setAccounts(loadedAccounts);
-        const accountTransactions = await Promise.all(loadedAccounts.map((account) => getTransactions(account.id)));
+        const currentAccounts = loadedAccounts.filter((account) => account.id === session.id);
+        setAccounts(currentAccounts.length > 0 ? currentAccounts : [session]);
+        const accountTransactions = await Promise.all((currentAccounts.length > 0 ? currentAccounts : [session]).map((account) => getTransactions(account.id)));
         setApiTransactions(accountTransactions.flat().sort((first, second) => new Date(second.createdAt).getTime() - new Date(first.createdAt).getTime()));
       })
-      .catch(() => setApiError("Backend není dostupný. Zobrazuji ukázková data."))
-      .finally(() => setLoading(false));
-  }, []);
+      .catch(() => {
+        setAccounts([session]);
+        setApiError("Backend není dostupný. Zobrazuji poslední známé údaje.");
+      })
+      .finally(() => { setLoading(false); setSessionReady(true); });
+  }, [router]);
 
   const currentAccount = accounts[0];
   const savingsAccount = accounts[1];
@@ -98,16 +110,6 @@ export default function BankDashboard() {
   }
   const selectedAccount = selectedTransaction?.source ? accounts.find((account) => account.id === selectedTransaction.source?.accountId) : currentAccount;
   const selectedCounterpartyAccount = selectedTransaction ? accounts.find((account) => account.id === counterpartyFor(selectedTransaction)?.accountId) : undefined;
-
-  function closePayment() {
-    setPaymentOpen(false);
-    setPaymentSent(false);
-  }
-
-  function submitPayment(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    setPaymentSent(true);
-  }
 
   function openProfile() {
     setProfileName(currentAccount?.ownerName ?? "");
@@ -124,6 +126,7 @@ export default function BankDashboard() {
     setProfileSaving(true);
     try {
       const updatedAccount = await updateAccount(currentAccount.id, { ownerName: profileName.trim(), email: profileEmail.trim(), address: profileAddress.trim(), password: profilePassword || undefined });
+      setSession(updatedAccount);
       setAccounts((currentAccounts) => currentAccounts.map((account) => account.id === updatedAccount.id ? updatedAccount : account));
       setProfileEmail(updatedAccount.email);
       setProfileAddress(updatedAccount.address);
@@ -137,6 +140,8 @@ export default function BankDashboard() {
     }
   }
 
+  if (!sessionReady) return <div className="session-loading">Načítám bankovnictví...</div>;
+
   return (
     <div className="bank-app">
       <aside className={`bank-sidebar ${menuOpen ? "is-open" : ""}`}>
@@ -148,9 +153,9 @@ export default function BankDashboard() {
           ))}
         </nav>
         <div className="sidebar-bottom">
-          <button><HelpCircle size={20} /><span>Pomoc a kontakt</span></button>
-          <button><Settings size={20} /><span>Nastavení</span></button>
-          <button><LogOut size={20} /><span>Odhlásit se</span></button>
+          <Link href="/help"><HelpCircle size={20} /><span>Pomoc a kontakt</span></Link>
+          <Link href="/settings"><Settings size={20} /><span>Nastavení</span></Link>
+          <button onClick={() => setNoticeOpen("logout")}><LogOut size={20} /><span>Odhlásit se</span></button>
         </div>
       </aside>
       {menuOpen && <button className="menu-scrim" onClick={() => setMenuOpen(false)} aria-label="Zavřít nabídku" />}
@@ -160,7 +165,7 @@ export default function BankDashboard() {
           <button className="mobile-menu" onClick={() => setMenuOpen(true)} aria-label="Otevřít nabídku"><Menu /></button>
           <div className="mobile-logo">Lístek</div>
           <div className="header-actions">
-            <button className="icon-button notification" aria-label="Oznámení"><Bell size={20} /><span /></button>
+            <button className="icon-button notification" onClick={() => setNoticeOpen("notifications")} aria-label="Oznámení"><Bell size={20} /><span /></button>
             <button className="profile-button" onClick={openProfile}><span className="avatar">{(currentAccount?.ownerName ?? "Jan Král").split(" ").map((part) => part[0]).slice(0, 2).join("").toUpperCase()}</span><span className="profile-name">{currentAccount?.ownerName ?? "Jan Král"}</span><ChevronDown size={16} /></button>
           </div>
         </header>
@@ -170,20 +175,20 @@ export default function BankDashboard() {
           {apiError && <p className="api-notice">{apiError}</p>}
           <section className="welcome-row">
             <div><p className="date-label">Čtvrtek, 20. srpna</p><h1>Dobré ráno, Jane.</h1></div>
-            <button className="pay-button" onClick={() => setPaymentOpen(true)}><Plus size={19} /> Nová platba</button>
+            <Link className="pay-button" href="/payments"><Plus size={19} /> Nová platba</Link>
           </section>
 
           <section className="account-section" aria-labelledby="accounts-title">
-            <div className="section-heading"><h2 id="accounts-title">Moje účty</h2><button className="text-button">Spravovat účty <ArrowRight size={16} /></button></div>
+            <div className="section-heading"><h2 id="accounts-title">Moje účty</h2><Link className="text-button" href="/ucty">Spravovat účty <ArrowRight size={16} /></Link></div>
             <div className="account-grid">
               <article className="account-primary">
                 <div className="account-topline"><span className="account-type">Běžný účet</span><button onClick={() => setBalanceVisible((visible) => !visible)} aria-label={balanceVisible ? "Skrýt zůstatek" : "Zobrazit zůstatek"}>{balanceVisible ? <Eye size={20} /> : <EyeOff size={20} />}</button></div>
                 <p className="account-number">123456789 / 3030</p><p className="balance-label">Disponibilní zůstatek</p>
                 <strong className="main-balance">{balanceVisible ? currentAccount ? currency.format(currentAccount.balance) : currency.format(126840.35) : "••••••••"}</strong>
-                <div className="account-footer"><span><i /> Aktivní účet</span><button>Detail účtu <ArrowRight size={15} /></button></div>
+                <div className="account-footer"><span><i /> Aktivní účet</span><Link href="/ucty">Detail účtu <ArrowRight size={15} /></Link></div>
               </article>
               <article className="savings-account">
-                <div className="savings-head"><span><TrendingUp size={19} /> Spořicí účet</span><button aria-label="Detail spořicího účtu"><ArrowRight size={17} /></button></div>
+                <div className="savings-head"><span><TrendingUp size={19} /> Spořicí účet</span><Link href="/sporeni" aria-label="Detail spořicího účtu"><ArrowRight size={17} /></Link></div>
                 <strong>{balanceVisible ? savingsAccount ? currency.format(savingsAccount.balance) : currency.format(84200) : "••••••••"}</strong><p>Úrok 4,2 % p. a.</p>
                 <div className="saving-progress"><span /></div><small>Cíl: Finanční rezerva <b>84 %</b></small>
               </article>
@@ -211,43 +216,25 @@ export default function BankDashboard() {
                 ))}
                 {filteredTransactions.length === 0 && <p className="bank-empty">Žádný pohyb neodpovídá hledání.</p>}
               </div>
-              <button className="all-transactions">Všechny pohyby <ArrowRight size={16} /></button>
+              <Link className="all-transactions" href="/payments">Všechny pohyby <ArrowRight size={16} /></Link>
             </section>
 
             <aside className="insights-column">
               <section className="spending-panel">
-                <div className="section-heading"><h2>Výdaje v srpnu</h2><button aria-label="Detail výdajů"><ArrowRight size={17} /></button></div>
+                <div className="section-heading"><h2>Výdaje v srpnu</h2><button onClick={() => setNoticeOpen("spending")} aria-label="Detail výdajů"><ArrowRight size={17} /></button></div>
                 <strong>24 386 Kč</strong><p>O 12 % méně než minulý měsíc</p>
                 <div className="spending-bars" aria-label="Výdaje po týdnech">{[42, 68, 50, 82, 58, 72, 44, 63, 37, 54, 31, 47].map((height, index) => <span key={index} style={{ height: `${height}%` }} className={index === 7 ? "current" : ""} />)}</div>
                 <div className="bar-labels"><span>1. 8.</span><span>Dnes</span><span>31. 8.</span></div>
               </section>
-              <section className="tip-panel"><Sparkles size={21} /><div><strong>Tip pro vaše peníze</strong><p>Na běžném účtu máte víc, než obvykle. Přesuňte část na spoření.</p><button>Přesunout peníze <ArrowRight size={15} /></button></div></section>
+              <section className="tip-panel"><Sparkles size={21} /><div><strong>Tip pro vaše peníze</strong><p>Na běžném účtu máte víc, než obvykle. Přesuňte část na spoření.</p><Link href="/sporeni">Přesunout peníze <ArrowRight size={15} /></Link></div></section>
             </aside>
           </div>
         </div>
       </main>
 
-      {paymentOpen && (
-        <div className="modal-backdrop" role="presentation" onMouseDown={(event) => event.target === event.currentTarget && closePayment()}>
-          <section className="payment-modal" role="dialog" aria-modal="true" aria-labelledby="payment-title">
-            <button className="modal-close" onClick={closePayment} aria-label="Zavřít"><X size={21} /></button>
-            {paymentSent ? (
-              <div className="payment-success"><span><Check size={30} /></span><h2>Platba je připravená</h2><p>Po potvrzení v mobilní aplikaci ji odešleme.</p><button className="pay-button" onClick={closePayment}>Hotovo</button></div>
-            ) : (
-              <><p className="modal-kicker">Nová platba</p><h2 id="payment-title">Komu posíláte?</h2>
-                <form onSubmit={submitPayment}>
-                  <label>Číslo účtu<input required placeholder="123456789 / 0100" /></label>
-                  <div className="payment-fields"><label>Částka<input required type="number" min="1" placeholder="0,00" /></label><label>Měna<select defaultValue="CZK"><option>CZK</option><option>EUR</option></select></label></div>
-                  <label>Zpráva pro příjemce<input placeholder="Například oběd" /></label>
-                  <button className="pay-button payment-submit" type="submit">Pokračovat <ArrowRight size={18} /></button>
-                </form>
-                <p className="secure-note"><ShieldCheck size={16} /> Platbu před odesláním bezpečně potvrdíte.</p></>
-            )}
-          </section>
-        </div>
-      )}
       {selectedTransaction && <div className="modal-backdrop" role="presentation" onMouseDown={(event) => event.target === event.currentTarget && setSelectedTransaction(null)}><section className="payment-modal transaction-detail-modal" role="dialog" aria-modal="true" aria-labelledby="dashboard-transaction-detail-title"><button className="modal-close" onClick={() => setSelectedTransaction(null)} aria-label="Zavřít detail"><X size={21} /></button><p className="modal-kicker">Detail pohybu</p><h2 id="dashboard-transaction-detail-title">{selectedTransaction.title}</h2><div className="transaction-detail-amount"><span className={selectedTransaction.amount > 0 ? "incoming-amount" : ""}>{selectedTransaction.amount > 0 ? "+" : "−"}{currency.format(Math.abs(selectedTransaction.amount))}</span><small>{selectedTransaction.detail}</small></div><dl className="transaction-detail-list"><div><dt>Datum</dt><dd>{selectedTransaction.source ? new Intl.DateTimeFormat("cs-CZ", { dateStyle: "long", timeStyle: "short" }).format(new Date(selectedTransaction.source.createdAt)) : selectedTransaction.date}</dd></div><div><dt>Typ pohybu</dt><dd>{selectedTransaction.amount > 0 ? "Příchozí platba" : "Odchozí platba"}</dd></div><div><dt>Odchozí účet</dt><dd>{selectedTransaction.amount < 0 ? selectedAccount?.accountNumber ?? "Neuveden" : selectedCounterpartyAccount?.accountNumber ?? "Neuveden"}</dd></div><div><dt>Cílový účet</dt><dd>{selectedTransaction.amount > 0 ? selectedAccount?.accountNumber ?? "Neuveden" : selectedCounterpartyAccount?.accountNumber ?? "Neuveden"}</dd></div><div><dt>Zpráva</dt><dd>{selectedTransaction.source?.description ?? selectedTransaction.title}</dd></div>{selectedTransaction.source && <div><dt>ID transakce</dt><dd>{selectedTransaction.source.id}</dd></div>}</dl></section></div>}
       {profileOpen && <div className="modal-backdrop" role="presentation" onMouseDown={(event) => event.target === event.currentTarget && setProfileOpen(false)}><section className="payment-modal profile-modal" role="dialog" aria-modal="true" aria-labelledby="dashboard-profile-title"><button className="modal-close" onClick={() => setProfileOpen(false)} aria-label="Zavřít"><X size={21} /></button><p className="modal-kicker">Váš profil</p><h2 id="dashboard-profile-title">Osobní údaje a přihlášení</h2>{profileError && <p className="api-notice">{profileError}</p>}<form onSubmit={submitProfile}><label>Jméno a příjmení<input required minLength={2} maxLength={120} value={profileName} onChange={(event) => setProfileName(event.target.value)} /></label><label>E-mail<input required type="email" value={profileEmail} onChange={(event) => setProfileEmail(event.target.value)} /></label><label>Adresa<input required maxLength={240} value={profileAddress} onChange={(event) => setProfileAddress(event.target.value)} /></label><label>Nové heslo<input type="password" minLength={8} placeholder="Ponechte prázdné, pokud ho neměníte" value={profilePassword} onChange={(event) => setProfilePassword(event.target.value)} /></label><button className="pay-button payment-submit" type="submit" disabled={profileSaving}>{profileSaving ? "Ukládám..." : "Uložit profil"}</button></form></section></div>}
+      {noticeOpen && <div className="modal-backdrop" role="presentation" onMouseDown={(event) => event.target === event.currentTarget && setNoticeOpen(null)}><section className="payment-modal compact-modal" role="dialog" aria-modal="true" aria-labelledby="dashboard-notice-title"><button className="modal-close" onClick={() => setNoticeOpen(null)} aria-label="Zavřít"><X size={21} /></button><p className="modal-kicker">{noticeOpen === "spending" ? "Výdaje" : noticeOpen === "notifications" ? "Oznámení" : "Přihlášení"}</p><h2 id="dashboard-notice-title">{noticeOpen === "spending" ? "Odchozí platby" : noticeOpen === "notifications" ? "Vše je v pořádku" : "Odhlásit se?"}</h2>{noticeOpen === "spending" ? <div className="spending-detail-list">{displayedTransactions.filter((transaction) => transaction.amount < 0).slice(0, 5).map((transaction) => <div key={transaction.id}><span>{transaction.title}</span><strong>{currency.format(transaction.amount)}</strong></div>)}</div> : <><p className="modal-copy">{noticeOpen === "notifications" ? "Nemáte žádná nová oznámení." : "Pro další práci s účtem se budete muset znovu přihlásit."}</p><button className="pay-button payment-submit" onClick={() => { if (noticeOpen === "logout") { clearSession(); router.replace("/login"); } else setNoticeOpen(null); }}>{noticeOpen === "logout" ? "Odhlásit se" : "Rozumím"}</button></>}</section></div>}
     </div>
   );
 }

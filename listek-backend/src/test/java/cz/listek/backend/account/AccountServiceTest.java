@@ -18,6 +18,7 @@ import org.springframework.web.server.ResponseStatusException;
 import cz.listek.backend.transaction.TransactionRepository;
 
 class AccountServiceTest {
+
     private AccountRepository accountRepository;
     private TransactionRepository transactionRepository;
     private AccountService accountService;
@@ -59,5 +60,18 @@ class AccountServiceTest {
         assertEquals(new BigDecimal("100.00"), source.getBalance());
         assertEquals(new BigDecimal("200.00"), target.getBalance());
         verify(transactionRepository, never()).save(any());
+    }
+
+    @Test
+    void rejectsRegistrationWithExistingEmail() {
+        var request = new AccountDtos.CreateAccountRequest(
+                "Jan Kral", "jan@example.com", "Praha", "bezpecneheslo", "123456789", BigDecimal.ZERO, CurrencyCode.CZK);
+        when(accountRepository.existsByEmailIgnoreCase("jan@example.com")).thenReturn(true);
+
+        ResponseStatusException exception = assertThrows(ResponseStatusException.class,
+                () -> accountService.create(request));
+
+        assertEquals(409, exception.getStatusCode().value());
+        verify(accountRepository, never()).save(any());
     }
 }

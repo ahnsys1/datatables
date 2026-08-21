@@ -1,6 +1,7 @@
 package cz.listek.backend.account;
 
 import java.math.BigDecimal;
+import java.security.SecureRandom;
 import java.util.List;
 import java.util.UUID;
 
@@ -11,6 +12,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import cz.listek.backend.account.AccountDtos.AccountResponse;
 import cz.listek.backend.account.AccountDtos.CreateAccountRequest;
+import cz.listek.backend.account.AccountDtos.RegisterAccountRequest;
 import cz.listek.backend.account.AccountDtos.UpdateAccountRequest;
 import cz.listek.backend.transaction.Transaction;
 import cz.listek.backend.transaction.TransactionDtos.TransactionResponse;
@@ -19,6 +21,8 @@ import cz.listek.backend.transaction.TransactionType;
 
 @Service
 public class AccountService {
+
+    private static final SecureRandom ACCOUNT_NUMBER_RANDOM = new SecureRandom();
 
     private final AccountRepository accountRepository;
     private final TransactionRepository transactionRepository;
@@ -35,12 +39,29 @@ public class AccountService {
 
     @Transactional
     public AccountResponse create(CreateAccountRequest request) {
+        if (accountRepository.existsByEmailIgnoreCase(request.email().trim())) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "E-mail je jiz zaregistrovan");
+        }
         var initialBalance = request.initialBalance() == null ? BigDecimal.ZERO : request.initialBalance();
         if (initialBalance.signum() < 0) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Pocatecni zustatek nesmi byt zaporny");
         }
         var currency = request.currency() == null ? CurrencyCode.CZK : request.currency();
         return toResponse(accountRepository.save(new Account(request.ownerName().trim(), request.email().trim(), request.address().trim(), PasswordHasher.hash(request.password()), request.accountNumber(), initialBalance, currency)));
+    }
+
+    @Transactional
+    public AccountResponse register(RegisterAccountRequest request) {
+        if (accountRepository.existsByEmailIgnoreCase(request.email().trim())) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "E-mail je jiz zaregistrovan");
+        }
+        String accountNumber;
+        do {
+            accountNumber = String.format("%09d", ACCOUNT_NUMBER_RANDOM.nextInt(1_000_000_000));
+        } while (accountRepository.existsByAccountNumber(accountNumber));
+        Account account = new Account(request.ownerName().trim(), request.email().trim(), request.address().trim(),
+                PasswordHasher.hash(request.password()), accountNumber, BigDecimal.ZERO, CurrencyCode.CZK);
+        return toResponse(accountRepository.save(account));
     }
 
     @Transactional

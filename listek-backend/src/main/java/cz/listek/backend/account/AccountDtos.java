@@ -40,4 +40,16 @@ public final class AccountDtos {
             @Size(min = 8, max = 120) String password) {
 
     }
+
+    public record RegisterAccountRequest(
+            @NotBlank
+            @Size(max = 120) String ownerName,
+            @NotBlank
+            @jakarta.validation.constraints.Email String email,
+            @NotBlank
+            @Size(max = 240) String address,
+            @NotBlank
+            @Size(min = 8, max = 120) String password) {
+
+    }
 }
