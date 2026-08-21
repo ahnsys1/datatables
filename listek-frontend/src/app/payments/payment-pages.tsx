@@ -4,6 +4,7 @@ import {
   ArrowRight,
   FileText,
   Trash2,
+  X,
 } from "lucide-react";
 import Link from "next/link";
 import { FormEvent, useEffect, useState } from "react";
@@ -47,7 +48,9 @@ function sortTransactions(transactions: BankTransaction[], accounts: Account[]) 
 }
 
 function PageFrame({ children }: { children: React.ReactNode }) {
-  return <div className="bank-content section-page"><Link className="text-button" href="/payments"><ArrowRight size={15} style={{ transform: "rotate(180deg)" }} /> Zpět na platby</Link>{children}</div>;
+  const router = useRouter();
+
+  return <div className="bank-content section-page"><button className="modal-close standalone-close" type="button" onClick={() => router.push("/payments")} aria-label="Zavřít"><X size={21} /></button>{children}</div>;
 }
 
 function useAccounts() {
