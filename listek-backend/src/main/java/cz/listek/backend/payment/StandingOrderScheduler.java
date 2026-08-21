@@ -23,18 +23,10 @@ public class StandingOrderScheduler {
             StandingOrderRepository standingOrderRepository,
             StandingOrderExecutionRepository executionRepository,
             AccountService accountService) {
-        this(standingOrderRepository, executionRepository, accountService, Clock.system(ZoneId.of("Europe/Prague")));
-    }
-
-    StandingOrderScheduler(
-            StandingOrderRepository standingOrderRepository,
-            StandingOrderExecutionRepository executionRepository,
-            AccountService accountService,
-            Clock clock) {
         this.standingOrderRepository = standingOrderRepository;
         this.executionRepository = executionRepository;
         this.accountService = accountService;
-        this.clock = clock;
+        this.clock = Clock.system(ZoneId.of("Europe/Prague"));
     }
 
     @Scheduled(cron = "${app.scheduler.standing-orders-cron:0 0 1 * * *}")
