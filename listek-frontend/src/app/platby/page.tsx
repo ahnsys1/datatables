@@ -28,6 +28,7 @@ import {
   PaymentTemplate,
   StandingOrder,
   transferMoney,
+  updatePaymentTemplate,
   updateStandingOrder,
 } from "../../lib/api";
 
@@ -51,9 +52,10 @@ export default function PaymentsPage() {
   const [selectedTransaction, setSelectedTransaction] =
     useState<BankTransaction | null>(null);
   const [quickAction, setQuickAction] = useState<
-    "standing-order" | "standing-orders" | "repeat" | "templates" | null
+    "standing-order" | "standing-orders" | "repeat" | "template" | "template-list" | null
   >(null);
   const [editingStandingOrder, setEditingStandingOrder] = useState<StandingOrder | null>(null);
+  const [editingTemplate, setEditingTemplate] = useState<PaymentTemplate | null>(null);
   const paymentFormRef = useRef<HTMLElement>(null);
 
   async function refreshTransactions(accountList: Account[]) {
@@ -172,6 +174,18 @@ export default function PaymentsPage() {
     setQuickAction("standing-order");
   }
 
+  function openNewTemplate() {
+    setEditingTemplate(null);
+    setError("");
+    setQuickAction("template");
+  }
+
+  function editTemplate(template: PaymentTemplate) {
+    setEditingTemplate(template);
+    setError("");
+    setQuickAction("template");
+  }
+
   function editStandingOrder(order: StandingOrder) {
     setEditingStandingOrder(order);
     setError("");
@@ -237,16 +251,26 @@ export default function PaymentsPage() {
 
   async function submitTemplate(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    const form = new FormData(event.currentTarget);
+    const formElement = event.currentTarget;
+    const form = new FormData(formElement);
     const accountId = String(form.get("accountId"));
     try {
-      await createPaymentTemplate(accountId, {
+      const input = {
         name: String(form.get("name")).trim(),
         targetAccountNumber: String(form.get("targetAccountNumber")).trim(),
         amount: Number(form.get("amount")),
         description: String(form.get("description")).trim(),
-      });
+      };
+      if (editingTemplate) {
+        await updatePaymentTemplate(editingTemplate.id, input);
+      } else {
+        await createPaymentTemplate(accountId, input);
+      }
       await refreshPaymentAutomation(accounts);
+      formElement.reset();
+      setQuickAction(null);
+      setEditingTemplate(null);
+      setError("");
     } catch (actionError) {
       setError(
         actionError instanceof Error
@@ -257,8 +281,13 @@ export default function PaymentsPage() {
   }
 
   async function removeTemplate(templateId: string) {
-    await deletePaymentTemplate(templateId);
-    await refreshPaymentAutomation(accounts);
+    if (!window.confirm("Opravdu chcete smazat tuto šablonu?")) return;
+    try {
+      await deletePaymentTemplate(templateId);
+      await refreshPaymentAutomation(accounts);
+    } catch (actionError) {
+      setError(actionError instanceof Error ? actionError.message : "Šablonu se nepodařilo smazat.");
+    }
   }
 
   return (
@@ -411,11 +440,28 @@ export default function PaymentsPage() {
               Opakovat platbu
               <ArrowRight size={16} />
             </button>
-            <button type="button" onClick={() => setQuickAction("templates")}>
+            <button
+              type="button"
+              onClick={openNewTemplate}
+            >
+              <span>
+                <Plus size={18} />
+              </span>
+              Nová šablona
+              <ArrowRight size={16} />
+            </button>
+            <button
+              type="button"
+              onClick={async () => {
+                setError("");
+                await refreshPaymentAutomation(accounts);
+                setQuickAction("template-list");
+              }}
+            >
               <span>
                 <FileText size={18} />
               </span>
-              Spravovat šablony
+              Seznam šablon
               <ArrowRight size={16} />
             </button>
           </aside>
@@ -673,7 +719,7 @@ export default function PaymentsPage() {
           </section>
         </div>
       )}
-      {quickAction === "templates" && (
+      {quickAction === "template" && (
         <div
           className="modal-backdrop"
           role="presentation"
@@ -695,16 +741,16 @@ export default function PaymentsPage() {
               <X size={21} />
             </button>
             <p className="modal-kicker">Platební šablony</p>
-            <h2 id="templates-title">Spravovat šablony</h2>
+            <h2 id="templates-title">{editingTemplate ? "Upravit šablonu" : "Nová šablona"}</h2>
             {error && <p className="api-notice">{error}</p>}
             <form onSubmit={submitTemplate}>
               <label>
                 Název šablony
-                <input required name="name" placeholder="Například nájem" />
+                <input required name="name" placeholder="Například nájem" defaultValue={editingTemplate?.name} />
               </label>
               <label>
                 Odesílatel
-                <select required name="accountId" defaultValue={fromAccountId}>
+                <select required name="accountId" defaultValue={editingTemplate?.accountId ?? fromAccountId}>
                   {accounts.map((account) => (
                     <option key={account.id} value={account.id}>
                       {formatAccountNumber(account.accountNumber)}
@@ -718,9 +764,10 @@ export default function PaymentsPage() {
                   required
                   name="targetAccountNumber"
                   placeholder="123456789 / 0100"
+                  defaultValue={editingTemplate?.targetAccountNumber}
                 />
               </label>
-              <div className="payment-fields">
+              <div className="payment-fields payment-template-fields">
                 <label>
                   Částka
                   <input
@@ -730,17 +777,45 @@ export default function PaymentsPage() {
                     min="0.01"
                     step="0.01"
                     placeholder="0,00"
+                    defaultValue={editingTemplate?.amount}
                   />
                 </label>
                 <label>
                   Zpráva
-                  <input required name="description" placeholder="Popis" />
+                  <input required name="description" placeholder="Popis" defaultValue={editingTemplate?.description} />
                 </label>
               </div>
               <button className="pay-button payment-submit" type="submit">
-                Uložit šablonu <ArrowRight size={18} />
+                {editingTemplate ? "Uložit změny" : "Uložit šablonu"} <ArrowRight size={18} />
               </button>
             </form>
+          </section>
+        </div>
+      )}
+      {quickAction === "template-list" && (
+        <div
+          className="modal-backdrop"
+          role="presentation"
+          onMouseDown={(event) =>
+            event.target === event.currentTarget && setQuickAction(null)
+          }
+        >
+          <section
+            className="payment-modal automation-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="template-list-title"
+          >
+            <button
+              className="modal-close"
+              onClick={() => setQuickAction(null)}
+              aria-label="Zavřít"
+            >
+              <X size={21} />
+            </button>
+            <p className="modal-kicker">Platební šablony</p>
+            <h2 id="template-list-title">Seznam šablon</h2>
+            {error && <p className="api-notice">{error}</p>}
             <div className="automation-list selectable-list">
               {templates.map((template) => (
                 <div key={template.id}>
@@ -764,14 +839,22 @@ export default function PaymentsPage() {
                       })}
                     </small>
                   </button>
-                  <button
-                    className="template-delete"
-                    type="button"
-                    onClick={() => removeTemplate(template.id)}
-                    aria-label={`Smazat šablonu ${template.name}`}
-                  >
-                    <Trash2 size={16} />
-                  </button>
+                  <div className="automation-actions">
+                    <button
+                      type="button"
+                      onClick={() => editTemplate(template)}
+                      aria-label={`Upravit šablonu ${template.name}`}
+                    >
+                      <FileText size={15} /> Upravit
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => removeTemplate(template.id)}
+                      aria-label={`Smazat šablonu ${template.name}`}
+                    >
+                      <Trash2 size={15} /> Smazat
+                    </button>
+                  </div>
                 </div>
               ))}
               {templates.length === 0 && (

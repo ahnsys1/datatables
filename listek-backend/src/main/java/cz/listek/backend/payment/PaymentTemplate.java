@@ -72,6 +72,13 @@ public class PaymentTemplate {
         return description;
     }
 
+    public void update(String name, String targetAccountNumber, BigDecimal amount, String description) {
+        this.name = name;
+        this.targetAccountNumber = targetAccountNumber;
+        this.amount = amount;
+        this.description = description;
+    }
+
     public OffsetDateTime getCreatedAt() {
         return createdAt;
     }

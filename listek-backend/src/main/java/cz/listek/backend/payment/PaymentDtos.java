@@ -36,6 +36,11 @@ public final class PaymentDtos {
 
     }
 
+    public record UpdatePaymentTemplateRequest(@NotBlank String name, @NotBlank String targetAccountNumber, @NotNull
+            @DecimalMin("0.01") BigDecimal amount, @NotBlank String description) {
+
+    }
+
     public record PaymentTemplateResponse(UUID id, UUID accountId, String name, String targetAccountNumber, BigDecimal amount, String description, OffsetDateTime createdAt) {
 
     }

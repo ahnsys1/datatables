@@ -14,6 +14,7 @@ import cz.listek.backend.payment.PaymentDtos.CreatePaymentTemplateRequest;
 import cz.listek.backend.payment.PaymentDtos.CreateStandingOrderRequest;
 import cz.listek.backend.payment.PaymentDtos.PaymentTemplateResponse;
 import cz.listek.backend.payment.PaymentDtos.StandingOrderResponse;
+import cz.listek.backend.payment.PaymentDtos.UpdatePaymentTemplateRequest;
 import cz.listek.backend.payment.PaymentDtos.UpdateStandingOrderRequest;
 
 @Service
@@ -67,6 +68,14 @@ public class PaymentService {
     public PaymentTemplateResponse createTemplate(UUID accountId, CreatePaymentTemplateRequest request) {
         Account account = requireAccount(accountId);
         return toResponse(paymentTemplateRepository.save(new PaymentTemplate(account, request.name().trim(), request.targetAccountNumber().trim(), request.amount(), request.description().trim())));
+    }
+
+    @Transactional
+    public PaymentTemplateResponse updateTemplate(UUID templateId, UpdatePaymentTemplateRequest request) {
+        PaymentTemplate template = paymentTemplateRepository.findById(templateId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Sablona nebyla nalezena"));
+        template.update(request.name().trim(), request.targetAccountNumber().trim(), request.amount(), request.description().trim());
+        return toResponse(template);
     }
 
     @Transactional

@@ -128,6 +128,10 @@ export function createPaymentTemplate(accountId: string, input: Omit<PaymentTemp
   return request<PaymentTemplate>(`/accounts/${accountId}/payment-templates`, { method: "POST", body: JSON.stringify(input) });
 }
 
+export function updatePaymentTemplate(templateId: string, input: Omit<PaymentTemplate, "id" | "accountId" | "createdAt">) {
+  return request<PaymentTemplate>(`/payment-templates/${templateId}`, { method: "PATCH", body: JSON.stringify(input) });
+}
+
 export function deletePaymentTemplate(templateId: string) {
   return request<void>(`/payment-templates/${templateId}`, { method: "DELETE" });
 }

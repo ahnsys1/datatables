@@ -136,6 +136,7 @@ button { color: inherit; }
 .payment-form-card form > label, .payment-form-card .payment-fields label { display: grid; gap: 7px; margin-top: 15px; color: var(--muted); font-size: 10px; font-weight: 750; }
 .api-notice { margin: 0 0 18px; padding: 11px 14px; border: 1px solid #ead9a7; border-radius: 5px; background: #fff6dd; color: #745815; font-size: 11px; }
 .payment-fields { display: grid; grid-template-columns: 1fr 100px; gap: 12px; }
+.payment-template-fields { grid-template-columns: 1fr; }
 .payment-submit { width: 100%; margin-top: 24px; }
 .secure-note { display: flex; justify-content: center; align-items: center; gap: 6px; margin: 17px 0 0; color: var(--muted); font-size: 9px; }
 .payment-success { padding: 20px 0 8px; text-align: center; }
@@ -180,8 +181,8 @@ button { color: inherit; }
 .automation-actions button:last-child { color: #a43b32; }
 .selectable-list > button { width: 100%; cursor: pointer; }
 .selectable-list > button:hover { color: var(--green); }
-.selectable-list > div { grid-template-columns: minmax(0, 1fr) 32px; align-items: center; }
-.selectable-list > div > button:first-child { display: grid; gap: 4px; padding: 0; border: 0; background: transparent; color: var(--ink); text-align: left; cursor: pointer; }
+.selectable-list > div { grid-template-columns: minmax(0, 1fr); align-items: stretch; min-width: 0; }
+.selectable-list > div > button:first-child { width: 100%; min-width: 0; display: grid; gap: 4px; padding: 0; border: 0; background: transparent; color: var(--ink); text-align: left; cursor: pointer; }
 .template-delete { width: 32px; height: 32px; display: grid; place-items: center; border: 0; border-radius: 5px; background: #fff0ec; color: #a94b33; cursor: pointer; }
 .transaction-detail-amount { display: grid; gap: 5px; padding: 18px 0 20px; border-bottom: 1px solid var(--line); }
 .transaction-detail-amount span { font-size: 30px; font-weight: 800; }

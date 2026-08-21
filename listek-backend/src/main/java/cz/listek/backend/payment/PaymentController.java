@@ -18,6 +18,7 @@ import cz.listek.backend.payment.PaymentDtos.CreatePaymentTemplateRequest;
 import cz.listek.backend.payment.PaymentDtos.CreateStandingOrderRequest;
 import cz.listek.backend.payment.PaymentDtos.PaymentTemplateResponse;
 import cz.listek.backend.payment.PaymentDtos.StandingOrderResponse;
+import cz.listek.backend.payment.PaymentDtos.UpdatePaymentTemplateRequest;
 import cz.listek.backend.payment.PaymentDtos.UpdateStandingOrderRequest;
 import jakarta.validation.Valid;
 
@@ -62,6 +63,11 @@ public class PaymentController {
     @ResponseStatus(HttpStatus.CREATED)
     public PaymentTemplateResponse createTemplate(@PathVariable UUID accountId, @Valid @RequestBody CreatePaymentTemplateRequest request) {
         return paymentService.createTemplate(accountId, request);
+    }
+
+    @PatchMapping("/payment-templates/{templateId}")
+    public PaymentTemplateResponse updateTemplate(@PathVariable UUID templateId, @Valid @RequestBody UpdatePaymentTemplateRequest request) {
+        return paymentService.updateTemplate(templateId, request);
     }
 
     @DeleteMapping("/payment-templates/{templateId}")
