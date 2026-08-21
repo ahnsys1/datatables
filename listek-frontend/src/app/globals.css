@@ -123,6 +123,7 @@ button { color: inherit; }
 .tip-panel button { display: inline-flex; align-items: center; gap: 5px; padding: 0; border: 0; background: transparent; color: #8e6819; font-size: 9px; font-weight: 800; cursor: pointer; }
 
 .modal-backdrop { position: fixed; inset: 0; z-index: 60; display: grid; place-items: center; padding: 20px; background: rgba(15,29,22,.58); backdrop-filter: blur(3px); }
+.payment-page-backdrop { z-index: 40; }
 .payment-modal { position: relative; width: min(100%, 470px); padding: 34px; border-radius: 8px; background: #fff; box-shadow: 0 28px 80px rgba(8,24,16,.25); }
 .profile-modal { width: min(100%, 430px); }
 .modal-close { position: absolute; top: 16px; right: 16px; width: 36px; height: 36px; display: grid; place-items: center; border: 0; border-radius: 50%; background: #f1f3ef; cursor: pointer; }
@@ -193,8 +194,8 @@ button { color: inherit; }
 .transaction-detail-list dt { color: var(--muted); font-size: 11px; }
 .transaction-detail-list dd { max-width: 62%; margin: 0; color: var(--ink); font-size: 11px; font-weight: 700; text-align: right; overflow-wrap: anywhere; }
 .bank-content { position: relative; }
-.standalone-page { width: min(100%, 860px); max-width: none; margin: 24px auto 0; }
-.standalone-close { top: 45px; right: 4.2vw; }
+.standalone-page { position: relative; width: min(100%, 860px); max-width: none; margin: 0 auto; }
+.standalone-close { top: 16px; right: 16px; }
 .standalone-page form { max-width: none; }
 .standalone-page h1 { margin: 0 0 24px; font-size: 28px; }
 .standalone-page .section-heading h1 { margin: 0; }

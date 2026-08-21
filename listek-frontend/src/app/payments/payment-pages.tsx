@@ -9,6 +9,7 @@ import {
 import Link from "next/link";
 import { FormEvent, useEffect, useState } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
+import PaymentsPage from "./page";
 import {
   Account,
   BankTransaction,
@@ -50,7 +51,7 @@ function sortTransactions(transactions: BankTransaction[], accounts: Account[]) 
 function PageFrame({ children }: { children: React.ReactNode }) {
   const router = useRouter();
 
-  return <div className="bank-content section-page"><button className="modal-close standalone-close" type="button" onClick={() => router.push("/payments")} aria-label="Zavřít"><X size={21} /></button>{children}</div>;
+  return <><PaymentsPage /><div className="modal-backdrop payment-page-backdrop"><div className="standalone-page"><button className="modal-close standalone-close" type="button" onClick={() => router.push("/payments")} aria-label="Zavřít"><X size={21} /></button>{children}</div></div></>;
 }
 
 function useAccounts() {
@@ -134,7 +135,7 @@ export function StandingOrderFormPage() {
     }
   }
 
-  return <PageFrame><section className="standalone-page payment-form-card"><p className="modal-kicker">Pravidelná platba</p><h1>{editingOrder ? "Upravit trvalý příkaz" : "Nový trvalý příkaz"}</h1><FormError message={error || accountsError || automationError} /><form onSubmit={submit}>
+  return <PageFrame><section className="payment-form-card"><p className="modal-kicker">Pravidelná platba</p><h1>{editingOrder ? "Upravit trvalý příkaz" : "Nový trvalý příkaz"}</h1><FormError message={error || accountsError || automationError} /><form onSubmit={submit}>
     <label>Odesílatel<select required name="accountId" defaultValue={editingOrder?.accountId ?? accounts[0]?.id ?? ""}>{accounts.map((account) => <option key={account.id} value={account.id}>{formatAccountNumber(account.accountNumber)}</option>)}</select></label>
     <label>Cílový účet<input required name="targetAccountNumber" placeholder="123456789 / 0100" defaultValue={editingOrder?.targetAccountNumber} /></label>
     <div className="payment-fields"><label>Částka<input required name="amount" type="number" min="0.01" step="0.01" placeholder="0,00" defaultValue={editingOrder?.amount} /></label><label>Den v měsíci<input required name="dayOfMonth" type="number" min="1" max="28" defaultValue={editingOrder?.dayOfMonth ?? 1} /></label></div>
@@ -156,7 +157,7 @@ export function StandingOrdersPage() {
     }
   }
 
-  return <PageFrame><section className="standalone-page payment-form-card"><div className="section-heading"><div><p className="modal-kicker">Pravidelné platby</p><h1>Trvalé příkazy</h1></div><Link className="pay-button" href="/payments/standing-orders/new">Nový příkaz <ArrowRight size={18} /></Link></div><FormError message={error} /><div className="automation-list">{standingOrders.map((order) => <div key={order.id} className="automation-item"><span>{formatAccountNumber(order.targetAccountNumber)} · {order.amount.toLocaleString("cs-CZ", { style: "currency", currency: "CZK" })}</span><small>{order.description}, každý měsíc {order.dayOfMonth}. den</small><div className="automation-actions"><Link href={`/payments/standing-orders/new?edit=${order.id}`}><FileText size={15} /> Upravit</Link><button type="button" onClick={() => remove(order.id)}><Trash2 size={15} /> Smazat</button></div></div>)}{standingOrders.length === 0 && <p className="bank-empty">Zatím nemáte uložené trvalé příkazy.</p>}</div></section></PageFrame>;
+  return <PageFrame><section className="payment-form-card"><div className="section-heading"><div><p className="modal-kicker">Pravidelné platby</p><h1>Trvalé příkazy</h1></div><Link className="pay-button" href="/payments/standing-orders/new">Nový příkaz <ArrowRight size={18} /></Link></div><FormError message={error} /><div className="automation-list">{standingOrders.map((order) => <div key={order.id} className="automation-item"><span>{formatAccountNumber(order.targetAccountNumber)} · {order.amount.toLocaleString("cs-CZ", { style: "currency", currency: "CZK" })}</span><small>{order.description}, každý měsíc {order.dayOfMonth}. den</small><div className="automation-actions"><Link href={`/payments/standing-orders/new?edit=${order.id}`}><FileText size={15} /> Upravit</Link><button type="button" onClick={() => remove(order.id)}><Trash2 size={15} /> Smazat</button></div></div>)}{standingOrders.length === 0 && <p className="bank-empty">Zatím nemáte uložené trvalé příkazy.</p>}</div></section></PageFrame>;
 }
 
 function useTransactions() {
@@ -183,7 +184,7 @@ export function RepeatPaymentPage() {
     return `/payments?${params.toString()}`;
   }
 
-  return <PageFrame><section className="standalone-page payment-form-card"><p className="modal-kicker">Opakovaná platba</p><h1>Vyberte předchozí platbu</h1><FormError message={error} /><div className="automation-list selectable-list">{transactions.filter((transaction) => transaction.type === "DEBIT").map((transaction) => <Link key={transaction.id} href={hrefFor(transaction)}><span>{transaction.description}</span><small>{transaction.counterpartyAccountNumber ? formatAccountNumber(transaction.counterpartyAccountNumber) : "Doplňte cílový účet"} · {Math.abs(transaction.amount).toLocaleString("cs-CZ", { style: "currency", currency: accounts.find((account) => account.id === transaction.accountId)?.currency ?? "CZK" })}</small></Link>)}{transactions.filter((transaction) => transaction.type === "DEBIT").length === 0 && <p className="bank-empty">Zatím nemáte žádnou odchozí platbu k opakování.</p>}</div></section></PageFrame>;
+  return <PageFrame><section className="payment-form-card"><p className="modal-kicker">Opakovaná platba</p><h1>Vyberte předchozí platbu</h1><FormError message={error} /><div className="automation-list selectable-list">{transactions.filter((transaction) => transaction.type === "DEBIT").map((transaction) => <Link key={transaction.id} href={hrefFor(transaction)}><span>{transaction.description}</span><small>{transaction.counterpartyAccountNumber ? formatAccountNumber(transaction.counterpartyAccountNumber) : "Doplňte cílový účet"} · {Math.abs(transaction.amount).toLocaleString("cs-CZ", { style: "currency", currency: accounts.find((account) => account.id === transaction.accountId)?.currency ?? "CZK" })}</small></Link>)}{transactions.filter((transaction) => transaction.type === "DEBIT").length === 0 && <p className="bank-empty">Zatím nemáte žádnou odchozí platbu k opakování.</p>}</div></section></PageFrame>;
 }
 
 export function TemplateFormPage() {
@@ -209,7 +210,7 @@ export function TemplateFormPage() {
     }
   }
 
-  return <PageFrame><section className="standalone-page payment-form-card"><p className="modal-kicker">Platební šablony</p><h1>{editingTemplate ? "Upravit šablonu" : "Nová šablona"}</h1><FormError message={error || accountsError || automationError} /><form onSubmit={submit}>
+  return <PageFrame><section className="payment-form-card"><p className="modal-kicker">Platební šablony</p><h1>{editingTemplate ? "Upravit šablonu" : "Nová šablona"}</h1><FormError message={error || accountsError || automationError} /><form onSubmit={submit}>
     <label>Název šablony<input required name="name" placeholder="Například nájem" defaultValue={editingTemplate?.name} /></label>
     <label>Odesílatel<select required name="accountId" defaultValue={editingTemplate?.accountId ?? accounts[0]?.id ?? ""}>{accounts.map((account) => <option key={account.id} value={account.id}>{formatAccountNumber(account.accountNumber)}</option>)}</select></label>
     <label>Cílový účet<input required name="targetAccountNumber" placeholder="123456789 / 0100" defaultValue={editingTemplate?.targetAccountNumber} /></label>
@@ -236,7 +237,7 @@ export function TemplateListPage() {
     return `/payments?${params.toString()}`;
   }
 
-  return <PageFrame><section className="standalone-page payment-form-card"><div className="section-heading"><div><p className="modal-kicker">Platební šablony</p><h1>Seznam šablon</h1></div><Link className="pay-button" href="/payments/templates/new">Nová šablona <ArrowRight size={18} /></Link></div><FormError message={error} /><div className="automation-list selectable-list">{templates.map((template) => <div key={template.id}><Link href={applyTemplate(template)}><span>{template.name}</span><small>{formatAccountNumber(template.targetAccountNumber)} · {template.amount.toLocaleString("cs-CZ", { style: "currency", currency: "CZK" })}</small></Link><div className="automation-actions"><Link href={`/payments/templates/new?edit=${template.id}`}><FileText size={15} /> Upravit</Link><button type="button" onClick={() => remove(template.id)}><Trash2 size={15} /> Smazat</button></div></div>)}{templates.length === 0 && <p className="bank-empty">Zatím nemáte uložené šablony.</p>}</div></section></PageFrame>;
+  return <PageFrame><section className="payment-form-card"><div className="section-heading"><div><p className="modal-kicker">Platební šablony</p><h1>Seznam šablon</h1></div><Link className="pay-button" href="/payments/templates/new">Nová šablona <ArrowRight size={18} /></Link></div><FormError message={error} /><div className="automation-list selectable-list">{templates.map((template) => <div key={template.id}><Link href={applyTemplate(template)}><span>{template.name}</span><small>{formatAccountNumber(template.targetAccountNumber)} · {template.amount.toLocaleString("cs-CZ", { style: "currency", currency: "CZK" })}</small></Link><div className="automation-actions"><Link href={`/payments/templates/new?edit=${template.id}`}><FileText size={15} /> Upravit</Link><button type="button" onClick={() => remove(template.id)}><Trash2 size={15} /> Smazat</button></div></div>)}{templates.length === 0 && <p className="bank-empty">Zatím nemáte uložené šablony.</p>}</div></section></PageFrame>;
 }
 
 export function TransactionDetailPage() {
@@ -248,7 +249,7 @@ export function TransactionDetailPage() {
   const counterpartyAccount = counterpartyTransaction ? accounts.find((account) => account.id === counterpartyTransaction.accountId) : undefined;
   const counterpartyNumber = selectedTransaction?.counterpartyAccountNumber ?? counterpartyAccount?.accountNumber;
 
-  if (!selectedTransaction) return <PageFrame><section className="standalone-page payment-form-card"><FormError message={error || "Platbu se nepodařilo najít."} /></section></PageFrame>;
+  if (!selectedTransaction) return <PageFrame><section className="payment-form-card"><FormError message={error || "Platbu se nepodařilo najít."} /></section></PageFrame>;
 
-  return <PageFrame><section className="standalone-page payment-form-card"><p className="modal-kicker">Detail platby</p><h1>{selectedTransaction.description}</h1><div className="transaction-detail-amount"><span className={selectedTransaction.type === "CREDIT" ? "incoming-amount" : ""}>{selectedTransaction.type === "CREDIT" ? "+" : "−"}{Math.abs(selectedTransaction.amount).toLocaleString("cs-CZ", { style: "currency", currency: transactionAccount?.currency ?? "CZK" })}</span><small>{selectedTransaction.type === "CREDIT" ? "Příchozí platba" : "Odchozí platba"}</small></div><dl className="transaction-detail-list"><div><dt>Datum a čas</dt><dd>{new Intl.DateTimeFormat("cs-CZ", { dateStyle: "long", timeStyle: "short" }).format(new Date(selectedTransaction.createdAt))}</dd></div><div><dt>Odchozí účet</dt><dd>{selectedTransaction.type === "DEBIT" ? transactionAccount ? formatAccountNumber(transactionAccount.accountNumber) : "Neznámý účet" : counterpartyNumber ? formatAccountNumber(counterpartyNumber) : "Neuveden"}</dd></div><div><dt>Cílový účet</dt><dd>{selectedTransaction.type === "CREDIT" ? transactionAccount ? formatAccountNumber(transactionAccount.accountNumber) : "Neznámý účet" : counterpartyNumber ? formatAccountNumber(counterpartyNumber) : "Neuveden"}</dd></div><div><dt>Majitel účtu</dt><dd>{transactionAccount?.ownerName ?? "Neznámý"}</dd></div><div><dt>Zpráva</dt><dd>{selectedTransaction.description}</dd></div><div><dt>ID transakce</dt><dd>{selectedTransaction.id}</dd></div></dl></section></PageFrame>;
+  return <PageFrame><section className="payment-form-card"><p className="modal-kicker">Detail platby</p><h1>{selectedTransaction.description}</h1><div className="transaction-detail-amount"><span className={selectedTransaction.type === "CREDIT" ? "incoming-amount" : ""}>{selectedTransaction.type === "CREDIT" ? "+" : "−"}{Math.abs(selectedTransaction.amount).toLocaleString("cs-CZ", { style: "currency", currency: transactionAccount?.currency ?? "CZK" })}</span><small>{selectedTransaction.type === "CREDIT" ? "Příchozí platba" : "Odchozí platba"}</small></div><dl className="transaction-detail-list"><div><dt>Datum a čas</dt><dd>{new Intl.DateTimeFormat("cs-CZ", { dateStyle: "long", timeStyle: "short" }).format(new Date(selectedTransaction.createdAt))}</dd></div><div><dt>Odchozí účet</dt><dd>{selectedTransaction.type === "DEBIT" ? transactionAccount ? formatAccountNumber(transactionAccount.accountNumber) : "Neznámý účet" : counterpartyNumber ? formatAccountNumber(counterpartyNumber) : "Neuveden"}</dd></div><div><dt>Cílový účet</dt><dd>{selectedTransaction.type === "CREDIT" ? transactionAccount ? formatAccountNumber(transactionAccount.accountNumber) : "Neznámý účet" : counterpartyNumber ? formatAccountNumber(counterpartyNumber) : "Neuveden"}</dd></div><div><dt>Majitel účtu</dt><dd>{transactionAccount?.ownerName ?? "Neznámý"}</dd></div><div><dt>Zpráva</dt><dd>{selectedTransaction.description}</dd></div><div><dt>ID transakce</dt><dd>{selectedTransaction.id}</dd></div></dl></section></PageFrame>;
 }
