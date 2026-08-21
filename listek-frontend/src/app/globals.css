@@ -199,6 +199,7 @@ button { color: inherit; }
 .standalone-page form { max-width: none; }
 .standalone-page h1 { margin: 0 0 24px; font-size: 28px; }
 .standalone-page .section-heading h1 { margin: 0; }
+.standalone-page .section-heading > .pay-button { margin-right: 52px; }
 .cards-page-grid { display: grid; grid-template-columns: 390px minmax(0, 1fr); gap: 34px; align-items: center; }
 .card-large { position: relative; overflow: hidden; min-height: 245px; padding: 27px; border-radius: 10px; background: #263d35; color: white; box-shadow: 0 16px 30px rgba(24,33,28,.15); }
 .card-large.is-locked { background: #46514b; }
