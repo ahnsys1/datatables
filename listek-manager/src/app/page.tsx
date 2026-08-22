@@ -1,69 +1,182 @@
-import Image from "next/image";
+"use client";
+
+import {
+  Bell, Check, ChevronRight, CircleDollarSign, ClipboardCheck, FileClock,
+  Landmark, LayoutDashboard, Menu, Plus, Search, ShieldCheck, Users, WalletCards, X,
+} from "lucide-react";
+import { FormEvent, useEffect, useState } from "react";
+import {
+  Account, BankApplication, Dashboard, createOverdraft, decideApplication, getAccounts,
+  getDashboard, getLoans, getOverdrafts,
+} from "@/lib/api";
+
+type View = "overview" | "loans" | "overdrafts" | "clients";
+
+const money = new Intl.NumberFormat("cs-CZ", { style: "currency", currency: "CZK", maximumFractionDigits: 0 });
+const date = new Intl.DateTimeFormat("cs-CZ", { dateStyle: "medium", timeStyle: "short" });
+const navigation = [
+  { id: "overview" as const, label: "Přehled", icon: LayoutDashboard },
+  { id: "loans" as const, label: "Půjčky", icon: CircleDollarSign },
+  { id: "overdrafts" as const, label: "Kontokorenty", icon: WalletCards },
+  { id: "clients" as const, label: "Klienti", icon: Users },
+];
 
 export default function Home() {
+  const [view, setView] = useState<View>("overview");
+  const [dashboard, setDashboard] = useState<Dashboard | null>(null);
+  const [loans, setLoans] = useState<BankApplication[]>([]);
+  const [overdrafts, setOverdrafts] = useState<BankApplication[]>([]);
+  const [accounts, setAccounts] = useState<Account[]>([]);
+  const [selected, setSelected] = useState<BankApplication | null>(null);
+  const [search, setSearch] = useState("");
+  const [note, setNote] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [overdraftFormOpen, setOverdraftFormOpen] = useState(false);
+  const [creating, setCreating] = useState(false);
+
+  useEffect(() => {
+    Promise.all([getDashboard(), getLoans(), getOverdrafts(), getAccounts()])
+      .then(([dashboardData, loanData, overdraftData, accountData]) => {
+        setDashboard(dashboardData);
+        setLoans(loanData);
+        setOverdrafts(overdraftData);
+        setAccounts(accountData);
+      })
+      .catch(() => setError("Administraci se nepodařilo spojit s backendem."))
+      .finally(() => setLoading(false));
+  }, []);
+
+  const allApplications = [...loans, ...overdrafts].sort((left, right) => right.createdAt.localeCompare(left.createdAt));
+  const sourceApplications = view === "loans" ? loans : view === "overdrafts" ? overdrafts : allApplications;
+  const visibleApplications = sourceApplications.filter((application) =>
+    application.clientName.toLocaleLowerCase("cs").includes(search.toLocaleLowerCase("cs"))
+      || application.accountNumber.includes(search));
+
+  async function decide(status: "APPROVED" | "REJECTED") {
+    if (!selected || (status === "REJECTED" && !note.trim())) return;
+    setSaving(true);
+    try {
+      const updated = await decideApplication(selected, status, note.trim());
+      const updateList = (items: BankApplication[]) => items.map((item) => item.id === updated.id ? updated : item);
+      if (updated.category === "LOAN") setLoans(updateList);
+      else setOverdrafts(updateList);
+      setSelected(updated);
+      setNote("");
+      setDashboard(await getDashboard());
+      setError("");
+    } catch (decisionError) {
+      setError(decisionError instanceof Error ? decisionError.message : "Rozhodnutí se nepodařilo uložit.");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function submitOverdraft(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const form = new FormData(event.currentTarget);
+    setCreating(true);
+    try {
+      const application = await createOverdraft({
+        accountId: String(form.get("accountId")),
+        requestedLimit: Number(form.get("requestedLimit")),
+        monthlyIncome: Number(form.get("monthlyIncome")),
+      });
+      setOverdrafts((items) => [application, ...items]);
+      setDashboard(await getDashboard());
+      setOverdraftFormOpen(false);
+      setSelected(application);
+      setError("");
+    } catch (creationError) {
+      setError(creationError instanceof Error ? creationError.message : "Žádost se nepodařilo založit.");
+    } finally {
+      setCreating(false);
+    }
+  }
+
+  const titles: Record<View, [string, string]> = {
+    overview: ["Operační přehled", "Dnes máte pod kontrolou vše důležité."],
+    loans: ["Žádosti o půjčku", "Posuďte žádosti, riziko a schopnost klienta splácet."],
+    overdrafts: ["Žádosti o kontokorent", "Rozhodujte o krátkodobých úvěrových rámcích."],
+    clients: ["Klienti a účty", "Rychlý dohled nad klientským portfoliem banky."],
+  };
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert h-5 w-[100px]"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the{" "}
-            <code className="rounded bg-black/[.06] px-1.5 py-0.5 font-mono text-[0.9em] dark:bg-white/[.08]">
-              page.tsx
-            </code>{" "}
-            file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert h-[14px] w-4"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={14}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+    <div className="admin-app">
+      <aside className={`admin-sidebar ${menuOpen ? "is-open" : ""}`}>
+        <div className="brand"><span className="brand-mark"><i /></span><span>Lístek<small>Manager</small></span></div>
+        <button className="sidebar-close" onClick={() => setMenuOpen(false)} aria-label="Zavřít nabídku"><X size={20} /></button>
+        <p className="nav-label">Pracovní prostor</p>
+        <nav>
+          {navigation.map(({ id, label, icon: Icon }) => (
+            <button className={view === id ? "active" : ""} key={id} onClick={() => { setView(id); setSelected(null); setMenuOpen(false); }}>
+              <Icon size={19} /><span>{label}</span>
+              {id !== "clients" && <b>{id === "loans" ? dashboard?.pendingLoans : id === "overdrafts" ? dashboard?.pendingOverdrafts : (dashboard?.pendingLoans ?? 0) + (dashboard?.pendingOverdrafts ?? 0)}</b>}
+            </button>
+          ))}
+        </nav>
+        <div className="sidebar-foot"><ShieldCheck size={18} /><span>Zabezpečená administrace<small>Produkční prostředí</small></span></div>
+      </aside>
+      {menuOpen && <button className="menu-scrim" aria-label="Zavřít nabídku" onClick={() => setMenuOpen(false)} />}
+
+      <main className="admin-main">
+        <header className="topbar">
+          <button className="menu-button" onClick={() => setMenuOpen(true)} aria-label="Otevřít nabídku"><Menu /></button>
+          <div className="environment"><i /> Systémy v pořádku</div>
+          <button className="icon-button" aria-label="Oznámení"><Bell size={19} /><span /></button>
+          <div className="operator"><span>JP</span><div><strong>Jan Pokorný</strong><small>Úvěrový specialista</small></div></div>
+        </header>
+
+        <div className="admin-content">
+          <section className="page-heading">
+            <div><p>22. SRPNA 2026</p><h1>{titles[view][0]}</h1><span>{titles[view][1]}</span></div>
+            {view !== "clients" && <div className="heading-actions"><div className="search"><Search size={18} /><input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Hledat klienta nebo účet" /></div>{view === "overdrafts" && <button className="primary-button" onClick={() => setOverdraftFormOpen(true)}><Plus size={17} /> Založit žádost</button>}</div>}
+          </section>
+
+          {error && <div className="notice">{error}</div>}
+          {loading && <div className="loading">Načítám data banky...</div>}
+
+          {!loading && view === "overview" && dashboard && <section className="metrics">
+            <article><span className="metric-icon green"><Users size={21} /></span><div><small>Aktivní klienti</small><strong>{dashboard.clients}</strong><p>V klientském portfoliu</p></div></article>
+            <article><span className="metric-icon amber"><FileClock size={21} /></span><div><small>Čeká na rozhodnutí</small><strong>{dashboard.pendingLoans + dashboard.pendingOverdrafts}</strong><p>{dashboard.pendingLoans} půjčky · {dashboard.pendingOverdrafts} kontokorenty</p></div></article>
+            <article><span className="metric-icon blue"><Landmark size={21} /></span><div><small>Vklady klientů</small><strong>{money.format(dashboard.deposits)}</strong><p>Napříč všemi účty</p></div></article>
+            <article><span className="metric-icon dark"><ClipboardCheck size={21} /></span><div><small>Dnes rozhodnuto</small><strong>{dashboard.decidedToday}</strong><p>Vyřízených žádostí</p></div></article>
+          </section>}
+
+          {view !== "clients" && !loading && <section className="work-layout">
+            <div className="queue-panel">
+              <div className="panel-heading"><div><p>{view === "overview" ? "PRIORITNÍ FRONTA" : "VŠECHNY ŽÁDOSTI"}</p><h2>{view === "loans" ? "Půjčky" : view === "overdrafts" ? "Kontokorenty" : "Žádosti k posouzení"}</h2></div><span>{visibleApplications.filter((item) => item.status === "PENDING").length} čeká</span></div>
+              <div className="application-list">
+                {visibleApplications.length === 0 && <div className="empty-state"><Check size={25} /><strong>Fronta je prázdná</strong><span>Žádné žádosti neodpovídají filtru.</span></div>}
+                {visibleApplications.map((application) => (
+                  <button key={application.id} className={selected?.id === application.id ? "selected" : ""} onClick={() => { setSelected(application); setNote(application.decisionNote ?? ""); }}>
+                    <span className={`application-type ${application.category.toLowerCase()}`}>{application.category === "LOAN" ? <CircleDollarSign size={20} /> : <WalletCards size={20} />}</span>
+                    <div><strong>{application.clientName}</strong><small>{application.category === "LOAN" ? (application.product === "PERSONAL" ? "Půjčka na cokoliv" : "Půjčka na bydlení") : "Kontokorent"} · {application.accountNumber}</small></div>
+                    <div className="application-amount"><strong>{money.format(application.amount)}</strong><span className={`status ${application.status.toLowerCase()}`}>{application.status === "PENDING" ? "Čeká" : application.status === "APPROVED" ? "Schváleno" : "Zamítnuto"}</span></div>
+                    <ChevronRight size={18} />
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <aside className="detail-panel">
+              {!selected ? <div className="detail-empty"><ClipboardCheck size={34} /><h2>Vyberte žádost</h2><p>V detailu uvidíte finanční údaje a provedete rozhodnutí.</p></div> : <>
+                <div className="detail-head"><span className={`application-type ${selected.category.toLowerCase()}`}>{selected.category === "LOAN" ? <CircleDollarSign size={22} /> : <WalletCards size={22} />}</span><div><small>{selected.category === "LOAN" ? "ŽÁDOST O PŮJČKU" : "ŽÁDOST O KONTOKORENT"}</small><h2>{selected.clientName}</h2></div></div>
+                <dl><div><dt>Požadovaná částka</dt><dd>{money.format(selected.amount)}</dd></div><div><dt>Účet</dt><dd>{selected.accountNumber}</dd></div>{selected.repaymentMonths && <div><dt>Splatnost</dt><dd>{selected.repaymentMonths} měsíců</dd></div>}{selected.monthlyPayment && <div><dt>Měsíční splátka</dt><dd>{money.format(selected.monthlyPayment)}</dd></div>}{selected.monthlyIncome && <div><dt>Měsíční příjem</dt><dd>{money.format(selected.monthlyIncome)}</dd></div>}<div><dt>Účel</dt><dd>{selected.purpose}</dd></div><div><dt>Podáno</dt><dd>{date.format(new Date(selected.createdAt))}</dd></div></dl>
+                {selected.status === "PENDING" ? <div className="decision-box"><label>Poznámka k rozhodnutí<textarea value={note} onChange={(event) => setNote(event.target.value)} placeholder="Při zamítnutí je důvod povinný" maxLength={500} /></label><div><button className="reject" disabled={saving || !note.trim()} onClick={() => decide("REJECTED")}><X size={17} /> Zamítnout</button><button className="approve" disabled={saving} onClick={() => decide("APPROVED")}><Check size={17} /> Schválit</button></div></div> : <div className={`decision-result ${selected.status.toLowerCase()}`}><strong>{selected.status === "APPROVED" ? "Žádost byla schválena" : "Žádost byla zamítnuta"}</strong><p>{selected.decisionNote || "Bez doplňující poznámky."}</p></div>}
+              </>}
+            </aside>
+          </section>}
+
+          {view === "clients" && !loading && <section className="clients-panel">
+            <div className="panel-heading"><div><p>KLIENTSKÝ KMEN</p><h2>Účty a zůstatky</h2></div><span>{accounts.length} klientů</span></div>
+            <div className="client-table"><div className="table-head"><span>Klient</span><span>Číslo účtu</span><span>Kontakt</span><span>Zůstatek</span></div>{accounts.map((account) => <article key={account.id}><span className="client-name"><i>{account.ownerName.split(" ").map((part) => part[0]).slice(0, 2).join("")}</i><strong>{account.ownerName}</strong></span><span>{account.accountNumber}</span><span>{account.email}</span><strong>{money.format(account.balance)}</strong></article>)}</div>
+          </section>}
         </div>
       </main>
+      {overdraftFormOpen && <div className="modal-backdrop" role="presentation" onMouseDown={(event) => event.target === event.currentTarget && setOverdraftFormOpen(false)}><section className="admin-modal" role="dialog" aria-modal="true" aria-labelledby="overdraft-title"><button className="modal-close" onClick={() => setOverdraftFormOpen(false)} aria-label="Zavřít"><X size={20} /></button><p>KONTOKORENT</p><h2 id="overdraft-title">Založit žádost klienta</h2><span>Zařaďte žádost do fronty pro následné posouzení.</span><form onSubmit={submitOverdraft}><label>Klientský účet<select name="accountId" required defaultValue=""><option value="" disabled>Vyberte účet</option>{accounts.map((account) => <option value={account.id} key={account.id}>{account.ownerName} · {account.accountNumber}</option>)}</select></label><label>Požadovaný limit<input name="requestedLimit" type="number" required min="1000" max="250000" step="1000" placeholder="50 000 Kč" /></label><label>Doložený měsíční příjem<input name="monthlyIncome" type="number" required min="0" step="1000" placeholder="45 000 Kč" /></label><button className="primary-button submit-button" type="submit" disabled={creating}>{creating ? "Zakládám..." : "Zařadit do fronty"}</button></form></section></div>}
     </div>
   );
 }

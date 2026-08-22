@@ -1,0 +1,39 @@
+package cz.listek.admin.api;
+
+import java.math.BigDecimal;
+import java.time.Instant;
+import java.util.UUID;
+
+import cz.listek.admin.domain.ApplicationStatus;
+import jakarta.validation.constraints.DecimalMin;
+import jakarta.validation.constraints.DecimalMax;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
+
+public final class AdminDtos {
+
+    private AdminDtos() {
+    }
+
+    public record DashboardResponse(long clients, long pendingLoans, long pendingOverdrafts,
+            BigDecimal deposits, long decidedToday) {
+    }
+
+    public record AccountResponse(UUID id, String ownerName, String email, String accountNumber,
+            BigDecimal balance, String currency) {
+    }
+
+    public record ApplicationResponse(UUID id, String category, String product, UUID accountId,
+            String clientName, String accountNumber, BigDecimal amount, Integer repaymentMonths,
+            BigDecimal monthlyIncome, BigDecimal monthlyPayment, String purpose,
+            ApplicationStatus status, Instant createdAt, Instant decidedAt, String decisionNote) {
+    }
+
+    public record DecisionRequest(@NotNull ApplicationStatus status, @Size(max = 500) String note) {
+    }
+
+    public record CreateOverdraftRequest(@NotNull UUID accountId,
+            @NotNull @DecimalMin("1000.00") @DecimalMax("250000.00") BigDecimal requestedLimit,
+            @NotNull @DecimalMin("0.00") BigDecimal monthlyIncome) {
+    }
+}

@@ -8,9 +8,9 @@
         <relativePath/>
     </parent>
     <groupId>cz.listek</groupId>
-    <artifactId>lisstek-admin</artifactId>
+    <artifactId>listek-admin</artifactId>
     <version>0.0.1-SNAPSHOT</version>
-    <name>lisstek-admin</name>
+    <name>listek-admin</name>
     <description>Listek administration backend</description>
     <properties>
         <java.version>26</java.version>
