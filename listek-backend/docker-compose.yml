@@ -46,5 +46,35 @@ services:
     ports:
       - "3000:3000"
 
+  listek-admin:
+    build:
+      context: ../listek-admin
+      dockerfile: Dockerfile
+    container_name: listek-admin
+    environment:
+      DB_URL: jdbc:postgresql://postgres:5432/listek
+      DB_USERNAME: listek
+      DB_PASSWORD: listek
+      SERVER_PORT: 8090
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - "8090:8090"
+
+  listek-manager:
+    build:
+      context: ../listek-manager
+      dockerfile: Dockerfile
+      args:
+        ADMIN_BACKEND_URL: http://listek-admin:8090
+    container_name: listek-manager
+    environment:
+      ADMIN_BACKEND_URL: http://listek-admin:8090
+    depends_on:
+      - listek-admin
+    ports:
+      - "3001:3000"
+
 volumes:
   listek-postgres-data:
