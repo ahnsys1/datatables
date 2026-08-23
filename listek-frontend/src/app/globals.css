@@ -90,7 +90,8 @@ button { color: inherit; }
 .main-balance { display: block; margin-top: 3px; font-size: clamp(24px, 2.4vw, 32px); letter-spacing: 0; }
 .account-footer { position: absolute; z-index: 1; left: 23px; right: 23px; bottom: 20px; display: flex; justify-content: space-between; align-items: center; }
 .account-footer span { color: var(--muted); font-size: 10px; }
-.account-footer i { display: inline-block; width: 7px; height: 7px; margin-right: 5px; border-radius: 50%; background: #35a56b; }
+.account-footer i, .account-status i { display: inline-block; width: 7px; height: 7px; margin-right: 5px; border-radius: 50%; background: #35a56b; }
+.account-status { margin: -10px 0 18px; color: var(--muted); font-size: 11px; }
 .account-footer button, .account-footer a { display: inline-flex; align-items: center; gap: 5px; border: 0; background: none; color: var(--green); font-size: 11px; font-weight: 750; cursor: pointer; text-decoration: none; }
 .savings-account { background: #e5efdd; border: 1px solid #d1dfc7; }
 .savings-head span { display: flex; align-items: center; gap: 8px; font-size: 12px; font-weight: 800; }

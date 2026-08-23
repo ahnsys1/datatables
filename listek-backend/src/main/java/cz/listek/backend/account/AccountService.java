@@ -88,7 +88,7 @@ public class AccountService {
 
     @Transactional(readOnly = true)
     public AccountResponse login(String email, String password) {
-        Account account = accountRepository.findByEmailIgnoreCase(email.trim())
+        Account account = accountRepository.findByEmailIgnoreCaseAndType(email.trim(), AccountType.CURRENT)
                 .filter(candidate -> PasswordHasher.matches(password, candidate.getPasswordHash()))
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Nespravny e-mail nebo heslo"));
         return toResponse(account);

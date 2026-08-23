@@ -9,6 +9,8 @@ public interface AccountRepository extends JpaRepository<Account, UUID> {
 
     Optional<Account> findByEmailIgnoreCase(String email);
 
+    Optional<Account> findByEmailIgnoreCaseAndType(String email, AccountType type);
+
     boolean existsByEmailIgnoreCase(String email);
 
     Optional<Account> findByAccountNumber(String accountNumber);

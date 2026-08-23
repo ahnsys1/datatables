@@ -198,7 +198,7 @@ export default function BankDashboard() {
               {savingsAccount && <article className="savings-account">
                 <div className="savings-head"><span><TrendingUp size={19} /> Spořicí účet</span><Link href="/sporeni" aria-label="Detail spořicího účtu"><ArrowRight size={17} /></Link></div>
                 <strong>{balanceVisible ? savingsAccount ? currency.format(savingsAccount.balance) : "-" : "••••••••"}</strong><p>Úrok 4,2 % p. a.</p>
-                <div className="saving-progress"><span /></div><small>Cíl: Finanční rezerva <b>84 %</b></small>
+                <div className="saving-progress"><span style={{ width: "0%" }} /></div><small>Spořicí cíl zatím není nastaven.</small>
               </article>}
               <article className="card-preview">
                 <div className="card-chip" /><span className="card-brand">Lístek</span><p>••••&nbsp; ••••&nbsp; ••••&nbsp; 2841</p><div><span>{currentAccount?.ownerName ?? "Načítám..."}</span><b>VISA</b></div>

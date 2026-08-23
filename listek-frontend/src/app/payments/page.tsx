@@ -156,13 +156,6 @@ export default function PaymentsPage() {
                 </span>
                 <h2>Platba byla odeslána</h2>
                 <p>Backend převod zpracoval a zapsal odchozí pohyb.</p>
-                <button
-                  className="pay-button"
-                  type="button"
-                  onClick={openNewPayment}
-                >
-                  Nová platba
-                </button>
               </div>
             ) : (
               <form onSubmit={submit}>
