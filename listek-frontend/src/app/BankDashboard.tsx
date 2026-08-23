@@ -23,12 +23,6 @@ type Transaction = {
 };
 
 const transactions: Transaction[] = [
-  { id: 1, title: "Výplata", detail: "Bright Studio s.r.o.", date: "Dnes", amount: 48500, icon: "income" },
-  { id: 2, title: "Albert", detail: "Platba kartou •• 2841", date: "Dnes", amount: -1248.9, icon: "card" },
-  { id: 3, title: "Spotify", detail: "Předplatné •• 2841", date: "Včera", amount: -169, icon: "mobile" },
-  { id: 4, title: "Nájem", detail: "Jan Novotný", date: "18. srpna", amount: -18500, icon: "payment" },
-  { id: 5, title: "Kavárna Místo", detail: "Platba kartou •• 2841", date: "17. srpna", amount: -178, icon: "card" },
-  { id: 6, title: "Vrácení platby", detail: "Alza.cz", date: "16. srpna", amount: 2390, icon: "income" },
 ];
 
 const navigation = [

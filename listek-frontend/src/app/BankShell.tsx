@@ -113,6 +113,7 @@ export default function BankShell({ children }: { children: ReactNode }) {
           <div className="header-actions">
             <button className="icon-button notification" onClick={() => setNoticeOpen("notifications")} aria-label="Oznámení"><Bell size={20} /><span /></button>
             <button className="profile-button" onClick={openProfile} title="Otevřít profil"><span className="avatar">{initials}</span><span className="profile-name">{displayName}</span><ChevronDown size={16} /></button>
+            <button className="header-logout" onClick={() => setNoticeOpen("logout")}><LogOut size={17} /> Odhlásit se</button>
           </div>
         </header>
         {children}
