@@ -362,12 +362,14 @@ button { color: inherit; }
 .loan-applications { margin-top: 28px; border: 1px solid var(--line); border-radius: 7px; background: white; overflow: hidden; }
 .loan-applications > .section-heading { padding: 16px 20px; border-bottom: 1px solid var(--line); }
 .loan-applications > .section-heading > span { color: var(--muted); font-size: 11px; }
-.loan-applications article { min-height: 72px; padding: 12px 20px; display: grid; grid-template-columns: 38px minmax(150px, 1fr) minmax(130px, .5fr) auto; align-items: center; gap: 14px; border-bottom: 1px solid var(--line); }
+.loan-applications article { min-height: 72px; padding: 12px 20px; display: grid; grid-template-columns: 38px minmax(0, 1fr) 180px 130px; align-items: center; gap: 14px; border-bottom: 1px solid var(--line); }
 .loan-applications article:last-child { border-bottom: 0; }
 .loan-applications article > div { display: grid; gap: 4px; }
 .loan-applications article strong { font-size: 11px; }
 .loan-applications article small { color: var(--muted); font-size: 9px; }
-.loan-applications article > b { padding: 6px 9px; border-radius: 4px; background: #fff5de; color: #8e6819; font-size: 9px; }
+.loan-applications article .loan-rejection-reason { color: #a43b32; line-height: 1.4; overflow-wrap: anywhere; }
+.loan-applications article .loan-approved-label { color: var(--green); font-weight: 750; }
+.loan-applications article > b { justify-self: end; padding: 6px 9px; border-radius: 4px; background: #fff5de; color: #8e6819; font-size: 9px; white-space: nowrap; }
 .loan-applications article > b.status-approved { background: var(--soft-green); color: var(--green); }
 .loan-applications article > b.status-rejected { background: #fff0ec; color: #a43b32; }
 .loan-status { width: 34px; height: 34px; display: grid; place-items: center; border-radius: 50%; background: var(--soft-green); color: var(--green); }
