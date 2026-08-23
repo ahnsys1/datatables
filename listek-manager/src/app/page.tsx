@@ -30,6 +30,7 @@ export default function Home() {
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [selected, setSelected] = useState<BankApplication | null>(null);
   const [search, setSearch] = useState("");
+  const [pendingOnly, setPendingOnly] = useState(true);
   const [note, setNote] = useState("");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -55,8 +56,9 @@ export default function Home() {
   const allApplications = [...loans, ...overdrafts].sort((left, right) => right.createdAt.localeCompare(left.createdAt));
   const sourceApplications = view === "loans" ? loans : view === "overdrafts" ? overdrafts : allApplications;
   const visibleApplications = sourceApplications.filter((application) =>
-    application.clientName.toLocaleLowerCase("cs").includes(search.toLocaleLowerCase("cs"))
-      || application.accountNumber.includes(search));
+    (!pendingOnly || application.status === "PENDING")
+      && (application.clientName.toLocaleLowerCase("cs").includes(search.toLocaleLowerCase("cs"))
+        || application.accountNumber.includes(search)));
 
   async function decide(status: "APPROVED" | "REJECTED") {
     if (!selected) return;
@@ -151,7 +153,7 @@ export default function Home() {
         <div className="admin-content">
           <section className="page-heading">
             <div><p>22. SRPNA 2026</p><h1>{titles[view][0]}</h1><span>{titles[view][1]}</span></div>
-            {view !== "clients" && view !== "settings" && <div className="heading-actions"><div className="search"><Search size={18} /><input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Hledat klienta nebo účet" /></div>{view === "overdrafts" && <button className="primary-button" onClick={() => setOverdraftFormOpen(true)}><Plus size={17} /> Založit žádost</button>}</div>}
+            {view !== "clients" && view !== "settings" && <div className="heading-actions"><div className="search"><Search size={18} /><input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Hledat klienta nebo účet" /></div><label className="pending-filter"><input type="checkbox" checked={pendingOnly} onChange={(event) => setPendingOnly(event.target.checked)} /> Jen čekající</label>{view === "overdrafts" && <button className="primary-button" onClick={() => setOverdraftFormOpen(true)}><Plus size={17} /> Založit žádost</button>}</div>}
           </section>
 
           {error && <div className="notice">{error}</div>}

@@ -80,10 +80,15 @@ export default function PaymentsPage() {
     const form = new FormData(event.currentTarget);
     const selectedFromAccountId = String(form.get("fromAccountId"));
     const selectedToAccountNumber = String(form.get("toAccountNumber")).trim();
-    const paymentAmount = Number(form.get("amount"));
+    const formAmount = Number(form.get("amount"));
+    const paymentAmount = Number(amount);
     const paymentDescription = String(form.get("description") || "Platba");
     if (!selectedFromAccountId || !selectedToAccountNumber) {
       setError("Vyplňte odesílající i cílový účet.");
+      return;
+    }
+    if (!Number.isFinite(paymentAmount) || paymentAmount < 0.01 || formAmount !== paymentAmount) {
+      setError("Zadejte platnou částku vyšší než 0,01 Kč.");
       return;
     }
     try {

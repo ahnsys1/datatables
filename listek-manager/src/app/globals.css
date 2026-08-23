@@ -56,6 +56,8 @@ button { cursor: pointer; }
 .heading-actions { display: flex; align-items: center; gap: 9px; }
 .search { width: min(320px, 38vw); height: 42px; padding: 0 13px; display: flex; align-items: center; gap: 9px; border: 1px solid var(--line); border-radius: 5px; color: var(--muted); background: white; }
 .search input { width: 100%; border: 0; outline: 0; background: transparent; font-size: 11px; }
+.pending-filter { min-height: 42px; padding: 0 12px; display: inline-flex; align-items: center; gap: 8px; border: 1px solid var(--line); border-radius: 5px; color: var(--muted); background: white; font-size: 10px; font-weight: 750; white-space: nowrap; }
+.pending-filter input { width: 15px; height: 15px; margin: 0; accent-color: var(--green); }
 .primary-button { min-height: 42px; padding: 0 15px; display: inline-flex; align-items: center; justify-content: center; gap: 7px; border: 0; border-radius: 5px; color: white; background: var(--green); font-size: 10px; font-weight: 800; white-space: nowrap; }
 .primary-button:hover { background: var(--green-dark); }
 .notice { margin-bottom: 18px; padding: 12px 15px; border: 1px solid #eac4bd; border-radius: 5px; color: #8c382e; background: #fff1ee; font-size: 11px; }
@@ -70,7 +72,7 @@ button { cursor: pointer; }
 .metric-icon.dark { color: var(--lime); background: #263d35; }
 .metrics article > div { min-width: 0; display: grid; }
 .metrics small { color: var(--muted); font-size: 9px; font-weight: 750; }
-.metrics strong { margin: 3px 0 2px; overflow: hidden; font-size: clamp(18px, 1.8vw, 26px); text-overflow: ellipsis; white-space: nowrap; }
+.metrics strong { margin: 3px 0 2px; font-size: clamp(17px, 1.8vw, 26px); line-height: 1.1; overflow-wrap: anywhere; }
 .metrics p { margin: 0; color: #849087; font-size: 8px; }
 
 .work-layout { display: grid; grid-template-columns: minmax(0, 1.55fr) minmax(320px, .75fr); gap: 20px; align-items: start; }
@@ -164,6 +166,7 @@ button { cursor: pointer; }
   .page-heading { align-items: stretch; flex-direction: column; }
   .heading-actions { align-items: stretch; flex-direction: column; }
   .search { width: 100%; }
+  .pending-filter { justify-content: flex-start; }
   .metrics { grid-template-columns: 1fr; }
   .application-list > button { grid-template-columns: 40px minmax(0, 1fr) 18px; }
   .application-amount { grid-column: 2; justify-items: start; }
