@@ -64,18 +64,25 @@ export default function Home() {
     if (!token || !username) { setAdminReady(true); setLoading(false); return; }
     setAdminUser(username);
     setMustChangePassword(localStorage.getItem("listek-admin-must-change") === "true");
-    Promise.all([getDashboard(), getLoans(), getOverdrafts(), getAccounts(), getInterestSettings()])
-      .then(([dashboardData, loanData, overdraftData, accountData, settingsData]) => {
-        setDashboard(dashboardData);
-        setLoans(loanData);
-        setOverdrafts(overdraftData);
-        setAccounts(accountData);
-        setInterestSettings(settingsData);
-        setPendingRegistrations([]);
-      })
+    setAdminReady(true);
+    async function refreshData() {
+      const [dashboardData, loanData, overdraftData, accountData, settingsData] = await Promise.all([getDashboard(), getLoans(), getOverdrafts(), getAccounts(), getInterestSettings()]);
+      setDashboard(dashboardData);
+      setLoans(loanData);
+      setOverdrafts(overdraftData);
+      setAccounts(accountData);
+      setInterestSettings(settingsData);
+      setPendingRegistrations([]);
+      setError("");
+    }
+    refreshData()
       .catch(() => setError("Administraci se nepodařilo spojit s backendem."))
       .finally(() => setLoading(false));
-  }, []);
+    const interval = window.setInterval(() => {
+      void refreshData().catch(() => setError("Administraci se nepodařilo spojit s backendem."));
+    }, 10000);
+    return () => window.clearInterval(interval);
+  }, [adminReady]);
 
   async function signIn(event: FormEvent<HTMLFormElement>) {
     event.preventDefault(); setAuthSaving(true); setAuthError("");

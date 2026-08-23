@@ -50,6 +50,7 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const token = typeof window === "undefined" ? null : localStorage.getItem("listek-admin-session");
   const response = await fetch(`/api/admin${path}`, {
     ...init,
+    cache: "no-store",
     headers: { "Content-Type": "application/json", ...(token ? { "X-Admin-Session": token } : {}), ...init?.headers },
   });
   if (!response.ok) {
