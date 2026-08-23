@@ -48,6 +48,8 @@ button { cursor: pointer; }
 .operator div { display: grid; }
 .operator strong { font-size: 11px; }
 .operator small { color: var(--muted); font-size: 8px; }
+.logout-button { min-height: 38px; padding: 0 12px; display: inline-flex; align-items: center; gap: 7px; border: 1px solid #e2b7b0; border-radius: 5px; color: var(--danger); background: white; font-size: 10px; font-weight: 800; white-space: nowrap; }
+.logout-button:hover { color: white; background: var(--danger); }
 .admin-content { max-width: 1500px; margin: auto; padding: 38px 4vw 64px; }
 .page-heading { margin-bottom: 28px; display: flex; align-items: flex-end; justify-content: space-between; gap: 24px; }
 .page-heading p, .panel-heading p { margin: 0 0 6px; color: var(--green); font-size: 9px; font-weight: 800; }
@@ -162,6 +164,7 @@ button { cursor: pointer; }
   .menu-button { margin-right: auto; display: grid; place-items: center; border: 0; background: transparent; }
   .environment, .operator div { display: none; }
   .operator { padding-left: 0; border-left: 0; }
+  .logout-button { padding: 0 9px; }
   .admin-content { padding: 28px 18px 48px; }
   .page-heading { align-items: stretch; flex-direction: column; }
   .heading-actions { align-items: stretch; flex-direction: column; }

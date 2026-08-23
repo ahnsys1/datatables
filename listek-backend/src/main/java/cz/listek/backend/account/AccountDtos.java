@@ -12,7 +12,9 @@ public final class AccountDtos {
     private AccountDtos() {
     }
 
-    public record AccountResponse(UUID id, String ownerName, String email, String address, String accountNumber, BigDecimal balance, CurrencyCode currency, AccountType type) {
+    public record AccountResponse(UUID id, String ownerName, String username, String firstName, String lastName,
+            String birthNumber, String email, String address, String accountNumber, BigDecimal balance,
+            CurrencyCode currency, AccountType type) {
 
     }
 
@@ -43,13 +45,23 @@ public final class AccountDtos {
 
     public record RegisterAccountRequest(
             @NotBlank
-            @Size(max = 120) String ownerName,
+            @Size(max = 80) String username,
+            @NotBlank
+            @Size(max = 80) String firstName,
+            @NotBlank
+            @Size(max = 80) String lastName,
+            @NotBlank
+            @Pattern(regexp = "[0-9]{6}/?[0-9]{3,4}") String birthNumber,
             @NotBlank
             @jakarta.validation.constraints.Email String email,
             @NotBlank
-            @Size(max = 240) String address,
+            @Size(max = 120) String street,
             @NotBlank
-            @Size(min = 8, max = 120) String password) {
+            @Size(max = 100) String city,
+            @NotBlank
+            @Pattern(regexp = "[0-9]{3} ?[0-9]{2}") String postalCode,
+            @NotBlank
+            @Size(min = 12, max = 200) String password) {
 
     }
 }

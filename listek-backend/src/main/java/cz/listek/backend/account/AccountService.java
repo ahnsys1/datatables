@@ -67,15 +67,19 @@ public class AccountService {
 
     @Transactional
     public AccountResponse register(RegisterAccountRequest request) {
+        if (accountRepository.existsByUsernameIgnoreCaseAndType(request.username().trim(), AccountType.CURRENT)) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Uživatelské jméno je již registrované");
+        }
         if (accountRepository.existsByEmailIgnoreCase(request.email().trim())) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "E-mail je jiz zaregistrovan");
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "E-mail je již zaregistrovaný");
         }
         String accountNumber;
         do {
             accountNumber = String.format("%09d", ACCOUNT_NUMBER_RANDOM.nextInt(1_000_000_000));
         } while (accountRepository.existsByAccountNumber(accountNumber));
-        Account account = new Account(request.ownerName().trim(), request.email().trim(), request.address().trim(),
-                PasswordHasher.hash(request.password()), accountNumber, BigDecimal.ZERO, CurrencyCode.CZK);
+        Account account = new Account(request.username().trim(), request.firstName().trim(), request.lastName().trim(),
+                request.birthNumber().trim(), request.email().trim(), request.street().trim(), request.city().trim(),
+                request.postalCode().trim(), PasswordHasher.hash(request.password()), accountNumber, BigDecimal.ZERO, CurrencyCode.CZK);
         return toResponse(accountRepository.save(account));
     }
 
@@ -87,10 +91,10 @@ public class AccountService {
     }
 
     @Transactional(readOnly = true)
-    public AccountResponse login(String email, String password) {
-        Account account = accountRepository.findByEmailIgnoreCaseAndType(email.trim(), AccountType.CURRENT)
+    public AccountResponse login(String username, String password) {
+        Account account = accountRepository.findByUsernameIgnoreCaseAndType(username.trim(), AccountType.CURRENT)
                 .filter(candidate -> PasswordHasher.matches(password, candidate.getPasswordHash()))
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Nespravny e-mail nebo heslo"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Nesprávné uživatelské jméno nebo heslo"));
         return toResponse(account);
     }
 
@@ -146,7 +150,8 @@ public class AccountService {
     }
 
     private AccountResponse toResponse(Account account) {
-        return new AccountResponse(account.getId(), account.getOwnerName(), account.getEmail(), account.getAddress(), account.getAccountNumber(), account.getBalance(), account.getCurrency(), account.getType());
+        return new AccountResponse(account.getId(), account.getOwnerName(), account.getUsername(), account.getFirstName(), account.getLastName(),
+                account.getBirthNumber(), account.getEmail(), account.getAddress(), account.getAccountNumber(), account.getBalance(), account.getCurrency(), account.getType());
     }
 
     private TransactionResponse toResponse(Transaction transaction) {

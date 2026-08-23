@@ -10,7 +10,6 @@ import org.springframework.web.bind.annotation.RestController;
 import cz.listek.backend.account.AccountDtos.AccountResponse;
 import cz.listek.backend.account.AccountDtos.RegisterAccountRequest;
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 
 @RestController
@@ -26,7 +25,7 @@ public class AuthController {
     @PostMapping("/login")
     @ResponseStatus(HttpStatus.OK)
     public AccountResponse login(@Valid @RequestBody LoginRequest request) {
-        return accountService.login(request.email(), request.password());
+        return accountService.login(request.username(), request.password());
     }
 
     @PostMapping("/register")
@@ -35,8 +34,7 @@ public class AuthController {
         return accountService.register(request);
     }
 
-    public record LoginRequest(@NotBlank
-            @Email String email, @NotBlank String password) {
+    public record LoginRequest(@NotBlank String username, @NotBlank String password) {
 
     }
 }

@@ -11,6 +11,8 @@ public interface AccountRepository extends JpaRepository<Account, UUID> {
 
     Optional<Account> findByEmailIgnoreCaseAndType(String email, AccountType type);
 
+    Optional<Account> findByUsernameIgnoreCaseAndType(String username, AccountType type);
+
     boolean existsByEmailIgnoreCase(String email);
 
     Optional<Account> findByAccountNumber(String accountNumber);
@@ -18,4 +20,6 @@ public interface AccountRepository extends JpaRepository<Account, UUID> {
     boolean existsByAccountNumber(String accountNumber);
 
     boolean existsByEmailIgnoreCaseAndType(String email, AccountType type);
+
+    boolean existsByUsernameIgnoreCaseAndType(String username, AccountType type);
 }

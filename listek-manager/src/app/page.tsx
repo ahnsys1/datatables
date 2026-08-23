@@ -2,7 +2,7 @@
 
 import {
   Bell, Check, ChevronRight, CircleDollarSign, ClipboardCheck, FileClock,
-  Landmark, LayoutDashboard, Menu, Search, ShieldCheck, Users, WalletCards, X,
+  Landmark, LayoutDashboard, LogOut, Menu, Search, ShieldCheck, Users, WalletCards, X,
 } from "lucide-react";
 import { FormEvent, useEffect, useState } from "react";
 import {
@@ -126,6 +126,7 @@ export default function Home() {
           <div className="environment"><i /> Systémy v pořádku</div>
           <button className="icon-button" aria-label="Oznámení"><Bell size={19} /><span /></button>
           <div className="operator"><span>JP</span><div><strong>Jan Pokorný</strong><small>Úvěrový specialista</small></div></div>
+          <button className="logout-button" type="button"><LogOut size={17} /> Odhlášení</button>
         </header>
 
         <div className="admin-content">

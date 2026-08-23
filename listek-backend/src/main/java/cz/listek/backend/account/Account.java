@@ -25,6 +25,14 @@ public class Account {
 
     @Column(nullable = false, length = 120)
     private String ownerName;
+    @Column(length = 80)
+    private String username;
+    @Column(length = 80)
+    private String firstName;
+    @Column(length = 80)
+    private String lastName;
+    @Column(length = 11)
+    private String birthNumber;
     @Column(nullable = false, length = 160)
     private String email;
     @Column(nullable = false, length = 240)
@@ -58,7 +66,24 @@ public class Account {
     }
 
     public Account(String ownerName, String email, String address, String passwordHash, String accountNumber, BigDecimal balance, CurrencyCode currency, AccountType type) {
+        this(null, ownerName, null, null, null, email, address, passwordHash, accountNumber, balance, currency, type);
+    }
+
+    public Account(String username, String firstName, String lastName, String birthNumber, String email,
+            String street, String city, String postalCode, String passwordHash, String accountNumber,
+            BigDecimal balance, CurrencyCode currency) {
+        this(username, firstName + " " + lastName, firstName, lastName, birthNumber, email,
+                street + ", " + city + ", " + postalCode, passwordHash, accountNumber, balance, currency, AccountType.CURRENT);
+    }
+
+    private Account(String username, String ownerName, String firstName, String lastName, String birthNumber,
+            String email, String address, String passwordHash, String accountNumber, BigDecimal balance,
+            CurrencyCode currency, AccountType type) {
         this.ownerName = ownerName;
+        this.username = username;
+        this.firstName = firstName;
+        this.lastName = lastName;
+        this.birthNumber = birthNumber;
         this.email = email;
         this.address = address;
         this.passwordHash = passwordHash;
@@ -74,6 +99,22 @@ public class Account {
 
     public String getOwnerName() {
         return ownerName;
+    }
+
+    public String getUsername() {
+        return username;
+    }
+
+    public String getFirstName() {
+        return firstName;
+    }
+
+    public String getLastName() {
+        return lastName;
+    }
+
+    public String getBirthNumber() {
+        return birthNumber;
     }
 
     public String getAccountNumber() {

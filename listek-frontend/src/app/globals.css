@@ -23,14 +23,16 @@ body {
   font-family: var(--font-manrope), sans-serif;
 }
 .session-loading { min-height: 100vh; display: grid; place-items: center; color: var(--muted); font-size: 13px; }
-.auth-page { min-height: 100vh; display: grid; grid-template-columns: minmax(320px, .9fr) minmax(420px, 1.1fr); background: #f4f6f1; }
+.auth-page { position: relative; min-height: 100vh; display: grid; grid-template-columns: minmax(320px, .9fr) minmax(420px, 1.1fr); overflow: hidden; background: #f4f6f1; }
+.auth-page::after { content: ""; position: absolute; right: -80px; bottom: -150px; width: 330px; height: 480px; border-radius: 72% 28% 70% 30%; background: #d9f16d; opacity: .78; transform: rotate(34deg); box-shadow: inset 20px 0 0 rgba(22,122,69,.12), 0 25px 70px rgba(22,122,69,.12); pointer-events: none; }
+.auth-page::before { content: ""; position: absolute; right: 83px; bottom: -6px; z-index: 1; width: 3px; height: 390px; background: #167a45; opacity: .42; transform: rotate(34deg); pointer-events: none; }
 .auth-brand { padding: clamp(32px, 6vw, 84px); display: flex; flex-direction: column; justify-content: space-between; background: #173a2b; color: white; }
 .auth-brand .bank-logo { padding: 0; }
 .auth-brand h1 { margin: 10px 0 20px; font-size: clamp(42px, 5vw, 68px); line-height: 1.02; letter-spacing: 0; }
 .auth-brand p:not(.date-label) { max-width: 440px; color: #c8d8ce; line-height: 1.7; }
 .auth-security { display: flex; align-items: center; gap: 9px; color: #d9f16d; font-size: 12px; font-weight: 750; }
-.auth-panel { padding: 32px; display: grid; place-items: center; }
-.auth-card { width: min(100%, 430px); }
+.auth-panel { position: relative; z-index: 2; padding: 32px; display: grid; place-items: center; }
+.auth-card { width: min(100%, 520px); }
 .auth-icon { width: 48px; height: 48px; display: grid; place-items: center; border-radius: 50%; background: var(--soft-green); color: var(--green); }
 .auth-card h2 { margin: 18px 0 7px; font-size: 30px; }
 .auth-card > p { margin: 0 0 22px; color: var(--muted); font-size: 12px; }
@@ -40,8 +42,19 @@ body {
 .auth-card form > label { display: grid; gap: 7px; margin-top: 14px; color: var(--muted); font-size: 10px; font-weight: 750; }
 .auth-card input { width: 100%; height: 46px; padding: 0 12px; border: 1px solid #ccd3cc; border-radius: 5px; outline: 0; background: white; }
 .auth-card input:focus { border-color: var(--green); box-shadow: 0 0 0 3px rgba(22,122,69,.1); }
+.auth-fields { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 button, input, select { font: inherit; }
 button { color: inherit; }
+
+@media (max-width: 760px) {
+  .auth-page { display: block; min-height: 100svh; overflow: auto; }
+  .auth-brand { min-height: 220px; padding: 28px; }
+  .auth-brand h1, .auth-brand p:not(.date-label), .auth-security { display: none; }
+  .auth-panel { min-height: calc(100svh - 220px); padding: 28px 20px 48px; }
+  .auth-fields { grid-template-columns: 1fr; gap: 0; }
+  .auth-page::after { right: -120px; bottom: -180px; opacity: .45; }
+  .auth-page::before { right: 38px; bottom: -30px; }
+}
 
 .bank-app { min-height: 100vh; display: flex; }
 .bank-sidebar {

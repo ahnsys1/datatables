@@ -3,6 +3,10 @@ export type CurrencyCode = "CZK" | "EUR";
 export type Account = {
   id: string;
   ownerName: string;
+  username?: string;
+  firstName?: string;
+  lastName?: string;
+  birthNumber?: string;
   email: string;
   address: string;
   accountNumber: string;
@@ -132,11 +136,21 @@ export function createSavingsAccount(accountId: string) {
   return request<Account>(`/accounts/${accountId}/savings`, { method: "POST" });
 }
 
-export function login(input: { email: string; password: string }) {
+export function login(input: { username: string; password: string }) {
   return request<Account>("/auth/login", { method: "POST", body: JSON.stringify(input) });
 }
 
-export function register(input: { ownerName: string; email: string; address: string; password: string }) {
+export function register(input: {
+  username: string;
+  firstName: string;
+  lastName: string;
+  birthNumber: string;
+  email: string;
+  street: string;
+  city: string;
+  postalCode: string;
+  password: string;
+}) {
   return request<Account>("/auth/register", { method: "POST", body: JSON.stringify(input) });
 }
 
