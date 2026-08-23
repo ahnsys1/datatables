@@ -2,7 +2,7 @@
 
 import {
   Bell, ChevronDown, CreditCard, FileText, HelpCircle, Home, Landmark,
-  HandCoins, LogOut, Menu, Send, Settings, TrendingUp, X,
+  HandCoins, LogOut, Menu, Send, Settings, TrendingUp, WalletCards, X,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
@@ -17,6 +17,7 @@ const navigation = [
   { label: "Karty", href: "/karty", icon: CreditCard },
   { label: "Spoření", href: "/sporeni", icon: TrendingUp },
   { label: "Půjčky", href: "/pujcky", icon: HandCoins },
+  { label: "Kontokorent", href: "/kontokorent", icon: WalletCards },
   { label: "Dokumenty", href: "/dokumenty", icon: FileText },
 ];
 

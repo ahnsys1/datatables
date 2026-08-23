@@ -6,11 +6,11 @@ import {
 } from "lucide-react";
 import { FormEvent, useEffect, useState } from "react";
 import {
-  Account, BankApplication, Dashboard, createOverdraft, decideApplication, getAccounts,
-  getDashboard, getLoans, getOverdrafts,
+  Account, BankApplication, Dashboard, InterestSettings, createOverdraft, decideApplication, getAccounts,
+  getDashboard, getInterestSettings, getLoans, getOverdrafts, updateInterestSettings,
 } from "@/lib/api";
 
-type View = "overview" | "loans" | "overdrafts" | "clients";
+type View = "overview" | "loans" | "overdrafts" | "clients" | "settings";
 
 const money = new Intl.NumberFormat("cs-CZ", { style: "currency", currency: "CZK", maximumFractionDigits: 0 });
 const date = new Intl.DateTimeFormat("cs-CZ", { dateStyle: "medium", timeStyle: "short" });
@@ -19,6 +19,7 @@ const navigation = [
   { id: "loans" as const, label: "Půjčky", icon: CircleDollarSign },
   { id: "overdrafts" as const, label: "Kontokorenty", icon: WalletCards },
   { id: "clients" as const, label: "Klienti", icon: Users },
+  { id: "settings" as const, label: "Nastavení sazeb", icon: ClipboardCheck },
 ];
 
 export default function Home() {
@@ -36,14 +37,16 @@ export default function Home() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [overdraftFormOpen, setOverdraftFormOpen] = useState(false);
   const [creating, setCreating] = useState(false);
+  const [interestSettings, setInterestSettings] = useState<InterestSettings | null>(null);
 
   useEffect(() => {
-    Promise.all([getDashboard(), getLoans(), getOverdrafts(), getAccounts()])
-      .then(([dashboardData, loanData, overdraftData, accountData]) => {
+    Promise.all([getDashboard(), getLoans(), getOverdrafts(), getAccounts(), getInterestSettings()])
+      .then(([dashboardData, loanData, overdraftData, accountData, settingsData]) => {
         setDashboard(dashboardData);
         setLoans(loanData);
         setOverdrafts(overdraftData);
         setAccounts(accountData);
+        setInterestSettings(settingsData);
       })
       .catch(() => setError("Administraci se nepodařilo spojit s backendem."))
       .finally(() => setLoading(false));
@@ -101,7 +104,23 @@ export default function Home() {
     loans: ["Žádosti o půjčku", "Posuďte žádosti, riziko a schopnost klienta splácet."],
     overdrafts: ["Žádosti o kontokorent", "Rozhodujte o krátkodobých úvěrových rámcích."],
     clients: ["Klienti a účty", "Rychlý dohled nad klientským portfoliem banky."],
+    settings: ["Nastavení sazeb", "Spravujte úrokové sazby produktů dostupných klientům."],
   };
+
+  async function saveInterestSettings(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const form = new FormData(event.currentTarget);
+    setSaving(true);
+    try {
+      const updated = await updateInterestSettings({
+        savingsRate: Number(form.get("savingsRate")), overdraftRate: Number(form.get("overdraftRate")),
+        personalLoanRate: Number(form.get("personalLoanRate")), homeLoanRate: Number(form.get("homeLoanRate")),
+      });
+      setInterestSettings(updated);
+      setError("");
+    } catch (saveError) { setError(saveError instanceof Error ? saveError.message : "Sazby se nepodařilo uložit."); }
+    finally { setSaving(false); }
+  }
 
   return (
     <div className="admin-app">
@@ -132,7 +151,7 @@ export default function Home() {
         <div className="admin-content">
           <section className="page-heading">
             <div><p>22. SRPNA 2026</p><h1>{titles[view][0]}</h1><span>{titles[view][1]}</span></div>
-            {view !== "clients" && <div className="heading-actions"><div className="search"><Search size={18} /><input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Hledat klienta nebo účet" /></div>{view === "overdrafts" && <button className="primary-button" onClick={() => setOverdraftFormOpen(true)}><Plus size={17} /> Založit žádost</button>}</div>}
+            {view !== "clients" && view !== "settings" && <div className="heading-actions"><div className="search"><Search size={18} /><input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Hledat klienta nebo účet" /></div>{view === "overdrafts" && <button className="primary-button" onClick={() => setOverdraftFormOpen(true)}><Plus size={17} /> Založit žádost</button>}</div>}
           </section>
 
           {error && <div className="notice">{error}</div>}
@@ -145,7 +164,7 @@ export default function Home() {
             <article><span className="metric-icon dark"><ClipboardCheck size={21} /></span><div><small>Dnes rozhodnuto</small><strong>{dashboard.decidedToday}</strong><p>Vyřízených žádostí</p></div></article>
           </section>}
 
-          {view !== "clients" && !loading && <section className="work-layout">
+          {view !== "clients" && view !== "settings" && !loading && <section className="work-layout">
             <div className="queue-panel">
               <div className="panel-heading"><div><p>{view === "overview" ? "PRIORITNÍ FRONTA" : "VŠECHNY ŽÁDOSTI"}</p><h2>{view === "loans" ? "Půjčky" : view === "overdrafts" ? "Kontokorenty" : "Žádosti k posouzení"}</h2></div><span>{visibleApplications.filter((item) => item.status === "PENDING").length} čeká</span></div>
               <div className="application-list">
@@ -174,6 +193,8 @@ export default function Home() {
             <div className="panel-heading"><div><p>KLIENTSKÝ KMEN</p><h2>Účty a zůstatky</h2></div><span>{accounts.length} klientů</span></div>
             <div className="client-table"><div className="table-head"><span>Klient</span><span>Číslo účtu</span><span>Kontakt</span><span>Zůstatek</span></div>{accounts.map((account) => <article key={account.id}><span className="client-name"><i>{account.ownerName.split(" ").map((part) => part[0]).slice(0, 2).join("")}</i><strong>{account.ownerName}</strong></span><span>{account.accountNumber}</span><span>{account.email}</span><strong>{money.format(account.balance)}</strong></article>)}</div>
           </section>}
+
+          {view === "settings" && !loading && interestSettings && <section className="settings-card"><div className="panel-heading"><div><p>PRODUKTOVÉ PODMÍNKY</p><h2>Úrokové sazby</h2></div><span>% p. a.</span></div><form onSubmit={saveInterestSettings} className="rate-form"><label>Spořicí účet<input name="savingsRate" type="number" min="0" step="0.001" defaultValue={interestSettings.savingsRate} /></label><label>Kontokorent<input name="overdraftRate" type="number" min="0" step="0.001" defaultValue={interestSettings.overdraftRate} /></label><label>Půjčka na cokoliv<input name="personalLoanRate" type="number" min="0" step="0.001" defaultValue={interestSettings.personalLoanRate} /></label><label>Půjčka na bydlení<input name="homeLoanRate" type="number" min="0" step="0.001" defaultValue={interestSettings.homeLoanRate} /></label><button className="primary-button submit-button" type="submit" disabled={saving}>{saving ? "Ukládám..." : "Uložit sazby"}</button></form></section>}
         </div>
       </main>
       {overdraftFormOpen && <div className="modal-backdrop" role="presentation" onMouseDown={(event) => event.target === event.currentTarget && setOverdraftFormOpen(false)}><section className="admin-modal" role="dialog" aria-modal="true" aria-labelledby="overdraft-title"><button className="modal-close" onClick={() => setOverdraftFormOpen(false)} aria-label="Zavřít"><X size={20} /></button><p>KONTOKORENT</p><h2 id="overdraft-title">Založit žádost klienta</h2><span>Zařaďte žádost do fronty pro následné posouzení.</span><form onSubmit={submitOverdraft}><label>Klientský účet<select name="accountId" required defaultValue=""><option value="" disabled>Vyberte účet</option>{accounts.map((account) => <option value={account.id} key={account.id}>{account.ownerName} · {account.accountNumber}</option>)}</select></label><label>Požadovaný limit<input name="requestedLimit" type="number" required min="1000" max="250000" step="1000" placeholder="50 000 Kč" /></label><label>Doložený měsíční příjem<input name="monthlyIncome" type="number" required min="0" step="1000" placeholder="45 000 Kč" /></label><button className="primary-button submit-button" type="submit" disabled={creating}>{creating ? "Zakládám..." : "Zařadit do fronty"}</button></form></section></div>}

@@ -3,7 +3,7 @@
 import { ArrowRight, Check, CheckCircle2, HandCoins, Home, X } from "lucide-react";
 import { FormEvent, useEffect, useState } from "react";
 import BankShell from "../BankShell";
-import { LoanApplication, createLoanApplication, getLoanApplications } from "../../lib/api";
+import { InterestSettings, LoanApplication, createLoanApplication, getInterestSettings, getLoanApplications } from "../../lib/api";
 import { getSession } from "../../lib/session";
 
 type LoanKind = "personal" | "home";
@@ -29,16 +29,18 @@ export default function LoansPage() {
   const [loadingApplications, setLoadingApplications] = useState(true);
   const [savingApplication, setSavingApplication] = useState(false);
   const [error, setError] = useState("");
+  const [rates, setRates] = useState<InterestSettings | null>(null);
 
   const product = products[kind];
-  const installment = monthlyPayment(amount, months, product.rate);
+  const productRate = rates ? kind === "personal" ? rates.personalLoanRate : rates.homeLoanRate : product.rate;
+  const installment = monthlyPayment(amount, months, productRate);
   const total = installment * months;
 
   useEffect(() => {
     const session = getSession();
     if (!session) return;
-    getLoanApplications(session.id)
-      .then(setApplications)
+    Promise.all([getLoanApplications(session.id), getInterestSettings()])
+      .then(([loadedApplications, loadedRates]) => { setApplications(loadedApplications); setRates(loadedRates); })
       .catch(() => setError("Žádosti se nepodařilo načíst."))
       .finally(() => setLoadingApplications(false));
   }, []);
@@ -83,7 +85,7 @@ export default function LoansPage() {
     <div className="page-hero"><div><p className="date-label">Financování podle vašich plánů</p><h1>Půjčky</h1><p className="page-lead">Spočítejte si měsíční splátku a odešlete nezávaznou žádost.</p></div></div>
 
     <div className="loan-products" role="radiogroup" aria-label="Typ půjčky">
-      {(Object.entries(products) as [LoanKind, typeof products[LoanKind]][]).map(([productKind, item]) => { const Icon = item.icon; return <button className={kind === productKind ? "active" : ""} key={productKind} onClick={() => selectProduct(productKind)} role="radio" aria-checked={kind === productKind}><span><Icon size={21} /></span><strong>{item.name}</strong><small>Úrok od {item.rate.toLocaleString("cs-CZ")} % p. a.</small>{kind === productKind && <Check size={17} />}</button>; })}
+      {(Object.entries(products) as [LoanKind, typeof products[LoanKind]][]).map(([productKind, item]) => { const Icon = item.icon; const rate = rates ? productKind === "personal" ? rates.personalLoanRate : rates.homeLoanRate : item.rate; return <button className={kind === productKind ? "active" : ""} key={productKind} onClick={() => selectProduct(productKind)} role="radio" aria-checked={kind === productKind}><span><Icon size={21} /></span><strong>{item.name}</strong><small>Úrok od {rate.toLocaleString("cs-CZ")} % p. a.</small>{kind === productKind && <Check size={17} />}</button>; })}
     </div>
 
     <div className="loan-layout">
@@ -94,7 +96,7 @@ export default function LoansPage() {
         <div className="loan-benefits"><span><CheckCircle2 size={17} /> Předčasné splacení zdarma</span><span><CheckCircle2 size={17} /> Peníze po schválení na účet</span></div>
       </section>
 
-      <aside className="loan-summary"><p>Orientační měsíční splátka</p><strong>{currency.format(installment)}</strong><dl><div><dt>Úroková sazba</dt><dd>{product.rate.toLocaleString("cs-CZ")} % p. a.</dd></div><div><dt>RPSN</dt><dd>{(product.rate + 0.5).toLocaleString("cs-CZ")} %</dd></div><div><dt>Celkem zaplatíte</dt><dd>{currency.format(total)}</dd></div></dl><button className="pay-button" onClick={() => setApplicationOpen(true)}>Požádat o půjčku <ArrowRight size={18} /></button><small>Výpočet je orientační. Finální nabídka závisí na posouzení žádosti.</small></aside>
+      <aside className="loan-summary"><p>Orientační měsíční splátka</p><strong>{currency.format(installment)}</strong><dl><div><dt>Úroková sazba</dt><dd>{productRate.toLocaleString("cs-CZ")} % p. a.</dd></div><div><dt>RPSN</dt><dd>{(productRate + 0.5).toLocaleString("cs-CZ")} %</dd></div><div><dt>Celkem zaplatíte</dt><dd>{currency.format(total)}</dd></div></dl><button className="pay-button" onClick={() => setApplicationOpen(true)}>Požádat o půjčku <ArrowRight size={18} /></button><small>Výpočet je orientační. Finální nabídka závisí na posouzení žádosti.</small></aside>
     </div>
 
     {error && <p className="api-notice">{error}</p>}

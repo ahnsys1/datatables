@@ -1,0 +1,51 @@
+"use client";
+
+import { ArrowRight, Check, CheckCircle2, WalletCards, X } from "lucide-react";
+import { FormEvent, useEffect, useState } from "react";
+import BankShell from "../BankShell";
+import { Account, InterestSettings, OverdraftApplication, createOverdraftApplication, getAccounts, getInterestSettings, getOverdraftApplications } from "../../lib/api";
+import { getSession } from "../../lib/session";
+
+const currency = new Intl.NumberFormat("cs-CZ", { style: "currency", currency: "CZK", maximumFractionDigits: 0 });
+
+export default function OverdraftPage() {
+  const [account, setAccount] = useState<Account | null>(null);
+  const [settings, setSettings] = useState<InterestSettings | null>(null);
+  const [applications, setApplications] = useState<OverdraftApplication[]>([]);
+  const [limit, setLimit] = useState(50000);
+  const [income, setIncome] = useState(45000);
+  const [open, setOpen] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    const session = getSession();
+    if (!session) return;
+    Promise.all([getAccounts(), getInterestSettings(), getOverdraftApplications()]).then(([accounts, rates, items]) => {
+      setAccount(accounts.find((item) => item.id === session.id) ?? null);
+      setSettings(rates);
+      setApplications(items.filter((item) => item.accountId === session.id));
+    }).catch(() => setError("Kontokorent se nepodařilo načíst."));
+  }, []);
+
+  async function submit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!account) return;
+    setSaving(true);
+    try {
+      const application = await createOverdraftApplication({ accountId: account.id, requestedLimit: limit, monthlyIncome: income });
+      setApplications((items) => [application, ...items]);
+      setOpen(false);
+      setError("");
+    } catch (submissionError) { setError(submissionError instanceof Error ? submissionError.message : "Žádost se nepodařilo odeslat."); }
+    finally { setSaving(false); }
+  }
+
+  return <BankShell><div className="bank-content section-page loans-page">
+    {error && <p className="api-notice">{error}</p>}
+    <div className="page-hero"><div><p className="date-label">Finanční rezerva pro nečekané výdaje</p><h1>Kontokorent</h1><p className="page-lead">Mějte peníze k dispozici i v případě, že vám na účtu dočasně nestačí zůstatek.</p></div></div>
+    <div className="loan-layout"><section className="loan-calculator"><span className="savings-icon"><WalletCards size={23} /></span><p className="modal-kicker">Povolené přečerpání</p><h2>Nastavte si svůj limit</h2><label><span><strong>Požadovaný limit</strong><b>{currency.format(limit)}</b></span><input type="range" min="1000" max="250000" step="1000" value={limit} onChange={(event) => setLimit(Number(event.target.value))} /><small><span>1 000 Kč</span><span>250 000 Kč</span></small></label><div className="loan-benefits"><span><CheckCircle2 size={17} /> Peníze kdykoliv k dispozici</span><span><CheckCircle2 size={17} /> Platíte úrok jen z čerpané částky</span></div></section><aside className="loan-summary"><p>Úroková sazba</p><strong>{settings ? `${settings.overdraftRate.toLocaleString("cs-CZ")} %` : "Načítám..."}</strong><dl><div><dt>Účet</dt><dd>{account?.accountNumber ?? "-"}</dd></div><div><dt>Maximální limit</dt><dd>{currency.format(250000)}</dd></div><div><dt>Schválení</dt><dd>Po posouzení žádosti</dd></div></dl><button className="pay-button" onClick={() => setOpen(true)} disabled={!account}>Požádat o kontokorent <ArrowRight size={18} /></button><small>Kontokorent je úvěrový produkt. O jeho schválení rozhoduje banka.</small></aside></div>
+    {applications.length > 0 && <section className="loan-applications"><div className="section-heading"><h2>Moje žádosti</h2><span>{applications.length}</span></div>{applications.map((item) => <article key={item.id}><span className="loan-status"><CheckCircle2 size={18} /></span><div><strong>Kontokorent</strong><small>Odesláno {new Intl.DateTimeFormat("cs-CZ", { dateStyle: "medium" }).format(new Date(item.createdAt))}</small></div><div><strong>{currency.format(item.amount)}</strong><small>{currency.format(item.monthlyIncome)} měsíční příjem</small></div><b>{item.status === "PENDING" ? "Čeká na posouzení" : item.status === "APPROVED" ? "Schváleno" : "Zamítnuto"}</b></article>)}</section>}
+    {open && <div className="modal-backdrop" role="presentation" onMouseDown={(event) => event.target === event.currentTarget && setOpen(false)}><section className="payment-modal" role="dialog" aria-modal="true" aria-labelledby="overdraft-title"><button className="modal-close" onClick={() => setOpen(false)} aria-label="Zavřít"><X size={21} /></button><p className="modal-kicker">Kontokorent</p><h2 id="overdraft-title">Odeslat žádost</h2><form onSubmit={submit}><label>Požadovaný limit<input type="number" min="1000" max="250000" step="1000" value={limit} onChange={(event) => setLimit(Number(event.target.value))} required /></label><label>Měsíční příjem<input type="number" min="0" step="1000" value={income} onChange={(event) => setIncome(Number(event.target.value))} required /></label><button className="pay-button payment-submit" type="submit" disabled={saving}>{saving ? "Odesílám..." : "Odeslat žádost"}</button></form></section></div>}
+  </div></BankShell>;
+}

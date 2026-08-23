@@ -70,10 +70,18 @@ export type LoanApplication = {
   createdAt: string;
 };
 
+export type InterestSettings = { savingsRate: number; overdraftRate: number; personalLoanRate: number; homeLoanRate: number };
+export type OverdraftApplication = { id: string; category: "OVERDRAFT"; product: string; accountId: string; clientName: string; accountNumber: string; amount: number; monthlyIncome: number; status: "PENDING" | "APPROVED" | "REJECTED"; createdAt: string; decidedAt: string | null; decisionNote: string | null };
+
 const apiBase = process.env.NEXT_PUBLIC_API_BASE_URL ?? "/api/backend";
+const managerBase = "/api/manager";
 
 async function request<T>(path: string, options?: RequestInit): Promise<T> {
-  const response = await fetch(`${apiBase}${path}`, {
+  return requestFrom<T>(apiBase, path, options);
+}
+
+async function requestFrom<T>(base: string, path: string, options?: RequestInit): Promise<T> {
+  const response = await fetch(`${base}${path}`, {
     ...options,
     headers: { "Content-Type": "application/json", ...options?.headers },
   });
@@ -100,6 +108,12 @@ async function request<T>(path: string, options?: RequestInit): Promise<T> {
 
 export function getAccounts() {
   return request<Account[]>("/accounts", { cache: "no-store" });
+}
+
+export function getInterestSettings() { return requestFrom<InterestSettings>(managerBase, "/settings/interest", { cache: "no-store" }); }
+export function getOverdraftApplications() { return requestFrom<OverdraftApplication[]>(managerBase, "/overdrafts", { cache: "no-store" }); }
+export function createOverdraftApplication(input: { accountId: string; requestedLimit: number; monthlyIncome: number }) {
+  return requestFrom<OverdraftApplication>(managerBase, "/overdrafts", { method: "POST", body: JSON.stringify(input) });
 }
 
 export function createAccount(input: {

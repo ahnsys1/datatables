@@ -38,11 +38,14 @@ services:
       dockerfile: Dockerfile
       args:
         BACKEND_URL: http://listek-backend:8080
+        ADMIN_BACKEND_URL: http://listek-admin:8090
     container_name: listek-frontend
     environment:
       BACKEND_URL: http://listek-backend:8080
+      ADMIN_BACKEND_URL: http://listek-admin:8090
     depends_on:
       - listek-backend
+      - listek-admin
     ports:
       - "3000:3000"
 

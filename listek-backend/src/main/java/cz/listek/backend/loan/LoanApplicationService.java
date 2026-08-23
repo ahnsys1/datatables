@@ -14,6 +14,8 @@ import cz.listek.backend.account.Account;
 import cz.listek.backend.account.AccountRepository;
 import cz.listek.backend.loan.LoanDtos.CreateLoanApplicationRequest;
 import cz.listek.backend.loan.LoanDtos.LoanApplicationResponse;
+import cz.listek.backend.settings.ProductInterestSettings;
+import cz.listek.backend.settings.ProductInterestSettingsRepository;
 
 @Service
 public class LoanApplicationService {
@@ -25,10 +27,13 @@ public class LoanApplicationService {
 
     private final AccountRepository accountRepository;
     private final LoanApplicationRepository loanApplicationRepository;
+    private final ProductInterestSettingsRepository interestSettingsRepository;
 
-    public LoanApplicationService(AccountRepository accountRepository, LoanApplicationRepository loanApplicationRepository) {
+    public LoanApplicationService(AccountRepository accountRepository, LoanApplicationRepository loanApplicationRepository,
+            ProductInterestSettingsRepository interestSettingsRepository) {
         this.accountRepository = accountRepository;
         this.loanApplicationRepository = loanApplicationRepository;
+        this.interestSettingsRepository = interestSettingsRepository;
     }
 
     @Transactional(readOnly = true)
@@ -44,7 +49,10 @@ public class LoanApplicationService {
         if (request.amount().compareTo(maximum) > 0) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Castka pujcky presahuje povoleny limit");
         }
-        BigDecimal annualRate = request.type() == LoanType.PERSONAL ? PERSONAL_RATE : HOME_RATE;
+        ProductInterestSettings settings = interestSettingsRepository.findById(true).orElse(null);
+        BigDecimal annualRate = settings == null
+                ? request.type() == LoanType.PERSONAL ? PERSONAL_RATE : HOME_RATE
+                : request.type() == LoanType.PERSONAL ? settings.getPersonalLoanRate() : settings.getHomeLoanRate();
         BigDecimal monthlyPayment = monthlyPayment(request.amount(), request.repaymentMonths(), annualRate);
         LoanApplication application = new LoanApplication(account, request.type(), request.amount(), request.repaymentMonths(),
                 annualRate, monthlyPayment, request.purpose().trim());

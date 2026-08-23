@@ -35,6 +35,13 @@ export type BankApplication = {
   decisionNote: string | null;
 };
 
+export type InterestSettings = {
+  savingsRate: number;
+  overdraftRate: number;
+  personalLoanRate: number;
+  homeLoanRate: number;
+};
+
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const response = await fetch(`/api/admin${path}`, {
     ...init,
@@ -51,6 +58,10 @@ export function getDashboard() { return request<Dashboard>("/dashboard"); }
 export function getAccounts() { return request<Account[]>("/accounts"); }
 export function getLoans() { return request<BankApplication[]>("/loans"); }
 export function getOverdrafts() { return request<BankApplication[]>("/overdrafts"); }
+export function getInterestSettings() { return request<InterestSettings>("/settings/interest"); }
+export function updateInterestSettings(input: InterestSettings) {
+  return request<InterestSettings>("/settings/interest", { method: "PATCH", body: JSON.stringify(input) });
+}
 
 export function createOverdraft(input: { accountId: string; requestedLimit: number; monthlyIncome: number }) {
   return request<BankApplication>("/overdrafts", {

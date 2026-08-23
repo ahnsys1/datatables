@@ -18,6 +18,8 @@ import cz.listek.admin.api.AdminDtos.ApplicationResponse;
 import cz.listek.admin.api.AdminDtos.CreateOverdraftRequest;
 import cz.listek.admin.api.AdminDtos.DashboardResponse;
 import cz.listek.admin.api.AdminDtos.DecisionRequest;
+import cz.listek.admin.api.AdminDtos.InterestSettingsResponse;
+import cz.listek.admin.api.AdminDtos.UpdateInterestSettingsRequest;
 import cz.listek.admin.domain.AdminAccount;
 import cz.listek.admin.domain.AdminLoanApplication;
 import cz.listek.admin.domain.AdminStandingOrder;
@@ -27,11 +29,13 @@ import static cz.listek.admin.domain.ApplicationStatus.APPROVED;
 import static cz.listek.admin.domain.ApplicationStatus.PENDING;
 import static cz.listek.admin.domain.ApplicationStatus.REJECTED;
 import cz.listek.admin.domain.OverdraftApplication;
+import cz.listek.admin.domain.ProductInterestSettings;
 import cz.listek.admin.repository.AdminAccountRepository;
 import cz.listek.admin.repository.AdminLoanApplicationRepository;
 import cz.listek.admin.repository.AdminStandingOrderRepository;
 import cz.listek.admin.repository.AdminTransactionRepository;
 import cz.listek.admin.repository.OverdraftApplicationRepository;
+import cz.listek.admin.repository.ProductInterestSettingsRepository;
 
 @Service
 public class AdminWorkflowService {
@@ -41,6 +45,7 @@ public class AdminWorkflowService {
     private final OverdraftApplicationRepository overdraftRepository;
     private final AdminTransactionRepository transactionRepository;
     private final AdminStandingOrderRepository standingOrderRepository;
+    private final ProductInterestSettingsRepository interestSettingsRepository;
     private final String loanRepaymentAccountNumber;
 
     public AdminWorkflowService(AdminAccountRepository accountRepository,
@@ -48,12 +53,14 @@ public class AdminWorkflowService {
             OverdraftApplicationRepository overdraftRepository,
             AdminTransactionRepository transactionRepository,
             AdminStandingOrderRepository standingOrderRepository,
+            ProductInterestSettingsRepository interestSettingsRepository,
             @Value("${app.loan.repayment-account-number:LOAN-REPAYMENT}") String loanRepaymentAccountNumber) {
         this.accountRepository = accountRepository;
         this.loanRepository = loanRepository;
         this.overdraftRepository = overdraftRepository;
         this.transactionRepository = transactionRepository;
         this.standingOrderRepository = standingOrderRepository;
+        this.interestSettingsRepository = interestSettingsRepository;
         this.loanRepaymentAccountNumber = loanRepaymentAccountNumber;
     }
 
@@ -116,6 +123,26 @@ public class AdminWorkflowService {
         AdminAccount account = accountRepository.findById(request.accountId()).orElseThrow(() -> notFound("Účet"));
         return overdraftResponse(overdraftRepository.save(new OverdraftApplication(account,
                 request.requestedLimit(), request.monthlyIncome())));
+    }
+
+    @Transactional(readOnly = true)
+    public InterestSettingsResponse interestSettings() {
+        return settingsResponse(settings());
+    }
+
+    @Transactional
+    public InterestSettingsResponse updateInterestSettings(UpdateInterestSettingsRequest request) {
+        ProductInterestSettings settings = settings();
+        settings.update(request.savingsRate(), request.overdraftRate(), request.personalLoanRate(), request.homeLoanRate());
+        return settingsResponse(interestSettingsRepository.save(settings));
+    }
+
+    private ProductInterestSettings settings() {
+        return interestSettingsRepository.findById(true).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Nastavení sazeb nebylo nalezeno"));
+    }
+
+    private InterestSettingsResponse settingsResponse(ProductInterestSettings settings) {
+        return new InterestSettingsResponse(settings.getSavingsRate(), settings.getOverdraftRate(), settings.getPersonalLoanRate(), settings.getHomeLoanRate());
     }
 
     private void validateDecision(ApplicationStatus status) {

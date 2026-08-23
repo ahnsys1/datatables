@@ -18,6 +18,8 @@ import cz.listek.admin.api.AdminDtos.ApplicationResponse;
 import cz.listek.admin.api.AdminDtos.CreateOverdraftRequest;
 import cz.listek.admin.api.AdminDtos.DashboardResponse;
 import cz.listek.admin.api.AdminDtos.DecisionRequest;
+import cz.listek.admin.api.AdminDtos.InterestSettingsResponse;
+import cz.listek.admin.api.AdminDtos.UpdateInterestSettingsRequest;
 import cz.listek.admin.service.AdminWorkflowService;
 import jakarta.validation.Valid;
 
@@ -32,13 +34,19 @@ public class AdminController {
     }
 
     @GetMapping("/dashboard")
-    public DashboardResponse dashboard() { return workflowService.dashboard(); }
+    public DashboardResponse dashboard() {
+        return workflowService.dashboard();
+    }
 
     @GetMapping("/accounts")
-    public List<AccountResponse> accounts() { return workflowService.accounts(); }
+    public List<AccountResponse> accounts() {
+        return workflowService.accounts();
+    }
 
     @GetMapping("/loans")
-    public List<ApplicationResponse> loans() { return workflowService.loans(); }
+    public List<ApplicationResponse> loans() {
+        return workflowService.loans();
+    }
 
     @PatchMapping("/loans/{id}/decision")
     public ApplicationResponse decideLoan(@PathVariable UUID id, @Valid @RequestBody DecisionRequest request) {
@@ -46,7 +54,9 @@ public class AdminController {
     }
 
     @GetMapping("/overdrafts")
-    public List<ApplicationResponse> overdrafts() { return workflowService.overdrafts(); }
+    public List<ApplicationResponse> overdrafts() {
+        return workflowService.overdrafts();
+    }
 
     @PostMapping("/overdrafts")
     @ResponseStatus(HttpStatus.CREATED)
@@ -57,5 +67,15 @@ public class AdminController {
     @PatchMapping("/overdrafts/{id}/decision")
     public ApplicationResponse decideOverdraft(@PathVariable UUID id, @Valid @RequestBody DecisionRequest request) {
         return workflowService.decideOverdraft(id, request);
+    }
+
+    @GetMapping("/settings/interest")
+    public InterestSettingsResponse interestSettings() {
+        return workflowService.interestSettings();
+    }
+
+    @PatchMapping("/settings/interest")
+    public InterestSettingsResponse updateInterestSettings(@Valid @RequestBody UpdateInterestSettingsRequest request) {
+        return workflowService.updateInterestSettings(request);
     }
 }
