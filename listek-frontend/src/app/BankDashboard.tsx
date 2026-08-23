@@ -183,6 +183,7 @@ export default function BankDashboard() {
           <div className="header-actions">
             <button className="icon-button notification" onClick={() => setNoticeOpen("notifications")} aria-label="Oznámení"><Bell size={20} /><span /></button>
             <button className="profile-button" onClick={openProfile} title="Otevřít profil"><span className="avatar">{(currentAccount?.ownerName ?? "?").split(" ").map((part) => part[0]).slice(0, 2).join("").toUpperCase()}</span><span className="profile-name">{currentAccount?.ownerName ?? "Načítám..."}</span><ChevronDown size={16} /></button>
+            <button className="header-logout" onClick={() => setNoticeOpen("logout")}><LogOut size={17} /> Odhlásit se</button>
           </div>
         </header>
 
