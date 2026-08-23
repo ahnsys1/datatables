@@ -38,9 +38,8 @@ export default function LoginPage() {
         return;
       }
       const hashedPassword = await hashPassword(password, username);
-      const account = mode === "login"
-        ? await login({ username, password: hashedPassword })
-        : await register({
+      if (mode === "register") {
+        await register({
           username,
           firstName: String(form.get("firstName")).trim(),
           lastName: String(form.get("lastName")).trim(),
@@ -51,6 +50,10 @@ export default function LoginPage() {
           postalCode: String(form.get("postalCode")).trim(),
           password: hashedPassword,
         });
+        setError("Registrace byla přijata a čeká na schválení administrátorem.");
+        return;
+      }
+      const account = await login({ username, password: hashedPassword });
       setSession(account);
       router.replace("/");
     } catch (submissionError) {

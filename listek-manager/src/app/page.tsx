@@ -8,6 +8,7 @@ import { FormEvent, useEffect, useState } from "react";
 import {
   Account, BankApplication, Dashboard, InterestSettings, decideApplication, getAccounts,
   getDashboard, getInterestSettings, getLoans, getOverdrafts, updateInterestSettings,
+  adminLogin, changeAdminPassword, decideRegistration, getPendingRegistrations,
 } from "@/lib/api";
 
 type View = "overview" | "loans" | "overdrafts" | "clients" | "settings";
@@ -21,6 +22,14 @@ const navigation = [
   { id: "clients" as const, label: "Klienti", icon: Users },
   { id: "settings" as const, label: "Nastavení sazeb", icon: ClipboardCheck },
 ];
+
+async function hashPassword(password: string, username: string) {
+  const encoder = new TextEncoder();
+  const salt = encoder.encode(`listek-password-salt:${username.trim().toLocaleLowerCase("cs-CZ")}`);
+  const key = await crypto.subtle.importKey("raw", encoder.encode(password), "PBKDF2", false, ["deriveBits"]);
+  const bits = await crypto.subtle.deriveBits({ name: "PBKDF2", salt, iterations: 120000, hash: "SHA-256" }, key, 256);
+  return Array.from(new Uint8Array(bits), (byte) => byte.toString(16).padStart(2, "0")).join("");
+}
 
 export default function Home() {
   const [view, setView] = useState<View>("overview");
@@ -38,20 +47,63 @@ export default function Home() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [interestSettings, setInterestSettings] = useState<InterestSettings | null>(null);
   const [currentDate, setCurrentDate] = useState<Date | null>(null);
+  const [adminReady, setAdminReady] = useState(false);
+  const [adminUser, setAdminUser] = useState("");
+  const [mustChangePassword, setMustChangePassword] = useState(false);
+  const [pendingRegistrations, setPendingRegistrations] = useState<Account[]>([]);
+  const [authError, setAuthError] = useState("");
+  const [authSaving, setAuthSaving] = useState(false);
 
   useEffect(() => {
     setCurrentDate(new Date());
-    Promise.all([getDashboard(), getLoans(), getOverdrafts(), getAccounts(), getInterestSettings()])
-      .then(([dashboardData, loanData, overdraftData, accountData, settingsData]) => {
+    const token = localStorage.getItem("listek-admin-session");
+    const username = localStorage.getItem("listek-admin-user");
+    if (!token || !username) { setAdminReady(true); setLoading(false); return; }
+    setAdminUser(username);
+    setMustChangePassword(localStorage.getItem("listek-admin-must-change") === "true");
+    Promise.all([getDashboard(), getLoans(), getOverdrafts(), getAccounts(), getInterestSettings(), getPendingRegistrations()])
+      .then(([dashboardData, loanData, overdraftData, accountData, settingsData, registrationData]) => {
         setDashboard(dashboardData);
         setLoans(loanData);
         setOverdrafts(overdraftData);
         setAccounts(accountData);
         setInterestSettings(settingsData);
+        setPendingRegistrations(registrationData);
       })
       .catch(() => setError("Administraci se nepodařilo spojit s backendem."))
       .finally(() => setLoading(false));
   }, []);
+
+  async function signIn(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault(); setAuthSaving(true); setAuthError("");
+    const form = new FormData(event.currentTarget);
+    try {
+      const username = String(form.get("username")).trim();
+      const result = await adminLogin({ username, password: await hashPassword(String(form.get("password")), username) });
+      localStorage.setItem("listek-admin-session", result.token); localStorage.setItem("listek-admin-user", result.username); localStorage.setItem("listek-admin-must-change", String(result.mustChangePassword));
+      setAdminUser(result.username); setMustChangePassword(result.mustChangePassword); setAdminReady(true); setLoading(true);
+      const [dashboardData, loanData, overdraftData, accountData, settingsData, registrationData] = await Promise.all([getDashboard(), getLoans(), getOverdrafts(), getAccounts(), getInterestSettings(), getPendingRegistrations()]);
+      setDashboard(dashboardData); setLoans(loanData); setOverdrafts(overdraftData); setAccounts(accountData); setInterestSettings(settingsData); setPendingRegistrations(registrationData); setLoading(false);
+    } catch (loginError) { setAuthError(loginError instanceof Error ? loginError.message : "Přihlášení se nepodařilo."); }
+    finally { setAuthSaving(false); }
+  }
+
+  async function saveAdminPassword(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault(); const form = new FormData(event.currentTarget); const password = String(form.get("password"));
+    if (password !== String(form.get("confirmation"))) { setAuthError("Hesla se neshodují."); return; }
+    setAuthSaving(true); setAuthError("");
+    try { await changeAdminPassword(await hashPassword(password, adminUser)); localStorage.setItem("listek-admin-must-change", "false"); setMustChangePassword(false); }
+    catch (passwordError) { setAuthError(passwordError instanceof Error ? passwordError.message : "Heslo se nepodařilo změnit."); }
+    finally { setAuthSaving(false); }
+  }
+
+  async function decideRegistrationRequest(id: string, status: "APPROVED" | "REJECTED") {
+    try {
+      const updated = await decideRegistration(id, status);
+      setPendingRegistrations((items) => items.filter((item) => item.id !== updated.id));
+      setAccounts((items) => [...items, updated]);
+    } catch (decisionError) { setError(decisionError instanceof Error ? decisionError.message : "Registraci se nepodařilo vyřídit."); }
+  }
 
   const allApplications = [...loans, ...overdrafts].sort((left, right) => right.createdAt.localeCompare(left.createdAt));
   const sourceApplications = view === "loans" ? loans : view === "overdrafts" ? overdrafts : allApplications;
@@ -102,6 +154,9 @@ export default function Home() {
     finally { setSaving(false); }
   }
 
+  if (!adminReady) return <main className="admin-auth"><form className="admin-modal" onSubmit={signIn}><p>ADMINISTRACE BANKY LÍSTEK</p><h2>Přihlášení administrátora</h2><span>Přihlaste se pro správu registrací a bankovních žádostí.</span><label>Uživatelské jméno<input name="username" required autoComplete="username" /></label><label>Heslo<input name="password" required type="password" autoComplete="current-password" /></label>{authError && <div className="notice">{authError}</div>}<button className="primary-button submit-button" disabled={authSaving}>{authSaving ? "Přihlašuji..." : "Přihlásit se"}</button></form></main>;
+  if (mustChangePassword) return <main className="admin-auth"><form className="admin-modal" onSubmit={saveAdminPassword}><p>PRVNÍ PŘIHLÁŠENÍ</p><h2>Změňte heslo administrátora</h2><span>Výchozí heslo musí být před pokračováním změněno.</span><label>Nové heslo<input name="password" required minLength={12} type="password" autoComplete="new-password" /></label><label>Potvrzení hesla<input name="confirmation" required minLength={12} type="password" autoComplete="new-password" /></label>{authError && <div className="notice">{authError}</div>}<button className="primary-button submit-button" disabled={authSaving}>{authSaving ? "Ukládám..." : "Změnit heslo"}</button></form></main>;
+
   return (
     <div className="admin-app">
       <aside className={`admin-sidebar ${menuOpen ? "is-open" : ""}`}>
@@ -125,7 +180,6 @@ export default function Home() {
           <button className="menu-button" onClick={() => setMenuOpen(true)} aria-label="Otevřít nabídku"><Menu /></button>
           <div className="environment"><i /> Systémy v pořádku</div>
           <button className="icon-button" aria-label="Oznámení"><Bell size={19} /><span /></button>
-          <div className="operator"><span>JP</span><div><strong>Jan Pokorný</strong><small>Úvěrový specialista</small></div></div>
           <button className="logout-button" type="button"><LogOut size={17} /> Odhlášení</button>
         </header>
 
@@ -173,6 +227,7 @@ export default function Home() {
           {view === "clients" && !loading && <section className="clients-panel">
             <div className="panel-heading"><div><p>KLIENTSKÝ KMEN</p><h2>Účty a zůstatky</h2></div><span>{accounts.length} klientů</span></div>
             <div className="client-table"><div className="table-head"><span>Klient</span><span>Číslo účtu</span><span>Kontakt</span><span>Zůstatek</span></div>{accounts.map((account) => <article key={account.id}><span className="client-name"><i>{account.ownerName.split(" ").map((part) => part[0]).slice(0, 2).join("")}</i><strong>{account.ownerName}</strong></span><span>{account.accountNumber}</span><span>{account.email}</span><strong>{money.format(account.balance)}</strong></article>)}</div>
+            {pendingRegistrations.length > 0 && <div className="registration-queue"><div className="panel-heading"><div><p>ČEKÁ NA SCHVÁLENÍ</p><h2>Nové registrace</h2></div><span>{pendingRegistrations.length} čeká</span></div>{pendingRegistrations.map((registration) => <article key={registration.id}><div><strong>{registration.ownerName}</strong><small>{registration.email} · {registration.accountNumber}</small></div><div><button className="reject" onClick={() => decideRegistrationRequest(registration.id, "REJECTED")}>Zamítnout</button><button className="approve" onClick={() => decideRegistrationRequest(registration.id, "APPROVED")}>Schválit</button></div></article>)}</div>}
           </section>}
 
           {view === "settings" && !loading && interestSettings && <section className="settings-card"><div className="panel-heading"><div><p>PRODUKTOVÉ PODMÍNKY</p><h2>Úrokové sazby</h2></div><span>% p. a.</span></div><form onSubmit={saveInterestSettings} className="rate-form"><label>Spořicí účet<input name="savingsRate" type="number" min="0" step="0.001" defaultValue={interestSettings.savingsRate} /></label><label>Kontokorent<input name="overdraftRate" type="number" min="0" step="0.001" defaultValue={interestSettings.overdraftRate} /></label><label>Půjčka na cokoliv<input name="personalLoanRate" type="number" min="0" step="0.001" defaultValue={interestSettings.personalLoanRate} /></label><label>Půjčka na bydlení<input name="homeLoanRate" type="number" min="0" step="0.001" defaultValue={interestSettings.homeLoanRate} /></label><button className="primary-button submit-button" type="submit" disabled={saving}>{saving ? "Ukládám..." : "Uložit sazby"}</button></form></section>}

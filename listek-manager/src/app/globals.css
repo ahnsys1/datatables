@@ -19,6 +19,7 @@ button, input, textarea { color: inherit; font: inherit; letter-spacing: 0; }
 button { cursor: pointer; }
 
 .admin-app { min-height: 100vh; display: flex; }
+.admin-auth { min-height: 100vh; display: grid; place-items: center; padding: 24px; background: var(--paper); }
 .admin-sidebar { position: fixed; inset: 0 auto 0 0; z-index: 30; width: 240px; padding: 28px 18px 22px; display: flex; flex-direction: column; color: white; background: #173a2b; }
 .brand { display: flex; align-items: center; gap: 12px; padding: 0 12px 42px; font-size: 21px; font-weight: 800; }
 .brand > span:last-child { display: grid; }
@@ -43,11 +44,6 @@ button { cursor: pointer; }
 .environment i { width: 7px; height: 7px; border-radius: 50%; background: #35a56b; box-shadow: 0 0 0 4px #e5f2e9; }
 .icon-button { position: relative; width: 40px; height: 40px; display: grid; place-items: center; border: 1px solid var(--line); border-radius: 50%; background: white; }
 .icon-button span { position: absolute; top: 7px; right: 7px; width: 7px; height: 7px; border: 2px solid white; border-radius: 50%; background: #ef664d; }
-.operator { padding-left: 15px; display: flex; align-items: center; gap: 10px; border-left: 1px solid var(--line); }
-.operator > span { width: 37px; height: 37px; display: grid; place-items: center; border-radius: 50%; color: var(--green); background: var(--soft-green); font-size: 11px; font-weight: 800; }
-.operator div { display: grid; }
-.operator strong { font-size: 11px; }
-.operator small { color: var(--muted); font-size: 8px; }
 .logout-button { min-height: 38px; padding: 0 12px; display: inline-flex; align-items: center; gap: 7px; border: 1px solid #e2b7b0; border-radius: 5px; color: var(--danger); background: white; font-size: 10px; font-weight: 800; white-space: nowrap; }
 .logout-button:hover { color: white; background: var(--danger); }
 .admin-content { max-width: 1500px; margin: auto; padding: 38px 4vw 64px; }
@@ -131,6 +127,12 @@ button { cursor: pointer; }
 .client-table article > strong { text-align: right; }
 .client-name { display: flex; align-items: center; gap: 10px; }
 .client-name i { width: 32px; height: 32px; display: grid; place-items: center; border-radius: 50%; color: var(--green); background: var(--soft-green); font-size: 9px; font-style: normal; font-weight: 800; }
+.registration-queue { margin-top: 20px; border-top: 1px solid var(--line); }
+.registration-queue article { min-height: 70px; padding: 12px 22px; display: flex; align-items: center; justify-content: space-between; gap: 16px; border-top: 1px solid #edf0eb; }
+.registration-queue article > div:first-child { display: grid; gap: 4px; }
+.registration-queue small { color: var(--muted); font-size: 9px; }
+.registration-queue article > div:last-child { display: flex; gap: 8px; }
+.registration-queue button { min-height: 34px; padding: 0 10px; border-radius: 5px; font-size: 9px; font-weight: 800; }
 .modal-backdrop { position: fixed; inset: 0; z-index: 60; padding: 20px; display: grid; place-items: center; background: rgba(15,29,22,.58); backdrop-filter: blur(3px); }
 .admin-modal { position: relative; width: min(100%, 460px); padding: 33px; border-radius: 8px; background: white; box-shadow: 0 28px 80px rgba(8,24,16,.25); }
 .modal-close { position: absolute; top: 15px; right: 15px; width: 35px; height: 35px; display: grid; place-items: center; border: 0; border-radius: 50%; background: #f1f3ef; }
@@ -162,8 +164,7 @@ button { cursor: pointer; }
   .menu-scrim { position: fixed; inset: 0; z-index: 20; display: block; border: 0; background: rgba(9,25,17,.45); }
   .admin-main { width: 100%; margin-left: 0; }
   .menu-button { margin-right: auto; display: grid; place-items: center; border: 0; background: transparent; }
-  .environment, .operator div { display: none; }
-  .operator { padding-left: 0; border-left: 0; }
+  .environment { display: none; }
   .logout-button { padding: 0 9px; }
   .admin-content { padding: 28px 18px 48px; }
   .page-heading { align-items: stretch; flex-direction: column; }

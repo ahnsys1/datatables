@@ -14,7 +14,10 @@ export type Account = {
   balance: number;
   currency: string;
   type: "CURRENT" | "SAVINGS";
+  registrationStatus?: "PENDING" | "APPROVED" | "REJECTED";
 };
+
+export type AdminAuth = { token: string; username: string; mustChangePassword: boolean };
 
 export type ApplicationStatus = "PENDING" | "APPROVED" | "REJECTED";
 
@@ -44,16 +47,23 @@ export type InterestSettings = {
 };
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
+  const token = typeof window === "undefined" ? null : localStorage.getItem("listek-admin-session");
   const response = await fetch(`/api/admin${path}`, {
     ...init,
-    headers: { "Content-Type": "application/json", ...init?.headers },
+    headers: { "Content-Type": "application/json", ...(token ? { "X-Admin-Session": token } : {}), ...init?.headers },
   });
   if (!response.ok) {
     const message = await response.text();
     throw new Error(message || "Požadavek se nepodařilo zpracovat.");
   }
+  if (response.status === 204) return undefined as T;
   return response.json() as Promise<T>;
 }
+
+export function adminLogin(input: { username: string; password: string }) { return request<AdminAuth>("/auth/login", { method: "POST", body: JSON.stringify(input) }); }
+export function changeAdminPassword(password: string) { return request<void>("/auth/password", { method: "PATCH", body: JSON.stringify({ password }) }); }
+export function getPendingRegistrations() { return request<Account[]>("/registrations/pending"); }
+export function decideRegistration(id: string, status: "APPROVED" | "REJECTED") { return request<Account>(`/registrations/${id}/decision`, { method: "PATCH", body: JSON.stringify({ status }) }); }
 
 export function getDashboard() { return request<Dashboard>("/dashboard"); }
 export function getAccounts() { return request<Account[]>("/accounts"); }
