@@ -8,6 +8,7 @@ export type Account = {
   accountNumber: string;
   balance: number;
   currency: CurrencyCode;
+  type: "CURRENT" | "SAVINGS";
 };
 
 export type BankTransaction = {
@@ -111,6 +112,10 @@ export function createAccount(input: {
   currency?: CurrencyCode;
 }) {
   return request<Account>("/accounts", { method: "POST", body: JSON.stringify(input) });
+}
+
+export function createSavingsAccount(accountId: string) {
+  return request<Account>(`/accounts/${accountId}/savings`, { method: "POST" });
 }
 
 export function login(input: { email: string; password: string }) {

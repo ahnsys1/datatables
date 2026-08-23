@@ -12,7 +12,7 @@ public final class AccountDtos {
     private AccountDtos() {
     }
 
-    public record AccountResponse(UUID id, String ownerName, String email, String address, String accountNumber, BigDecimal balance, CurrencyCode currency) {
+    public record AccountResponse(UUID id, String ownerName, String email, String address, String accountNumber, BigDecimal balance, CurrencyCode currency, AccountType type) {
 
     }
 

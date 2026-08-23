@@ -36,6 +36,10 @@ public class Account {
     private BigDecimal balance;
 
     @Enumerated(EnumType.STRING)
+    @Column(name = "account_type", nullable = false, length = 10)
+    private AccountType type;
+
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 3)
     private CurrencyCode currency;
 
@@ -47,6 +51,10 @@ public class Account {
     }
 
     public Account(String ownerName, String email, String address, String passwordHash, String accountNumber, BigDecimal balance, CurrencyCode currency) {
+        this(ownerName, email, address, passwordHash, accountNumber, balance, currency, AccountType.CURRENT);
+    }
+
+    public Account(String ownerName, String email, String address, String passwordHash, String accountNumber, BigDecimal balance, CurrencyCode currency, AccountType type) {
         this.ownerName = ownerName;
         this.email = email;
         this.address = address;
@@ -54,6 +62,7 @@ public class Account {
         this.accountNumber = accountNumber;
         this.balance = balance;
         this.currency = currency;
+        this.type = type;
     }
 
     public UUID getId() {
@@ -86,6 +95,10 @@ public class Account {
 
     public CurrencyCode getCurrency() {
         return currency;
+    }
+
+    public AccountType getType() {
+        return type;
     }
 
     public void renameOwner(String ownerName) {

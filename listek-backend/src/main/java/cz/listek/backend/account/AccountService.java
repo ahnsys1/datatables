@@ -51,6 +51,21 @@ public class AccountService {
     }
 
     @Transactional
+    public AccountResponse createSavings(UUID currentAccountId) {
+        Account currentAccount = requireAccount(currentAccountId);
+        if (accountRepository.existsByEmailIgnoreCaseAndType(currentAccount.getEmail(), AccountType.SAVINGS)) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Sporici ucet uz existuje");
+        }
+        String accountNumber;
+        do {
+            accountNumber = String.format("%09d", ACCOUNT_NUMBER_RANDOM.nextInt(1_000_000_000));
+        } while (accountRepository.existsByAccountNumber(accountNumber));
+        Account savingsAccount = new Account(currentAccount.getOwnerName(), currentAccount.getEmail(), currentAccount.getAddress(),
+                currentAccount.getPasswordHash(), accountNumber, BigDecimal.ZERO, currentAccount.getCurrency(), AccountType.SAVINGS);
+        return toResponse(accountRepository.save(savingsAccount));
+    }
+
+    @Transactional
     public AccountResponse register(RegisterAccountRequest request) {
         if (accountRepository.existsByEmailIgnoreCase(request.email().trim())) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "E-mail je jiz zaregistrovan");
@@ -131,7 +146,7 @@ public class AccountService {
     }
 
     private AccountResponse toResponse(Account account) {
-        return new AccountResponse(account.getId(), account.getOwnerName(), account.getEmail(), account.getAddress(), account.getAccountNumber(), account.getBalance(), account.getCurrency());
+        return new AccountResponse(account.getId(), account.getOwnerName(), account.getEmail(), account.getAddress(), account.getAccountNumber(), account.getBalance(), account.getCurrency(), account.getType());
     }
 
     private TransactionResponse toResponse(Transaction transaction) {

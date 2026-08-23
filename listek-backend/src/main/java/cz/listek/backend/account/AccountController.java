@@ -40,6 +40,12 @@ public class AccountController {
         return accountService.create(request);
     }
 
+    @PostMapping("/{accountId}/savings")
+    @ResponseStatus(HttpStatus.CREATED)
+    public AccountResponse createSavings(@PathVariable UUID accountId) {
+        return accountService.createSavings(accountId);
+    }
+
     @PatchMapping("/{accountId}")
     public AccountResponse update(@PathVariable UUID accountId, @Valid @RequestBody UpdateAccountRequest request) {
         return accountService.update(accountId, request);

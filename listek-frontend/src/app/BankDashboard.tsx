@@ -65,6 +65,7 @@ export default function BankDashboard() {
   const [profileError, setProfileError] = useState("");
   const [noticeOpen, setNoticeOpen] = useState<"notifications" | "logout" | "spending" | null>(null);
   const [sessionReady, setSessionReady] = useState(false);
+  const [currentDate, setCurrentDate] = useState<Date | null>(null);
   const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
   const deferredSearch = useDeferredValue(search);
   const displayedTransactions: Transaction[] = apiTransactions.length > 0 ? apiTransactions.map((transaction, index) => ({
@@ -81,6 +82,7 @@ export default function BankDashboard() {
   );
 
   useEffect(() => {
+    setCurrentDate(new Date());
     const session = getSession();
     if (!session) {
       router.replace("/login");
@@ -103,7 +105,10 @@ export default function BankDashboard() {
 
   const session = getSession();
   const currentAccount = accounts.find((account) => account.id === session?.id) ?? accounts[0];
-  const savingsAccount = accounts.find((account) => account.id !== currentAccount?.id);
+  const savingsAccount = accounts.find((account) => account.type === "SAVINGS");
+  const firstName = currentAccount?.ownerName.trim().split(/\s+/)[0];
+  const hour = currentDate?.getHours() ?? 12;
+  const greeting = hour < 12 ? "Dobré ráno" : hour < 18 ? "Dobré odpoledne" : "Dobrý večer";
   function counterpartyFor(transaction: Transaction) {
     if (!transaction.source) return undefined;
     return apiTransactions.find((candidate) => candidate.id !== transaction.source?.id
@@ -169,7 +174,7 @@ export default function BankDashboard() {
           <div className="mobile-logo">Lístek</div>
           <div className="header-actions">
             <button className="icon-button notification" onClick={() => setNoticeOpen("notifications")} aria-label="Oznámení"><Bell size={20} /><span /></button>
-            <button className="profile-button" onClick={openProfile}><span className="avatar">{(currentAccount?.ownerName ?? "Jan Král").split(" ").map((part) => part[0]).slice(0, 2).join("").toUpperCase()}</span><span className="profile-name">{currentAccount?.ownerName ?? "Jan Král"}</span><ChevronDown size={16} /></button>
+            <button className="profile-button" onClick={openProfile}><span className="avatar">{(currentAccount?.ownerName ?? "?").split(" ").map((part) => part[0]).slice(0, 2).join("").toUpperCase()}</span><span className="profile-name">{currentAccount?.ownerName ?? "Načítám..."}</span><ChevronDown size={16} /></button>
           </div>
         </header>
 
@@ -177,24 +182,24 @@ export default function BankDashboard() {
           {loading && <p className="api-notice">Načítám data z bankovního backendu...</p>}
           {apiError && <p className="api-notice">{apiError}</p>}
           <section className="welcome-row">
-            <div><p className="date-label">Čtvrtek, 20. srpna</p><h1>Dobré ráno, Jane.</h1></div>
+            <div><p className="date-label">{currentDate ? new Intl.DateTimeFormat("cs-CZ", { weekday: "long", day: "numeric", month: "long" }).format(currentDate) : "Načítám datum..."}</p><h1>{greeting}{firstName ? `, ${firstName}` : ""}.</h1></div>
             <Link className="pay-button" href="/payments"><Plus size={19} /> Nová platba</Link>
           </section>
 
           <section className="account-section" aria-labelledby="accounts-title">
-            <div className="section-heading"><h2 id="accounts-title">Moje účty</h2><Link className="text-button" href="/ucty">Spravovat účty <ArrowRight size={16} /></Link></div>
+            <div className="section-heading"><div><h2 id="accounts-title">Moje účty</h2><button className="text-button" onClick={() => setBalanceVisible((visible) => !visible)} aria-label={balanceVisible ? "Skrýt zůstatky" : "Zobrazit zůstatky"}>{balanceVisible ? <Eye size={17} /> : <EyeOff size={17} />} {balanceVisible ? "Skrýt zůstatky" : "Zobrazit zůstatky"}</button></div><Link className="text-button" href="/ucty">Spravovat účty <ArrowRight size={16} /></Link></div>
             <div className="account-grid">
               <article className="account-primary">
-                <div className="account-topline"><span className="account-type">Běžný účet</span><button onClick={() => setBalanceVisible((visible) => !visible)} aria-label={balanceVisible ? "Skrýt zůstatek" : "Zobrazit zůstatek"}>{balanceVisible ? <Eye size={20} /> : <EyeOff size={20} />}</button></div>
+                <div className="account-topline"><span className="account-type">Běžný účet</span></div>
                 <p className="account-number">{currentAccount?.accountNumber ?? "-"}</p><p className="balance-label">Disponibilní zůstatek</p>
-                <strong className="main-balance">{balanceVisible ? currentAccount ? currency.format(currentAccount.balance) : currency.format(126840.35) : "••••••••"}</strong>
+                <strong className="main-balance">{balanceVisible ? currentAccount ? currency.format(currentAccount.balance) : "-" : "••••••••"}</strong>
                 <div className="account-footer"><span><i /> Aktivní účet</span><Link href="/ucty">Detail účtu <ArrowRight size={15} /></Link></div>
               </article>
-              <article className="savings-account">
+              {savingsAccount && <article className="savings-account">
                 <div className="savings-head"><span><TrendingUp size={19} /> Spořicí účet</span><Link href="/sporeni" aria-label="Detail spořicího účtu"><ArrowRight size={17} /></Link></div>
                 <strong>{balanceVisible ? savingsAccount ? currency.format(savingsAccount.balance) : "-" : "••••••••"}</strong><p>Úrok 4,2 % p. a.</p>
                 <div className="saving-progress"><span /></div><small>Cíl: Finanční rezerva <b>84 %</b></small>
-              </article>
+              </article>}
               <article className="card-preview">
                 <div className="card-chip" /><span className="card-brand">Lístek</span><p>••••&nbsp; ••••&nbsp; ••••&nbsp; 2841</p><div><span>JAN KRÁL</span><b>VISA</b></div>
               </article>
