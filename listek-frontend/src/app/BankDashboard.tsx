@@ -89,7 +89,8 @@ export default function BankDashboard() {
     getAccounts()
       .then(async (loadedAccounts) => {
         const currentAccounts = loadedAccounts.filter((account) => account.id === session.id);
-        setAccounts(currentAccounts.length > 0 ? currentAccounts : [session]);
+        const availableAccounts = loadedAccounts.length > 0 ? loadedAccounts : [session];
+        setAccounts(availableAccounts);
         const accountTransactions = await Promise.all((currentAccounts.length > 0 ? currentAccounts : [session]).map((account) => getTransactions(account.id)));
         setApiTransactions(accountTransactions.flat().sort((first, second) => new Date(second.createdAt).getTime() - new Date(first.createdAt).getTime()));
       })
@@ -100,8 +101,9 @@ export default function BankDashboard() {
       .finally(() => { setLoading(false); setSessionReady(true); });
   }, [router]);
 
-  const currentAccount = accounts[0];
-  const savingsAccount = accounts[1];
+  const session = getSession();
+  const currentAccount = accounts.find((account) => account.id === session?.id) ?? accounts[0];
+  const savingsAccount = accounts.find((account) => account.id !== currentAccount?.id);
   function counterpartyFor(transaction: Transaction) {
     if (!transaction.source) return undefined;
     return apiTransactions.find((candidate) => candidate.id !== transaction.source?.id
@@ -184,13 +186,13 @@ export default function BankDashboard() {
             <div className="account-grid">
               <article className="account-primary">
                 <div className="account-topline"><span className="account-type">Běžný účet</span><button onClick={() => setBalanceVisible((visible) => !visible)} aria-label={balanceVisible ? "Skrýt zůstatek" : "Zobrazit zůstatek"}>{balanceVisible ? <Eye size={20} /> : <EyeOff size={20} />}</button></div>
-                <p className="account-number">123456789 / 3030</p><p className="balance-label">Disponibilní zůstatek</p>
+                <p className="account-number">{currentAccount?.accountNumber ?? "-"}</p><p className="balance-label">Disponibilní zůstatek</p>
                 <strong className="main-balance">{balanceVisible ? currentAccount ? currency.format(currentAccount.balance) : currency.format(126840.35) : "••••••••"}</strong>
                 <div className="account-footer"><span><i /> Aktivní účet</span><Link href="/ucty">Detail účtu <ArrowRight size={15} /></Link></div>
               </article>
               <article className="savings-account">
                 <div className="savings-head"><span><TrendingUp size={19} /> Spořicí účet</span><Link href="/sporeni" aria-label="Detail spořicího účtu"><ArrowRight size={17} /></Link></div>
-                <strong>{balanceVisible ? savingsAccount ? currency.format(savingsAccount.balance) : currency.format(84200) : "••••••••"}</strong><p>Úrok 4,2 % p. a.</p>
+                <strong>{balanceVisible ? savingsAccount ? currency.format(savingsAccount.balance) : "-" : "••••••••"}</strong><p>Úrok 4,2 % p. a.</p>
                 <div className="saving-progress"><span /></div><small>Cíl: Finanční rezerva <b>84 %</b></small>
               </article>
               <article className="card-preview">

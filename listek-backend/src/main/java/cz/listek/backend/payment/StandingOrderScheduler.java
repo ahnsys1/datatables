@@ -30,13 +30,13 @@ public class StandingOrderScheduler {
     }
 
     @Scheduled(cron = "${app.scheduler.standing-orders-cron:0 0 1 * * *}")
+    @Transactional
     public void executeDueStandingOrders() {
         LocalDate today = LocalDate.now(clock);
         YearMonth executionMonth = YearMonth.from(today);
         standingOrderRepository.findByActiveTrue().forEach(order -> executeIfDue(order, today, executionMonth));
     }
 
-    @Transactional
     void executeIfDue(StandingOrder order, LocalDate today, YearMonth executionMonth) {
         var lockedOrder = standingOrderRepository.findWithLockById(order.getId()).orElse(null);
         if (lockedOrder == null || !lockedOrder.isActive() || lockedOrder.getDayOfMonth() > today.getDayOfMonth()) {

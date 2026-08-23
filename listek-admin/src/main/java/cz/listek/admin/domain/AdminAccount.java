@@ -33,10 +33,31 @@ public class AdminAccount {
     protected AdminAccount() {
     }
 
-    public UUID getId() { return id; }
-    public String getOwnerName() { return ownerName; }
-    public String getEmail() { return email; }
-    public String getAccountNumber() { return accountNumber; }
-    public BigDecimal getBalance() { return balance; }
-    public String getCurrency() { return currency; }
+    public UUID getId() {
+        return id;
+    }
+
+    public String getOwnerName() {
+        return ownerName;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public String getAccountNumber() {
+        return accountNumber;
+    }
+
+    public BigDecimal getBalance() {
+        return balance;
+    }
+
+    public String getCurrency() {
+        return currency;
+    }
+
+    public void credit(BigDecimal amount) {
+        this.balance = this.balance.add(amount);
+    }
 }

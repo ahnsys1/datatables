@@ -18,3 +18,7 @@ spring:
 
 server:
   port: ${SERVER_PORT:8090}
+
+app:
+  loan:
+    repayment-account-number: ${APP_LOAN_REPAYMENT_ACCOUNT_NUMBER:LOAN-REPAYMENT}

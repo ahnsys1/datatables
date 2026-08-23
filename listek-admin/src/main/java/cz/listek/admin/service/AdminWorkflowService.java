@@ -1,9 +1,5 @@
 package cz.listek.admin.service;
 
-import static cz.listek.admin.domain.ApplicationStatus.APPROVED;
-import static cz.listek.admin.domain.ApplicationStatus.PENDING;
-import static cz.listek.admin.domain.ApplicationStatus.REJECTED;
-
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDate;
@@ -11,6 +7,7 @@ import java.time.ZoneId;
 import java.util.List;
 import java.util.UUID;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -23,10 +20,17 @@ import cz.listek.admin.api.AdminDtos.DashboardResponse;
 import cz.listek.admin.api.AdminDtos.DecisionRequest;
 import cz.listek.admin.domain.AdminAccount;
 import cz.listek.admin.domain.AdminLoanApplication;
+import cz.listek.admin.domain.AdminStandingOrder;
+import cz.listek.admin.domain.AdminTransaction;
 import cz.listek.admin.domain.ApplicationStatus;
+import static cz.listek.admin.domain.ApplicationStatus.APPROVED;
+import static cz.listek.admin.domain.ApplicationStatus.PENDING;
+import static cz.listek.admin.domain.ApplicationStatus.REJECTED;
 import cz.listek.admin.domain.OverdraftApplication;
 import cz.listek.admin.repository.AdminAccountRepository;
 import cz.listek.admin.repository.AdminLoanApplicationRepository;
+import cz.listek.admin.repository.AdminStandingOrderRepository;
+import cz.listek.admin.repository.AdminTransactionRepository;
 import cz.listek.admin.repository.OverdraftApplicationRepository;
 
 @Service
@@ -35,13 +39,22 @@ public class AdminWorkflowService {
     private final AdminAccountRepository accountRepository;
     private final AdminLoanApplicationRepository loanRepository;
     private final OverdraftApplicationRepository overdraftRepository;
+    private final AdminTransactionRepository transactionRepository;
+    private final AdminStandingOrderRepository standingOrderRepository;
+    private final String loanRepaymentAccountNumber;
 
     public AdminWorkflowService(AdminAccountRepository accountRepository,
             AdminLoanApplicationRepository loanRepository,
-            OverdraftApplicationRepository overdraftRepository) {
+            OverdraftApplicationRepository overdraftRepository,
+            AdminTransactionRepository transactionRepository,
+            AdminStandingOrderRepository standingOrderRepository,
+            @Value("${app.loan.repayment-account-number:LOAN-REPAYMENT}") String loanRepaymentAccountNumber) {
         this.accountRepository = accountRepository;
         this.loanRepository = loanRepository;
         this.overdraftRepository = overdraftRepository;
+        this.transactionRepository = transactionRepository;
+        this.standingOrderRepository = standingOrderRepository;
+        this.loanRepaymentAccountNumber = loanRepaymentAccountNumber;
     }
 
     @Transactional(readOnly = true)
@@ -75,6 +88,17 @@ public class AdminWorkflowService {
     public ApplicationResponse decideLoan(UUID id, DecisionRequest request) {
         validateDecision(request.status());
         AdminLoanApplication application = loanRepository.findById(id).orElseThrow(() -> notFound("Žádost o půjčku"));
+        if (application.getStatus() != PENDING) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "O žádosti již bylo rozhodnuto");
+        }
+        if (request.status() == APPROVED) {
+            AdminAccount account = accountRepository.findWithLockById(application.getAccount().getId())
+                    .orElseThrow(() -> notFound("Účet"));
+            account.credit(application.getAmount());
+            transactionRepository.save(new AdminTransaction(account, application.getAmount(), "CREDIT", "Čerpání půjčky"));
+            standingOrderRepository.save(new AdminStandingOrder(account, loanRepaymentAccountNumber,
+                    application.getMonthlyPayment(), "Splátka půjčky", LocalDate.now(ZoneId.of("Europe/Prague")).getDayOfMonth()));
+        }
         application.decide(request.status(), normalizeNote(request.note()));
         return loanResponse(application);
     }

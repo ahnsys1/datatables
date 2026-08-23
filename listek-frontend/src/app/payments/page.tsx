@@ -41,21 +41,27 @@ function sortTransactions(transactions: BankTransaction[], accounts: Account[]) 
 }
 
 export default function PaymentsPage() {
+  const initialParams = typeof window === "undefined" ? null : new URLSearchParams(window.location.search);
+  const shouldPrefill = initialParams?.get("prefill") === "1";
   const [sent, setSent] = useState(false);
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [error, setError] = useState("");
-  const [fromAccountId, setFromAccountId] = useState(() => typeof window === "undefined" ? "" : new URLSearchParams(window.location.search).get("fromAccountId") ?? "");
-  const [toAccountNumber, setToAccountNumber] = useState(() => typeof window === "undefined" ? "" : new URLSearchParams(window.location.search).get("toAccountNumber") ?? "");
-  const [amount, setAmount] = useState(() => typeof window === "undefined" ? "" : new URLSearchParams(window.location.search).get("amount") ?? "");
-  const [description, setDescription] = useState(() => typeof window === "undefined" ? "" : new URLSearchParams(window.location.search).get("description") ?? "");
+  const [fromAccountId, setFromAccountId] = useState(() => shouldPrefill ? initialParams?.get("fromAccountId") ?? "" : "");
+  const [toAccountNumber, setToAccountNumber] = useState(() => shouldPrefill ? initialParams?.get("toAccountNumber") ?? "" : "");
+  const [amount, setAmount] = useState(() => shouldPrefill ? initialParams?.get("amount") ?? "" : "");
+  const [description, setDescription] = useState(() => shouldPrefill ? initialParams?.get("description") ?? "" : "");
   const [transactions, setTransactions] = useState<BankTransaction[]>([]);
+  const [accountFilter, setAccountFilter] = useState(() => typeof window === "undefined" ? "" : new URLSearchParams(window.location.search).get("accountId") ?? "");
   const paymentFormRef = useRef<HTMLElement>(null);
 
   async function refreshTransactions(accountList: Account[]) {
+    const selectedAccounts = accountFilter
+      ? accountList.filter((account) => account.id === accountFilter)
+      : accountList;
     const accountTransactions = await Promise.all(
-      accountList.map((account) => getTransactions(account.id)),
+      selectedAccounts.map((account) => getTransactions(account.id)),
     );
-    setTransactions(sortTransactions(accountTransactions.flat(), accountList));
+    setTransactions(sortTransactions(accountTransactions.flat(), selectedAccounts));
   }
 
   useEffect(() => {
@@ -102,6 +108,11 @@ export default function PaymentsPage() {
     return accounts.find((account) => account.id === transaction.accountId);
   }
 
+  const visibleTransactions = accountFilter
+    ? transactions.filter((transaction) => transaction.accountId === accountFilter)
+    : transactions;
+  const selectedAccount = accounts.find((account) => account.id === accountFilter);
+
   function openNewPayment() {
     setSent(false);
     setError("");
@@ -121,11 +132,13 @@ export default function PaymentsPage() {
         <div className="page-hero">
           <div>
             <p className="date-label">Bezpečně a jednoduše</p>
-            <h1>Platby</h1>
+            <h1>{accountFilter ? "Pohyby účtu" : "Platby"}</h1>
             <p className="page-lead">
-              Pošlete peníze, nastavte trvalý příkaz nebo si prohlédněte
-              šablony.
+              {accountFilter
+                ? `Historie pohybů účtu ${selectedAccount?.accountNumber ?? ""}.`
+                : "Pošlete peníze, nastavte trvalý příkaz nebo si prohlédněte šablony."}
             </p>
+            {accountFilter && selectedAccount && <p className="account-balance-summary">Zůstatek: <strong>{selectedAccount.balance.toLocaleString("cs-CZ", { style: "currency", currency: selectedAccount.currency })}</strong></p>}
           </div>
           <button className="pay-button" type="button" onClick={openNewPayment}>
             <Plus size={19} /> Nová platba
@@ -281,10 +294,10 @@ export default function PaymentsPage() {
               <h2 id="payment-history-title">Seznam plateb</h2>
               <p>Historie pohybů na vašich účtech</p>
             </div>
-            <span className="payment-count">{transactions.length} plateb</span>
+            <span className="payment-count">{visibleTransactions.length} plateb</span>
           </div>
           <div className="payment-history-list">
-            {transactions.map((transaction) => (
+            {visibleTransactions.map((transaction) => (
               <Link
                 className="payment-history-row"
                 key={transaction.id}
@@ -332,7 +345,7 @@ export default function PaymentsPage() {
                 <ArrowRight className="row-arrow" size={16} />
               </Link>
             ))}
-            {transactions.length === 0 && (
+            {visibleTransactions.length === 0 && (
               <p className="bank-empty">Zatím nemáte žádné platby.</p>
             )}
           </div>

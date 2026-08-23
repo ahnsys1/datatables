@@ -180,7 +180,7 @@ export function RepeatPaymentPage() {
   const { accounts, transactions, error } = useTransactions();
 
   function hrefFor(transaction: BankTransaction) {
-    const params = new URLSearchParams({ fromAccountId: transaction.accountId, toAccountNumber: transaction.counterpartyAccountNumber ?? "", amount: String(Math.abs(transaction.amount)), description: transaction.description });
+    const params = new URLSearchParams({ prefill: "1", fromAccountId: transaction.accountId, toAccountNumber: transaction.counterpartyAccountNumber ?? "", amount: String(Math.abs(transaction.amount)), description: transaction.description });
     return `/payments?${params.toString()}`;
   }
 
@@ -233,7 +233,7 @@ export function TemplateListPage() {
   }
 
   function applyTemplate(template: PaymentTemplate) {
-    const params = new URLSearchParams({ fromAccountId: template.accountId, toAccountNumber: template.targetAccountNumber, amount: String(template.amount), description: template.description });
+    const params = new URLSearchParams({ prefill: "1", fromAccountId: template.accountId, toAccountNumber: template.targetAccountNumber, amount: String(template.amount), description: template.description });
     return `/payments?${params.toString()}`;
   }
 

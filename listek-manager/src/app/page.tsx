@@ -56,7 +56,7 @@ export default function Home() {
       || application.accountNumber.includes(search));
 
   async function decide(status: "APPROVED" | "REJECTED") {
-    if (!selected || (status === "REJECTED" && !note.trim())) return;
+    if (!selected) return;
     setSaving(true);
     try {
       const updated = await decideApplication(selected, status, note.trim());
@@ -165,7 +165,7 @@ export default function Home() {
               {!selected ? <div className="detail-empty"><ClipboardCheck size={34} /><h2>Vyberte žádost</h2><p>V detailu uvidíte finanční údaje a provedete rozhodnutí.</p></div> : <>
                 <div className="detail-head"><span className={`application-type ${selected.category.toLowerCase()}`}>{selected.category === "LOAN" ? <CircleDollarSign size={22} /> : <WalletCards size={22} />}</span><div><small>{selected.category === "LOAN" ? "ŽÁDOST O PŮJČKU" : "ŽÁDOST O KONTOKORENT"}</small><h2>{selected.clientName}</h2></div></div>
                 <dl><div><dt>Požadovaná částka</dt><dd>{money.format(selected.amount)}</dd></div><div><dt>Účet</dt><dd>{selected.accountNumber}</dd></div>{selected.repaymentMonths && <div><dt>Splatnost</dt><dd>{selected.repaymentMonths} měsíců</dd></div>}{selected.monthlyPayment && <div><dt>Měsíční splátka</dt><dd>{money.format(selected.monthlyPayment)}</dd></div>}{selected.monthlyIncome && <div><dt>Měsíční příjem</dt><dd>{money.format(selected.monthlyIncome)}</dd></div>}<div><dt>Účel</dt><dd>{selected.purpose}</dd></div><div><dt>Podáno</dt><dd>{date.format(new Date(selected.createdAt))}</dd></div></dl>
-                {selected.status === "PENDING" ? <div className="decision-box"><label>Poznámka k rozhodnutí<textarea value={note} onChange={(event) => setNote(event.target.value)} placeholder="Při zamítnutí je důvod povinný" maxLength={500} /></label><div><button className="reject" disabled={saving || !note.trim()} onClick={() => decide("REJECTED")}><X size={17} /> Zamítnout</button><button className="approve" disabled={saving} onClick={() => decide("APPROVED")}><Check size={17} /> Schválit</button></div></div> : <div className={`decision-result ${selected.status.toLowerCase()}`}><strong>{selected.status === "APPROVED" ? "Žádost byla schválena" : "Žádost byla zamítnuta"}</strong><p>{selected.decisionNote || "Bez doplňující poznámky."}</p></div>}
+                {selected.status === "PENDING" ? <div className="decision-box"><label>Poznámka k rozhodnutí<textarea value={note} onChange={(event) => setNote(event.target.value)} placeholder="Volitelná poznámka k rozhodnutí" maxLength={500} /></label><div><button className="reject" disabled={saving} onClick={() => decide("REJECTED")}><X size={17} /> Zamítnout</button><button className="approve" disabled={saving} onClick={() => decide("APPROVED")}><Check size={17} /> Schválit</button></div></div> : <div className={`decision-result ${selected.status.toLowerCase()}`}><strong>{selected.status === "APPROVED" ? "Žádost byla schválena" : "Žádost byla zamítnuta"}</strong><p>{selected.decisionNote || "Bez doplňující poznámky."}</p></div>}
               </>}
             </aside>
           </section>}
