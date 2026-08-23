@@ -37,8 +37,10 @@ export default function Home() {
   const [error, setError] = useState("");
   const [menuOpen, setMenuOpen] = useState(false);
   const [interestSettings, setInterestSettings] = useState<InterestSettings | null>(null);
+  const [currentDate, setCurrentDate] = useState<Date | null>(null);
 
   useEffect(() => {
+    setCurrentDate(new Date());
     Promise.all([getDashboard(), getLoans(), getOverdrafts(), getAccounts(), getInterestSettings()])
       .then(([dashboardData, loanData, overdraftData, accountData, settingsData]) => {
         setDashboard(dashboardData);
@@ -128,7 +130,7 @@ export default function Home() {
 
         <div className="admin-content">
           <section className="page-heading">
-            <div><p>22. SRPNA 2026</p><h1>{titles[view][0]}</h1><span>{titles[view][1]}</span></div>
+            <div><p>{currentDate ? new Intl.DateTimeFormat("cs-CZ", { day: "numeric", month: "long", year: "numeric" }).format(currentDate).toUpperCase() : "Načítám datum..."}</p><h1>{titles[view][0]}</h1><span>{titles[view][1]}</span></div>
             {view !== "clients" && view !== "settings" && <div className="heading-actions"><div className="search"><Search size={18} /><input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Hledat klienta nebo účet" /></div><label className="pending-filter"><input type="checkbox" checked={pendingOnly} onChange={(event) => setPendingOnly(event.target.checked)} /> Jen čekající</label></div>}
           </section>
 
