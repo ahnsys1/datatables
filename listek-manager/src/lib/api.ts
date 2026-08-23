@@ -13,6 +13,7 @@ export type Account = {
   accountNumber: string;
   balance: number;
   currency: string;
+  type: "CURRENT" | "SAVINGS";
 };
 
 export type ApplicationStatus = "PENDING" | "APPROVED" | "REJECTED";

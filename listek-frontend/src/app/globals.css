@@ -368,7 +368,10 @@ button { color: inherit; }
 .loan-applications article strong { font-size: 11px; }
 .loan-applications article small { color: var(--muted); font-size: 9px; }
 .loan-applications article > b { padding: 6px 9px; border-radius: 4px; background: #fff5de; color: #8e6819; font-size: 9px; }
+.loan-applications article > b.status-approved { background: var(--soft-green); color: var(--green); }
+.loan-applications article > b.status-rejected { background: #fff0ec; color: #a43b32; }
 .loan-status { width: 34px; height: 34px; display: grid; place-items: center; border-radius: 50%; background: var(--soft-green); color: var(--green); }
+.loan-status-rejected { background: #fff0ec; color: #a43b32; }
 .loan-application-summary { display: grid; gap: 0; margin-bottom: 18px; }
 .loan-application-summary div { padding: 10px 0; display: flex; justify-content: space-between; gap: 14px; border-bottom: 1px solid var(--line); font-size: 11px; }
 .loan-application-summary span { color: var(--muted); }

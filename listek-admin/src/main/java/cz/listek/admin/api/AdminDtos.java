@@ -21,7 +21,7 @@ public final class AdminDtos {
     }
 
     public record AccountResponse(UUID id, String ownerName, String email, String accountNumber,
-            BigDecimal balance, String currency) {
+            BigDecimal balance, String currency, String type) {
 
     }
 

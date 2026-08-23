@@ -30,6 +30,9 @@ public class AdminAccount {
     @Column(nullable = false)
     private String currency;
 
+    @Column(name = "account_type", nullable = false)
+    private String type;
+
     protected AdminAccount() {
     }
 
@@ -55,6 +58,10 @@ public class AdminAccount {
 
     public String getCurrency() {
         return currency;
+    }
+
+    public String getType() {
+        return type;
     }
 
     public void credit(BigDecimal amount) {

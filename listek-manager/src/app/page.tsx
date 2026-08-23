@@ -158,7 +158,7 @@ export default function Home() {
           {loading && <div className="loading">Načítám data banky...</div>}
 
           {!loading && view === "overview" && dashboard && <section className="metrics">
-            <article><span className="metric-icon green"><Users size={21} /></span><div><small>Aktivní klienti</small><strong>{dashboard.clients}</strong><p>V klientském portfoliu</p></div></article>
+            <article><span className="metric-icon green"><Users size={21} /></span><div><small>Aktivní klienti</small><strong>{accounts.filter((account) => account.type === "CURRENT").length}</strong><p>Podle počtu běžných účtů</p></div></article>
             <article><span className="metric-icon amber"><FileClock size={21} /></span><div><small>Čeká na rozhodnutí</small><strong>{dashboard.pendingLoans + dashboard.pendingOverdrafts}</strong><p>{dashboard.pendingLoans} půjčky · {dashboard.pendingOverdrafts} kontokorenty</p></div></article>
             <article><span className="metric-icon blue"><Landmark size={21} /></span><div><small>Vklady klientů</small><strong>{money.format(dashboard.deposits)}</strong><p>Napříč všemi účty</p></div></article>
             <article><span className="metric-icon dark"><ClipboardCheck size={21} /></span><div><small>Dnes rozhodnuto</small><strong>{dashboard.decidedToday}</strong><p>Vyřízených žádostí</p></div></article>

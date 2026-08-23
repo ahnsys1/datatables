@@ -78,7 +78,7 @@ public class AdminWorkflowService {
     @Transactional(readOnly = true)
     public List<AccountResponse> accounts() {
         return accountRepository.findAll().stream().map(account -> new AccountResponse(account.getId(), account.getOwnerName(),
-                account.getEmail(), account.getAccountNumber(), account.getBalance(), account.getCurrency())).toList();
+                account.getEmail(), account.getAccountNumber(), account.getBalance(), account.getCurrency(), account.getType())).toList();
     }
 
     @Transactional(readOnly = true)
@@ -114,6 +114,12 @@ public class AdminWorkflowService {
     public ApplicationResponse decideOverdraft(UUID id, DecisionRequest request) {
         validateDecision(request.status());
         OverdraftApplication application = overdraftRepository.findById(id).orElseThrow(() -> notFound("Žádost o kontokorent"));
+        if (request.status() == APPROVED && application.getStatus() == PENDING) {
+            AdminAccount account = accountRepository.findWithLockById(application.getAccount().getId())
+                    .orElseThrow(() -> notFound("Účet"));
+            account.credit(application.getRequestedLimit());
+            transactionRepository.save(new AdminTransaction(account, application.getRequestedLimit(), "CREDIT", "Schválený kontokorent"));
+        }
         application.decide(request.status(), normalizeNote(request.note()));
         return overdraftResponse(application);
     }
