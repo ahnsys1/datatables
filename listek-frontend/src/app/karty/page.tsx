@@ -15,6 +15,7 @@ import {
 import { FormEvent, useEffect, useState } from "react";
 import BankShell from "../BankShell";
 import {
+  Account,
   BankCard,
   createCard,
   getAccounts,
@@ -24,6 +25,7 @@ import {
 
 export default function CardsPage() {
   const [cards, setCards] = useState<BankCard[]>([]);
+  const [account, setAccount] = useState<Account | null>(null);
   const [accountId, setAccountId] = useState("");
   const [loading, setLoading] = useState(true);
   const [apiError, setApiError] = useState("");
@@ -46,6 +48,7 @@ export default function CardsPage() {
       .then((accounts) => {
         const account = accounts[0];
         if (!account) throw new Error("Nebyl nalezen žádný účet.");
+        setAccount(account);
         setAccountId(account.id);
         return getCards(account.id);
       })
@@ -171,7 +174,7 @@ export default function CardsPage() {
             <span className="card-brand">Lístek</span>
             <p>••••&nbsp; ••••&nbsp; ••••&nbsp; 2841</p>
             <div className="card-owner">
-              <span>JAN KRÁL</span>
+              <span>{account?.ownerName ?? "Načítám..."}</span>
               <b>VISA</b>
             </div>
             {locked && (
@@ -200,10 +203,10 @@ export default function CardsPage() {
             {detailsVisible && (
               <div className="card-details">
                 <span>
-                  Držitel<b>Jan Král</b>
+                  Držitel<b>{account?.ownerName ?? "Načítám..."}</b>
                 </span>
                 <span>
-                  Účet<b>123456789 / 3030</b>
+                  Účet<b>{account?.accountNumber ?? "Načítám..."}</b>
                 </span>
                 <span>
                   Typ<b>Debetní karta</b>

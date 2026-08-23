@@ -32,7 +32,7 @@ class AccountServiceTest {
 
     @Test
     void transfersMoneyBetweenAccountsAndCreatesBothTransactions() {
-        var source = new Account("Jan Kral", "123456789", new BigDecimal("1000.00"), CurrencyCode.CZK);
+        var source = new Account("Source User", "123456789", new BigDecimal("1000.00"), CurrencyCode.CZK);
         var target = new Account("Eva Kralova", "987654321", new BigDecimal("200.00"), CurrencyCode.CZK);
         var sourceId = UUID.randomUUID();
         var targetId = UUID.randomUUID();
@@ -48,7 +48,7 @@ class AccountServiceTest {
 
     @Test
     void rejectsTransferWhenBalanceIsTooLow() {
-        var source = new Account("Jan Kral", "123456789", new BigDecimal("100.00"), CurrencyCode.CZK);
+        var source = new Account("Source User", "123456789", new BigDecimal("100.00"), CurrencyCode.CZK);
         var target = new Account("Eva Kralova", "987654321", new BigDecimal("200.00"), CurrencyCode.CZK);
         var sourceId = UUID.randomUUID();
         var targetId = UUID.randomUUID();
@@ -65,7 +65,7 @@ class AccountServiceTest {
     @Test
     void rejectsRegistrationWithExistingEmail() {
         var request = new AccountDtos.CreateAccountRequest(
-                "Jan Kral", "jan@example.com", "Praha", "bezpecneheslo", "123456789", BigDecimal.ZERO, CurrencyCode.CZK);
+                "Source User", "jan@example.com", "Praha", "bezpecneheslo", "123456789", BigDecimal.ZERO, CurrencyCode.CZK);
         when(accountRepository.existsByEmailIgnoreCase("jan@example.com")).thenReturn(true);
 
         ResponseStatusException exception = assertThrows(ResponseStatusException.class,

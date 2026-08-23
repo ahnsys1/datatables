@@ -1,7 +1,7 @@
 insert into bank_account (id, owner_name, account_number, balance, currency)
 values
-    ('00000000-0000-0000-0000-000000000001', 'Jan Kral', '123456789 / 3030', 126840.35, 'CZK'),
-    ('00000000-0000-0000-0000-000000000002', 'Jan Kral', '987654321 / 3030', 84200.00, 'CZK');
+    ('00000000-0000-0000-0000-000000000001', 'Demo User', '123456789 / 3030', 126840.35, 'CZK'),
+    ('00000000-0000-0000-0000-000000000002', 'Demo User', '987654321 / 3030', 84200.00, 'CZK');
 
 insert into bank_transaction (id, account_id, amount, type, description, created_at)
 values

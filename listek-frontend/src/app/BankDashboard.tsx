@@ -201,7 +201,7 @@ export default function BankDashboard() {
                 <div className="saving-progress"><span /></div><small>Cíl: Finanční rezerva <b>84 %</b></small>
               </article>}
               <article className="card-preview">
-                <div className="card-chip" /><span className="card-brand">Lístek</span><p>••••&nbsp; ••••&nbsp; ••••&nbsp; 2841</p><div><span>JAN KRÁL</span><b>VISA</b></div>
+                <div className="card-chip" /><span className="card-brand">Lístek</span><p>••••&nbsp; ••••&nbsp; ••••&nbsp; 2841</p><div><span>{currentAccount?.ownerName ?? "Načítám..."}</span><b>VISA</b></div>
               </article>
             </div>
           </section>

@@ -31,7 +31,7 @@ insert into bank_card (
 values (
     '20000000-0000-0000-0000-000000000001',
     '00000000-0000-0000-0000-000000000001',
-    'Jan Kral', 'Visa Classic', '2841', '08/29',
+    'Demo User', 'Visa Classic', '2841', '08/29',
     50000.00, 10000.00, false, true, true
 )
 on conflict (id) do nothing;
