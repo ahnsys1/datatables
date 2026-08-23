@@ -174,7 +174,7 @@ export default function BankDashboard() {
           <div className="mobile-logo">Lístek</div>
           <div className="header-actions">
             <button className="icon-button notification" onClick={() => setNoticeOpen("notifications")} aria-label="Oznámení"><Bell size={20} /><span /></button>
-            <button className="profile-button" onClick={openProfile}><span className="avatar">{(currentAccount?.ownerName ?? "?").split(" ").map((part) => part[0]).slice(0, 2).join("").toUpperCase()}</span><span className="profile-name">{currentAccount?.ownerName ?? "Načítám..."}</span><ChevronDown size={16} /></button>
+            <button className="profile-button" onClick={openProfile} title="Otevřít profil"><span className="avatar">{(currentAccount?.ownerName ?? "?").split(" ").map((part) => part[0]).slice(0, 2).join("").toUpperCase()}</span><span className="profile-name">{currentAccount?.ownerName ?? "Načítám..."}</span><ChevronDown size={16} /></button>
           </div>
         </header>
 
@@ -187,18 +187,18 @@ export default function BankDashboard() {
           </section>
 
           <section className="account-section" aria-labelledby="accounts-title">
-            <div className="section-heading"><div><h2 id="accounts-title">Moje účty</h2><button className="text-button" onClick={() => setBalanceVisible((visible) => !visible)} aria-label={balanceVisible ? "Skrýt zůstatky" : "Zobrazit zůstatky"}>{balanceVisible ? <Eye size={17} /> : <EyeOff size={17} />} {balanceVisible ? "Skrýt zůstatky" : "Zobrazit zůstatky"}</button></div><Link className="text-button" href="/ucty">Spravovat účty <ArrowRight size={16} /></Link></div>
+            <div className="section-heading"><div><h2 id="accounts-title">Moje účty</h2><button className="text-button" onClick={() => setBalanceVisible((visible) => !visible)} aria-label={balanceVisible ? "Skrýt zůstatky" : "Zobrazit zůstatky"}>{balanceVisible ? <Eye size={17} /> : <EyeOff size={17} />} {balanceVisible ? "Skrýt zůstatky" : "Zobrazit zůstatky"}</button></div><Link className="text-button" href="/ucty" aria-label="Otevřít správu účtů" title="Otevřít správu účtů">Spravovat účty <ArrowRight size={16} /></Link></div>
             <div className="account-grid">
               <article className="account-primary">
-                <div className="account-topline"><span className="account-type">Běžný účet</span></div>
-                <p className="account-number">{currentAccount?.accountNumber ?? "-"}</p><p className="balance-label">Disponibilní zůstatek</p>
+                <div className="account-topline"><Link className="account-type account-link" href={currentAccount ? `/payments?accountId=${currentAccount.id}` : "/payments"} title="Zobrazit pohyby běžného účtu">Běžný účet</Link></div>
+                <Link className="account-number account-link" href={currentAccount ? `/payments?accountId=${currentAccount.id}` : "/payments"} title="Zobrazit pohyby běžného účtu">{currentAccount?.accountNumber ?? "-"}</Link><p className="balance-label">Disponibilní zůstatek</p>
                 <strong className="main-balance">{balanceVisible ? currentAccount ? currency.format(currentAccount.balance) : "-" : "••••••••"}</strong>
-                <div className="account-footer"><span><i /> Aktivní účet</span><Link href="/ucty">Detail účtu <ArrowRight size={15} /></Link></div>
+                <div className="account-footer"><span><i /> Aktivní účet</span><Link href="/ucty" aria-label="Otevřít detail běžného účtu" title="Otevřít detail běžného účtu">Detail účtu <ArrowRight size={15} /></Link></div>
               </article>
               {savingsAccount && <article className="savings-account">
-                <div className="savings-head"><span><TrendingUp size={19} /> Spořicí účet</span><Link href="/sporeni" aria-label="Detail spořicího účtu"><ArrowRight size={17} /></Link></div>
-                <strong>{balanceVisible ? savingsAccount ? currency.format(savingsAccount.balance) : "-" : "••••••••"}</strong><p>Úrok 4,2 % p. a.</p>
-                <div className="saving-progress"><span style={{ width: "0%" }} /></div><small>Spořicí cíl zatím není nastaven.</small>
+                <div className="savings-head"><Link className="account-link" href={`/payments?accountId=${savingsAccount.id}`} title="Zobrazit pohyby spořicího účtu"><span><TrendingUp size={19} /> Spořicí účet</span></Link><Link href="/sporeni" aria-label="Otevřít detail spořicího účtu" title="Otevřít detail spořicího účtu"><ArrowRight size={17} /></Link></div>
+                <Link className="account-number account-link" href={`/payments?accountId=${savingsAccount.id}`} title="Zobrazit pohyby spořicího účtu">{savingsAccount.accountNumber}</Link><strong>{balanceVisible ? savingsAccount ? currency.format(savingsAccount.balance) : "-" : "••••••••"}</strong><p>Úrok 4,2 % p. a.</p>
+                <div className="saving-progress"><span style={{ width: "0%" }} /></div><small>Spořicí cíl zatím není nastaven.</small><div className="account-footer"><span><i /> Aktivní účet</span><Link href="/ucty" aria-label="Otevřít detail spořicího účtu" title="Otevřít detail spořicího účtu">Detail účtu <ArrowRight size={15} /></Link></div>
               </article>}
               <article className="card-preview">
                 <div className="card-chip" /><span className="card-brand">Lístek</span><p>••••&nbsp; ••••&nbsp; ••••&nbsp; 2841</p><div><span>{currentAccount?.ownerName ?? "Načítám..."}</span><b>VISA</b></div>
@@ -214,7 +214,7 @@ export default function BankDashboard() {
               </div>
               <div className="transaction-list">
                 {filteredTransactions.map((transaction) => (
-                  <button className="transaction-row" key={transaction.id} onClick={() => setSelectedTransaction(transaction)}>
+                  <button className="transaction-row" key={transaction.id} onClick={() => setSelectedTransaction(transaction)} title="Otevřít detail pohybu">
                     <span className={`transaction-icon ${transaction.amount > 0 ? "incoming" : ""}`}><TransactionIcon type={transaction.icon} /></span>
                     <span className="transaction-copy"><strong>{transaction.title}</strong><small>{transaction.detail}</small></span>
                     <span className="transaction-date">{transaction.date}</span>
@@ -229,12 +229,12 @@ export default function BankDashboard() {
 
             <aside className="insights-column">
               <section className="spending-panel">
-                <div className="section-heading"><h2>Výdaje v srpnu</h2><button onClick={() => setNoticeOpen("spending")} aria-label="Detail výdajů"><ArrowRight size={17} /></button></div>
+                <div className="section-heading"><h2>Výdaje v srpnu</h2><button onClick={() => setNoticeOpen("spending")} aria-label="Otevřít detail výdajů" title="Otevřít detail výdajů"><ArrowRight size={17} /></button></div>
                 <strong>24 386 Kč</strong><p>O 12 % méně než minulý měsíc</p>
                 <div className="spending-bars" aria-label="Výdaje po týdnech">{[42, 68, 50, 82, 58, 72, 44, 63, 37, 54, 31, 47].map((height, index) => <span key={index} style={{ height: `${height}%` }} className={index === 7 ? "current" : ""} />)}</div>
                 <div className="bar-labels"><span>1. 8.</span><span>Dnes</span><span>31. 8.</span></div>
               </section>
-              <section className="tip-panel"><Sparkles size={21} /><div><strong>Tip pro vaše peníze</strong><p>Na běžném účtu máte víc, než obvykle. Přesuňte část na spoření.</p><Link href="/sporeni">Přesunout peníze <ArrowRight size={15} /></Link></div></section>
+              <section className="tip-panel"><Sparkles size={21} /><div><strong>Tip pro vaše peníze</strong><p>Na běžném účtu máte víc, než obvykle. Přesuňte část na spoření.</p><Link href="/sporeni" title="Otevřít převod peněz na spoření">Přesunout peníze <ArrowRight size={15} /></Link></div></section>
             </aside>
           </div>
         </div>

@@ -74,6 +74,7 @@ button { color: inherit; }
 .date-label { margin: 0 0 7px; color: var(--muted); font-size: 12px; font-weight: 700; text-transform: uppercase; }
 .welcome-row h1 { margin: 0; font-size: clamp(29px, 3.1vw, 44px); line-height: 1.12; font-weight: 750; letter-spacing: 0; }
 .pay-button { min-height: 46px; padding: 0 18px; display: inline-flex; align-items: center; justify-content: center; gap: 9px; border: 0; border-radius: 5px; background: var(--green); color: white; cursor: pointer; font-size: 14px; font-weight: 750; }
+.pay-button > .lucide-arrow-right, .text-button > .lucide-arrow-right { margin-left: auto; }
 .pay-button:hover { background: var(--green-dark); }
 .section-heading { min-height: 38px; display: flex; align-items: center; justify-content: space-between; gap: 15px; }
 .section-heading h2 { margin: 0; font-size: 17px; font-weight: 800; letter-spacing: 0; }
@@ -84,7 +85,10 @@ button { color: inherit; }
 .account-primary::after { content: ""; position: absolute; right: -65px; bottom: -100px; width: 190px; height: 190px; border: 28px solid #edf4e8; border-radius: 50%; }
 .account-topline, .savings-head { display: flex; align-items: center; justify-content: space-between; }
 .account-topline button, .savings-head button, .savings-head a { position: relative; z-index: 1; width: 32px; height: 32px; display: grid; place-items: center; border: 0; background: transparent; color: inherit; cursor: pointer; }
-.account-type { font-size: 13px; font-weight: 800; }
+.account-type { display: inline-flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 800; }
+.account-link { color: inherit; text-decoration: none; }
+.account-number.account-link { display: block; }
+.account-link:hover { color: var(--green); }
 .account-number, .balance-label { margin: 4px 0 0; color: var(--muted); font-size: 11px; }
 .balance-label { margin-top: 21px; }
 .main-balance { display: block; margin-top: 3px; font-size: clamp(24px, 2.4vw, 32px); letter-spacing: 0; }
@@ -93,13 +97,14 @@ button { color: inherit; }
 .account-footer i, .account-status i { display: inline-block; width: 7px; height: 7px; margin-right: 5px; border-radius: 50%; background: #35a56b; }
 .account-status { margin: -10px 0 18px; color: var(--muted); font-size: 11px; }
 .account-footer button, .account-footer a { display: inline-flex; align-items: center; gap: 5px; border: 0; background: none; color: var(--green); font-size: 11px; font-weight: 750; cursor: pointer; text-decoration: none; }
-.savings-account { background: #e5efdd; border: 1px solid #d1dfc7; }
+.savings-account { position: relative; background: #e5efdd; border: 1px solid #d1dfc7; }
 .savings-head span { display: flex; align-items: center; gap: 8px; font-size: 12px; font-weight: 800; }
 .savings-account > strong { display: block; margin-top: 34px; font-size: 24px; }
 .savings-account > p { margin: 3px 0 18px; color: var(--green); font-size: 11px; font-weight: 750; }
 .saving-progress { height: 5px; border-radius: 5px; background: rgba(23,58,43,.13); overflow: hidden; }
 .saving-progress span { display: block; width: 84%; height: 100%; background: var(--green); }
 .savings-account small { display: flex; justify-content: space-between; margin-top: 8px; color: var(--muted); font-size: 9px; }
+.savings-account > small { padding-bottom: 34px; }
 .card-preview { position: relative; overflow: hidden; background: #263d35; color: white; box-shadow: 0 12px 25px rgba(24,33,28,.13); }
 .card-preview::after { content: ""; position: absolute; width: 130px; height: 210px; right: -33px; top: -63px; border: 1px solid rgba(217,241,109,.32); border-radius: 50%; transform: rotate(35deg); }
 .card-brand { position: absolute; right: 21px; top: 18px; color: var(--lime); font-size: 13px; font-weight: 800; }

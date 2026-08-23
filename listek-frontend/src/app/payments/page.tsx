@@ -295,6 +295,7 @@ export default function PaymentsPage() {
                 className="payment-history-row"
                 key={transaction.id}
                 href={`/payments/transactions/${transaction.id}`}
+                title="Otevřít detail platby"
               >
                 <span
                   className={`transaction-icon ${transaction.type === "CREDIT" ? "incoming" : ""}`}
