@@ -20,6 +20,7 @@ import cz.listek.admin.api.AdminDtos.DashboardResponse;
 import cz.listek.admin.api.AdminDtos.DecisionRequest;
 import cz.listek.admin.api.AdminDtos.InterestSettingsResponse;
 import cz.listek.admin.api.AdminDtos.UpdateInterestSettingsRequest;
+import cz.listek.admin.service.AdminAuthService;
 import cz.listek.admin.service.AdminWorkflowService;
 import jakarta.validation.Valid;
 
@@ -28,9 +29,23 @@ import jakarta.validation.Valid;
 public class AdminController {
 
     private final AdminWorkflowService workflowService;
+    private final AdminAuthService authService;
 
-    public AdminController(AdminWorkflowService workflowService) {
+    public AdminController(AdminWorkflowService workflowService, AdminAuthService authService) {
         this.workflowService = workflowService;
+        this.authService = authService;
+    }
+
+    @PostMapping("/auth/login")
+    public AdminDtos.AuthResponse login(@Valid @RequestBody AdminDtos.LoginRequest request) {
+        return authService.login(request);
+    }
+
+    @PatchMapping("/auth/password")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void changePassword(@RequestBody AdminDtos.PasswordRequest request,
+            @org.springframework.web.bind.annotation.RequestHeader("X-Admin-Session") String session) {
+        authService.changePassword(session, request.password());
     }
 
     @GetMapping("/dashboard")

@@ -15,6 +15,19 @@ public final class AdminDtos {
     private AdminDtos() {
     }
 
+    public record LoginRequest(@jakarta.validation.constraints.NotBlank String username,
+            @jakarta.validation.constraints.NotBlank String password) {
+
+    }
+
+    public record PasswordRequest(@jakarta.validation.constraints.NotBlank String password) {
+
+    }
+
+    public record AuthResponse(String token, String username, boolean mustChangePassword) {
+
+    }
+
     public record DashboardResponse(long clients, long pendingLoans, long pendingOverdrafts,
             BigDecimal deposits, long decidedToday) {
 

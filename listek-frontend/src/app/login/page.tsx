@@ -57,7 +57,7 @@ export default function LoginPage() {
       setSession(account);
       router.replace("/");
     } catch (submissionError) {
-      setError(submissionError instanceof Error ? submissionError.message : "Požadavek se nepodařilo dokončit.");
+      setError(mode === "login" ? "Uživatelské jméno nebo heslo nesedí. Zkontrolujte zadané údaje." : submissionError instanceof Error ? submissionError.message : "Požadavek se nepodařilo dokončit.");
     } finally {
       setSubmitting(false);
     }

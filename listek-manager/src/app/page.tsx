@@ -2,7 +2,7 @@
 
 import {
   Bell, Check, ChevronRight, CircleDollarSign, ClipboardCheck, FileClock,
-  Landmark, LayoutDashboard, LogOut, Menu, Search, ShieldCheck, Users, WalletCards, X,
+  Eye, EyeOff, Landmark, LayoutDashboard, LogOut, Menu, Search, ShieldCheck, Users, WalletCards, X,
 } from "lucide-react";
 import { FormEvent, useEffect, useState } from "react";
 import {
@@ -53,6 +53,9 @@ export default function Home() {
   const [pendingRegistrations, setPendingRegistrations] = useState<Account[]>([]);
   const [authError, setAuthError] = useState("");
   const [authSaving, setAuthSaving] = useState(false);
+  const [showLoginPassword, setShowLoginPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showPasswordConfirmation, setShowPasswordConfirmation] = useState(false);
 
   useEffect(() => {
     setCurrentDate(new Date());
@@ -61,14 +64,14 @@ export default function Home() {
     if (!token || !username) { setAdminReady(true); setLoading(false); return; }
     setAdminUser(username);
     setMustChangePassword(localStorage.getItem("listek-admin-must-change") === "true");
-    Promise.all([getDashboard(), getLoans(), getOverdrafts(), getAccounts(), getInterestSettings(), getPendingRegistrations()])
-      .then(([dashboardData, loanData, overdraftData, accountData, settingsData, registrationData]) => {
+    Promise.all([getDashboard(), getLoans(), getOverdrafts(), getAccounts(), getInterestSettings()])
+      .then(([dashboardData, loanData, overdraftData, accountData, settingsData]) => {
         setDashboard(dashboardData);
         setLoans(loanData);
         setOverdrafts(overdraftData);
         setAccounts(accountData);
         setInterestSettings(settingsData);
-        setPendingRegistrations(registrationData);
+        setPendingRegistrations([]);
       })
       .catch(() => setError("Administraci se nepodařilo spojit s backendem."))
       .finally(() => setLoading(false));
@@ -82,9 +85,9 @@ export default function Home() {
       const result = await adminLogin({ username, password: await hashPassword(String(form.get("password")), username) });
       localStorage.setItem("listek-admin-session", result.token); localStorage.setItem("listek-admin-user", result.username); localStorage.setItem("listek-admin-must-change", String(result.mustChangePassword));
       setAdminUser(result.username); setMustChangePassword(result.mustChangePassword); setAdminReady(true); setLoading(true);
-      const [dashboardData, loanData, overdraftData, accountData, settingsData, registrationData] = await Promise.all([getDashboard(), getLoans(), getOverdrafts(), getAccounts(), getInterestSettings(), getPendingRegistrations()]);
-      setDashboard(dashboardData); setLoans(loanData); setOverdrafts(overdraftData); setAccounts(accountData); setInterestSettings(settingsData); setPendingRegistrations(registrationData); setLoading(false);
-    } catch (loginError) { setAuthError(loginError instanceof Error ? loginError.message : "Přihlášení se nepodařilo."); }
+      const [dashboardData, loanData, overdraftData, accountData, settingsData] = await Promise.all([getDashboard(), getLoans(), getOverdrafts(), getAccounts(), getInterestSettings()]);
+      setDashboard(dashboardData); setLoans(loanData); setOverdrafts(overdraftData); setAccounts(accountData); setInterestSettings(settingsData); setPendingRegistrations([]); setLoading(false);
+    } catch { setAuthError("Uživatelské jméno nebo heslo nesedí. Zkontrolujte zadané údaje."); }
     finally { setAuthSaving(false); }
   }
 
@@ -131,6 +134,13 @@ export default function Home() {
     }
   }
 
+  function signOut() {
+    localStorage.removeItem("listek-admin-session");
+    localStorage.removeItem("listek-admin-user");
+    localStorage.removeItem("listek-admin-must-change");
+    setAdminReady(false);
+  }
+
   const titles: Record<View, [string, string]> = {
     overview: ["Operační přehled", "Dnes máte pod kontrolou vše důležité."],
     loans: ["Žádosti o půjčku", "Posuďte žádosti, riziko a schopnost klienta splácet."],
@@ -154,8 +164,8 @@ export default function Home() {
     finally { setSaving(false); }
   }
 
-  if (!adminReady) return <main className="admin-auth"><form className="admin-modal" onSubmit={signIn}><p>ADMINISTRACE BANKY LÍSTEK</p><h2>Přihlášení administrátora</h2><span>Přihlaste se pro správu registrací a bankovních žádostí.</span><label>Uživatelské jméno<input name="username" required autoComplete="username" /></label><label>Heslo<input name="password" required type="password" autoComplete="current-password" /></label>{authError && <div className="notice">{authError}</div>}<button className="primary-button submit-button" disabled={authSaving}>{authSaving ? "Přihlašuji..." : "Přihlásit se"}</button></form></main>;
-  if (mustChangePassword) return <main className="admin-auth"><form className="admin-modal" onSubmit={saveAdminPassword}><p>PRVNÍ PŘIHLÁŠENÍ</p><h2>Změňte heslo administrátora</h2><span>Výchozí heslo musí být před pokračováním změněno.</span><label>Nové heslo<input name="password" required minLength={12} type="password" autoComplete="new-password" /></label><label>Potvrzení hesla<input name="confirmation" required minLength={12} type="password" autoComplete="new-password" /></label>{authError && <div className="notice">{authError}</div>}<button className="primary-button submit-button" disabled={authSaving}>{authSaving ? "Ukládám..." : "Změnit heslo"}</button></form></main>;
+  if (!adminReady) return <main className="admin-auth"><form className="admin-modal" onSubmit={signIn}><p>ADMINISTRACE BANKY LÍSTEK</p><h2>Přihlášení administrátora</h2><span>Přihlaste se pro správu registrací a bankovních žádostí.</span><label>Uživatelské jméno<input name="username" required autoComplete="username" /></label><label>Heslo<div className="password-field"><input name="password" required type={showLoginPassword ? "text" : "password"} autoComplete="current-password" /><button type="button" className="password-toggle" onClick={() => setShowLoginPassword((visible) => !visible)} aria-label={showLoginPassword ? "Skrýt heslo" : "Zobrazit heslo"} title={showLoginPassword ? "Skrýt heslo" : "Zobrazit heslo"}>{showLoginPassword ? <EyeOff size={17} /> : <Eye size={17} />}</button></div></label>{authError && <div className="notice">{authError}</div>}<button className="primary-button submit-button" disabled={authSaving}>{authSaving ? "Přihlašuji..." : "Přihlásit se"}</button></form></main>;
+  if (mustChangePassword) return <main className="admin-auth"><form className="admin-modal" onSubmit={saveAdminPassword}><p>PRVNÍ PŘIHLÁŠENÍ</p><h2>Změňte heslo administrátora</h2><span>Výchozí heslo musí být před pokračováním změněno.</span><label>Nové heslo<div className="password-field"><input name="password" required minLength={12} type={showNewPassword ? "text" : "password"} autoComplete="new-password" /><button type="button" className="password-toggle" onClick={() => setShowNewPassword((visible) => !visible)} aria-label={showNewPassword ? "Skrýt heslo" : "Zobrazit heslo"} title={showNewPassword ? "Skrýt heslo" : "Zobrazit heslo"}>{showNewPassword ? <EyeOff size={17} /> : <Eye size={17} />}</button></div></label><label>Potvrzení hesla<div className="password-field"><input name="confirmation" required minLength={12} type={showPasswordConfirmation ? "text" : "password"} autoComplete="new-password" /><button type="button" className="password-toggle" onClick={() => setShowPasswordConfirmation((visible) => !visible)} aria-label={showPasswordConfirmation ? "Skrýt heslo" : "Zobrazit heslo"} title={showPasswordConfirmation ? "Skrýt heslo" : "Zobrazit heslo"}>{showPasswordConfirmation ? <EyeOff size={17} /> : <Eye size={17} />}</button></div></label>{authError && <div className="notice">{authError}</div>}<button className="primary-button submit-button" disabled={authSaving}>{authSaving ? "Ukládám..." : "Změnit heslo"}</button></form></main>;
 
   return (
     <div className="admin-app">
@@ -180,7 +190,7 @@ export default function Home() {
           <button className="menu-button" onClick={() => setMenuOpen(true)} aria-label="Otevřít nabídku"><Menu /></button>
           <div className="environment"><i /> Systémy v pořádku</div>
           <button className="icon-button" aria-label="Oznámení"><Bell size={19} /><span /></button>
-          <button className="logout-button" type="button"><LogOut size={17} /> Odhlášení</button>
+          <button className="logout-button" type="button" onClick={signOut}><LogOut size={17} /> Odhlášení</button>
         </header>
 
         <div className="admin-content">
