@@ -4,9 +4,9 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
-public class LisstekAdminApplication {
+public class ListekAdminApplication {
 
     public static void main(String[] args) {
-        SpringApplication.run(LisstekAdminApplication.class, args);
+        SpringApplication.run(ListekAdminApplication.class, args);
     }
 }

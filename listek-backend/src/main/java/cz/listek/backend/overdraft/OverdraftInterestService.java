@@ -4,6 +4,7 @@ import java.time.Clock;
 import java.time.LocalDate;
 import java.time.ZoneId;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -27,6 +28,7 @@ public class OverdraftInterestService {
     private final TransactionRepository transactionRepository;
     private final Clock clock;
 
+    @Autowired
     public OverdraftInterestService(AccountRepository accountRepository,
             OverdraftInterestAccrualRepository accrualRepository,
             ProductInterestSettingsRepository interestSettingsRepository,

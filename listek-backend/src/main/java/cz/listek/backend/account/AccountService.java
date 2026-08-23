@@ -97,7 +97,7 @@ public class AccountService {
     @Transactional(readOnly = true)
     public List<TransactionResponse> transactions(UUID accountId) {
         requireAccount(accountId);
-        return transactionRepository.findTop20ByAccountIdOrderByCreatedAtDesc(accountId).stream().map(this::toResponse).toList();
+        return transactionRepository.findByAccountIdOrderByCreatedAtDesc(accountId).stream().map(this::toResponse).toList();
     }
 
     @Transactional
