@@ -16,6 +16,9 @@ import jakarta.persistence.Table;
 @Table(name = "bank_account")
 public class Account {
 
+    private static final BigDecimal DAYS_IN_YEAR = new BigDecimal("365");
+    private static final BigDecimal PERCENT = new BigDecimal("100");
+
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
@@ -120,5 +123,13 @@ public class Account {
 
     public void credit(BigDecimal amount) {
         this.balance = this.balance.add(amount);
+    }
+
+    public BigDecimal dailyOverdraftInterest(BigDecimal annualRate) {
+        if (balance.signum() >= 0) {
+            return BigDecimal.ZERO.setScale(2);
+        }
+        return balance.abs().multiply(annualRate)
+                .divide(DAYS_IN_YEAR.multiply(PERCENT), 2, java.math.RoundingMode.HALF_UP);
     }
 }

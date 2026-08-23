@@ -74,4 +74,18 @@ class AccountServiceTest {
         assertEquals(409, exception.getStatusCode().value());
         verify(accountRepository, never()).save(any());
     }
+
+    @Test
+    void doesNotChargeDailyOverdraftInterestWhenAccountIsInCredit() {
+        var account = new Account("Client", "123456789", new BigDecimal("100.00"), CurrencyCode.CZK);
+
+        assertEquals(new BigDecimal("0.00"), account.dailyOverdraftInterest(new BigDecimal("12.900")));
+    }
+
+    @Test
+    void calculatesDailyOverdraftInterestOnlyFromNegativeBalance() {
+        var account = new Account("Client", "123456789", new BigDecimal("-1000.00"), CurrencyCode.CZK);
+
+        assertEquals(new BigDecimal("0.35"), account.dailyOverdraftInterest(new BigDecimal("12.900")));
+    }
 }
