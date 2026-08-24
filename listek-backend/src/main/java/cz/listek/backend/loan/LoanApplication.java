@@ -168,18 +168,7 @@ public class LoanApplication {
     }
 
     public BigDecimal calculateEarlyRepaymentAmount() {
-        if (remainingAmount.signum() == 0) {
-            return BigDecimal.ZERO.setScale(2);
-        }
-        BigDecimal monthlyRate = annualRate.divide(new BigDecimal("1200"), 12, java.math.RoundingMode.HALF_UP);
-        int remainingInstallmentCount = remainingInstallments == null ? repaymentMonths : remainingInstallments.intValue();
-        int paidInstallments = Math.max(0, repaymentMonths - remainingInstallmentCount);
-        double rate = monthlyRate.doubleValue();
-        double factor = Math.pow(1 + rate, paidInstallments);
-        double principalBalance = rate == 0
-                ? amount.doubleValue() - monthlyPayment.doubleValue() * paidInstallments
-                : amount.doubleValue() * factor - monthlyPayment.doubleValue() * (factor - 1) / rate;
-        return BigDecimal.valueOf(Math.max(0, principalBalance)).setScale(2, java.math.RoundingMode.HALF_UP);
+        return remainingAmount.setScale(2, java.math.RoundingMode.HALF_UP);
     }
 
     public void configureRepayment(String repaymentAccountNumber, String variableSymbol, String specificSymbol,
@@ -189,14 +178,25 @@ public class LoanApplication {
         this.specificSymbol = specificSymbol;
         this.repaymentDayOfMonth = repaymentDayOfMonth;
         this.dueDate = dueDate;
-        this.remainingAmount = monthlyPayment.multiply(BigDecimal.valueOf(repaymentMonths));
+        this.remainingAmount = amount;
     }
 
     public void recordRepayment(BigDecimal amount) {
         this.repaidAmount = this.repaidAmount.add(amount);
-        BigDecimal totalRepayment = monthlyPayment.multiply(BigDecimal.valueOf(repaymentMonths));
-        this.remainingAmount = totalRepayment.subtract(repaidAmount).max(BigDecimal.ZERO);
-        this.remainingInstallments = remainingAmount.signum() == 0 ? 0
-                : remainingAmount.divide(monthlyPayment, 0, java.math.RoundingMode.CEILING).intValueExact();
+        if (amount.compareTo(remainingAmount) >= 0) {
+            this.remainingAmount = BigDecimal.ZERO.setScale(2);
+            this.remainingInstallments = 0;
+            return;
+        }
+        int paidInstallments = repaidAmount.divide(monthlyPayment, 0, java.math.RoundingMode.FLOOR).intValue();
+        BigDecimal monthlyRate = annualRate.divide(new BigDecimal("1200"), 12, java.math.RoundingMode.HALF_UP);
+        double rate = monthlyRate.doubleValue();
+        double factor = Math.pow(1 + rate, paidInstallments);
+        double principalBalance = rate == 0
+                ? this.amount.doubleValue() - monthlyPayment.doubleValue() * paidInstallments
+                : this.amount.doubleValue() * factor - monthlyPayment.doubleValue() * (factor - 1) / rate;
+        this.remainingAmount = BigDecimal.valueOf(Math.max(0, principalBalance))
+                .setScale(2, java.math.RoundingMode.HALF_UP);
+        this.remainingInstallments = remainingAmount.signum() == 0 ? 0 : repaymentMonths - paidInstallments;
     }
 }
