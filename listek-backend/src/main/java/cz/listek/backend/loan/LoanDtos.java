@@ -45,6 +45,7 @@ public final class LoanDtos {
             BigDecimal repaidAmount,
             BigDecimal remainingAmount,
             Integer remainingInstallments,
+            BigDecimal earlyRepaymentAmount,
             LocalDate dueDate) {
 
     }

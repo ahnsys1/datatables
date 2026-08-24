@@ -81,6 +81,7 @@ public class LoanApplicationService {
                 application.getRepaymentAccountNumber(), application.getVariableSymbol(), application.getSpecificSymbol(),
                 application.getRepaymentDayOfMonth(), application.getRepaidAmount(), application.getRemainingAmount(),
                 application.getRemainingInstallments(),
+                application.calculateEarlyRepaymentAmount(),
                 application.getDueDate());
     }
 }

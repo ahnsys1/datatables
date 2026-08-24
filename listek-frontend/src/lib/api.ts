@@ -85,6 +85,7 @@ export type LoanApplication = {
   repaidAmount?: number;
   remainingAmount?: number;
   remainingInstallments?: number;
+  earlyRepaymentAmount?: number;
   dueDate?: string;
 };
 

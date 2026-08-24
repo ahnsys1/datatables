@@ -167,6 +167,21 @@ public class LoanApplication {
         return dueDate;
     }
 
+    public BigDecimal calculateEarlyRepaymentAmount() {
+        if (remainingAmount.signum() == 0) {
+            return BigDecimal.ZERO.setScale(2);
+        }
+        BigDecimal monthlyRate = annualRate.divide(new BigDecimal("1200"), 12, java.math.RoundingMode.HALF_UP);
+        int remainingInstallmentCount = remainingInstallments == null ? repaymentMonths : remainingInstallments.intValue();
+        int paidInstallments = Math.max(0, repaymentMonths - remainingInstallmentCount);
+        double rate = monthlyRate.doubleValue();
+        double factor = Math.pow(1 + rate, paidInstallments);
+        double principalBalance = rate == 0
+                ? amount.doubleValue() - monthlyPayment.doubleValue() * paidInstallments
+                : amount.doubleValue() * factor - monthlyPayment.doubleValue() * (factor - 1) / rate;
+        return BigDecimal.valueOf(Math.max(0, principalBalance)).setScale(2, java.math.RoundingMode.HALF_UP);
+    }
+
     public void configureRepayment(String repaymentAccountNumber, String variableSymbol, String specificSymbol,
             int repaymentDayOfMonth, LocalDate dueDate) {
         this.repaymentAccountNumber = repaymentAccountNumber;
