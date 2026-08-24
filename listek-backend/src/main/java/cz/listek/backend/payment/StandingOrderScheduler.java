@@ -48,6 +48,6 @@ public class StandingOrderScheduler {
                 lockedOrder.getAccount().getId(),
                 lockedOrder.getTargetAccountNumber(),
                 lockedOrder.getAmount(),
-                lockedOrder.getDescription());
+                lockedOrder.getDescription(), lockedOrder.getVariableSymbol(), lockedOrder.getSpecificSymbol());
     }
 }

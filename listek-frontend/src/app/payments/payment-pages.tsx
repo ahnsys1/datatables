@@ -124,6 +124,8 @@ export function StandingOrderFormPage() {
       targetAccountNumber: String(form.get("targetAccountNumber")).trim(),
       amount: Number(form.get("amount")),
       description: String(form.get("description")).trim(),
+      variableSymbol: String(form.get("variableSymbol") || "").trim() || undefined,
+      specificSymbol: String(form.get("specificSymbol") || "").trim() || undefined,
       dayOfMonth: Number(form.get("dayOfMonth")),
     };
     try {
@@ -140,6 +142,7 @@ export function StandingOrderFormPage() {
     <label>Cílový účet<input required name="targetAccountNumber" placeholder="123456789 / 0100" defaultValue={editingOrder?.targetAccountNumber} /></label>
     <div className="payment-fields"><label>Částka<input required name="amount" type="number" min="0.01" step="0.01" placeholder="0,00" defaultValue={editingOrder?.amount} /></label><label>Den v měsíci<input required name="dayOfMonth" type="number" min="1" max="28" defaultValue={editingOrder?.dayOfMonth ?? 1} /></label></div>
     <label>Zpráva pro příjemce<input required name="description" placeholder="Například nájem" defaultValue={editingOrder?.description} /></label>
+    <div className="payment-fields"><label>Variabilní symbol<input name="variableSymbol" inputMode="numeric" pattern="[0-9]{1,10}" maxLength={10} defaultValue={editingOrder?.variableSymbol ?? ""} /></label><label>Specifický symbol<input name="specificSymbol" inputMode="numeric" pattern="[0-9]{1,10}" maxLength={10} defaultValue={editingOrder?.specificSymbol ?? ""} /></label></div>
     <button className="pay-button payment-submit" type="submit">{editingOrder ? "Uložit změny" : "Uložit příkaz"} <ArrowRight size={18} /></button>
   </form></section></PageFrame>;
 }
@@ -180,7 +183,7 @@ export function RepeatPaymentPage() {
   const { accounts, transactions, error } = useTransactions();
 
   function hrefFor(transaction: BankTransaction) {
-    const params = new URLSearchParams({ prefill: "1", fromAccountId: transaction.accountId, toAccountNumber: transaction.counterpartyAccountNumber ?? "", amount: String(Math.abs(transaction.amount)), description: transaction.description });
+    const params = new URLSearchParams({ prefill: "1", fromAccountId: transaction.accountId, toAccountNumber: transaction.counterpartyAccountNumber ?? "", amount: String(Math.abs(transaction.amount)), description: transaction.description, variableSymbol: transaction.variableSymbol ?? "", specificSymbol: transaction.specificSymbol ?? "" });
     return `/payments?${params.toString()}`;
   }
 
@@ -200,7 +203,7 @@ export function TemplateFormPage() {
     event.preventDefault();
     const form = new FormData(event.currentTarget);
     const accountId = String(form.get("accountId"));
-    const input = { name: String(form.get("name")).trim(), targetAccountNumber: String(form.get("targetAccountNumber")).trim(), amount: Number(form.get("amount")), description: String(form.get("description")).trim() };
+    const input = { name: String(form.get("name")).trim(), targetAccountNumber: String(form.get("targetAccountNumber")).trim(), amount: Number(form.get("amount")), description: String(form.get("description")).trim(), variableSymbol: String(form.get("variableSymbol") || "").trim() || undefined, specificSymbol: String(form.get("specificSymbol") || "").trim() || undefined };
     try {
       if (editingTemplate) await updatePaymentTemplate(editingTemplate.id, input);
       else await createPaymentTemplate(accountId, input);
@@ -214,7 +217,7 @@ export function TemplateFormPage() {
     <label>Název šablony<input required name="name" placeholder="Například nájem" defaultValue={editingTemplate?.name} /></label>
     <label>Odesílatel<select required name="accountId" defaultValue={editingTemplate?.accountId ?? accounts[0]?.id ?? ""}>{accounts.map((account) => <option key={account.id} value={account.id}>{formatAccountNumber(account.accountNumber)}</option>)}</select></label>
     <label>Cílový účet<input required name="targetAccountNumber" placeholder="123456789 / 0100" defaultValue={editingTemplate?.targetAccountNumber} /></label>
-    <div className="payment-fields payment-template-fields"><label>Částka<input required name="amount" type="number" min="0.01" step="0.01" placeholder="0,00" defaultValue={editingTemplate?.amount} /></label><label>Zpráva<input required name="description" placeholder="Popis" defaultValue={editingTemplate?.description} /></label></div>
+    <div className="payment-fields payment-template-fields"><label>Částka<input required name="amount" type="number" min="0.01" step="0.01" placeholder="0,00" defaultValue={editingTemplate?.amount} /></label><label>Zpráva<input required name="description" placeholder="Popis" defaultValue={editingTemplate?.description} /></label></div><div className="payment-fields"><label>Variabilní symbol<input name="variableSymbol" inputMode="numeric" pattern="[0-9]{1,10}" maxLength={10} defaultValue={editingTemplate?.variableSymbol ?? ""} /></label><label>Specifický symbol<input name="specificSymbol" inputMode="numeric" pattern="[0-9]{1,10}" maxLength={10} defaultValue={editingTemplate?.specificSymbol ?? ""} /></label></div>
     <button className="pay-button payment-submit" type="submit">{editingTemplate ? "Uložit změny" : "Uložit šablonu"} <ArrowRight size={18} /></button>
   </form></section></PageFrame>;
 }
@@ -233,7 +236,7 @@ export function TemplateListPage() {
   }
 
   function applyTemplate(template: PaymentTemplate) {
-    const params = new URLSearchParams({ prefill: "1", fromAccountId: template.accountId, toAccountNumber: template.targetAccountNumber, amount: String(template.amount), description: template.description });
+    const params = new URLSearchParams({ prefill: "1", fromAccountId: template.accountId, toAccountNumber: template.targetAccountNumber, amount: String(template.amount), description: template.description, variableSymbol: template.variableSymbol ?? "", specificSymbol: template.specificSymbol ?? "" });
     return `/payments?${params.toString()}`;
   }
 

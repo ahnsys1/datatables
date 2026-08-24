@@ -39,14 +39,14 @@ public class PaymentService {
     @Transactional
     public StandingOrderResponse createStandingOrder(UUID accountId, CreateStandingOrderRequest request) {
         Account account = requireAccount(accountId);
-        return toResponse(standingOrderRepository.save(new StandingOrder(account, request.targetAccountNumber().trim(), request.amount(), request.description().trim(), request.dayOfMonth())));
+        return toResponse(standingOrderRepository.save(new StandingOrder(account, request.targetAccountNumber().trim(), request.amount(), request.description().trim(), request.dayOfMonth(), request.variableSymbol(), request.specificSymbol())));
     }
 
     @Transactional
     public StandingOrderResponse updateStandingOrder(UUID orderId, UpdateStandingOrderRequest request) {
         StandingOrder order = standingOrderRepository.findById(orderId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Trvalý příkaz nebyl nalezen"));
-        order.update(request.targetAccountNumber().trim(), request.amount(), request.description().trim(), request.dayOfMonth());
+        order.update(request.targetAccountNumber().trim(), request.amount(), request.description().trim(), request.dayOfMonth(), request.variableSymbol(), request.specificSymbol());
         return toResponse(order);
     }
 
@@ -67,14 +67,14 @@ public class PaymentService {
     @Transactional
     public PaymentTemplateResponse createTemplate(UUID accountId, CreatePaymentTemplateRequest request) {
         Account account = requireAccount(accountId);
-        return toResponse(paymentTemplateRepository.save(new PaymentTemplate(account, request.name().trim(), request.targetAccountNumber().trim(), request.amount(), request.description().trim())));
+        return toResponse(paymentTemplateRepository.save(new PaymentTemplate(account, request.name().trim(), request.targetAccountNumber().trim(), request.amount(), request.description().trim(), request.variableSymbol(), request.specificSymbol())));
     }
 
     @Transactional
     public PaymentTemplateResponse updateTemplate(UUID templateId, UpdatePaymentTemplateRequest request) {
         PaymentTemplate template = paymentTemplateRepository.findById(templateId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Sablona nebyla nalezena"));
-        template.update(request.name().trim(), request.targetAccountNumber().trim(), request.amount(), request.description().trim());
+        template.update(request.name().trim(), request.targetAccountNumber().trim(), request.amount(), request.description().trim(), request.variableSymbol(), request.specificSymbol());
         return toResponse(template);
     }
 
@@ -92,10 +92,10 @@ public class PaymentService {
     }
 
     private StandingOrderResponse toResponse(StandingOrder order) {
-        return new StandingOrderResponse(order.getId(), order.getAccount().getId(), order.getTargetAccountNumber(), order.getAmount(), order.getDescription(), order.getDayOfMonth(), order.isActive(), order.getCreatedAt());
+        return new StandingOrderResponse(order.getId(), order.getAccount().getId(), order.getTargetAccountNumber(), order.getAmount(), order.getDescription(), order.getDayOfMonth(), order.isActive(), order.getVariableSymbol(), order.getSpecificSymbol(), order.getCreatedAt());
     }
 
     private PaymentTemplateResponse toResponse(PaymentTemplate template) {
-        return new PaymentTemplateResponse(template.getId(), template.getAccount().getId(), template.getName(), template.getTargetAccountNumber(), template.getAmount(), template.getDescription(), template.getCreatedAt());
+        return new PaymentTemplateResponse(template.getId(), template.getAccount().getId(), template.getName(), template.getTargetAccountNumber(), template.getAmount(), template.getDescription(), template.getVariableSymbol(), template.getSpecificSymbol(), template.getCreatedAt());
     }
 }

@@ -33,6 +33,8 @@ export type StandingOrder = {
   targetAccountNumber: string;
   amount: number;
   description: string;
+  variableSymbol?: string;
+  specificSymbol?: string;
   dayOfMonth: number;
   active: boolean;
   createdAt: string;
@@ -45,6 +47,8 @@ export type PaymentTemplate = {
   targetAccountNumber: string;
   amount: number;
   description: string;
+  variableSymbol?: string;
+  specificSymbol?: string;
   createdAt: string;
 };
 

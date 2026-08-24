@@ -33,6 +33,10 @@ public class PaymentTemplate {
     private BigDecimal amount;
     @Column(nullable = false, length = 120)
     private String description;
+    @Column(length = 10)
+    private String variableSymbol;
+    @Column(length = 10)
+    private String specificSymbol;
     @Column(nullable = false)
     private OffsetDateTime createdAt;
 
@@ -40,11 +44,17 @@ public class PaymentTemplate {
     }
 
     public PaymentTemplate(Account account, String name, String targetAccountNumber, BigDecimal amount, String description) {
+        this(account, name, targetAccountNumber, amount, description, null, null);
+    }
+
+    public PaymentTemplate(Account account, String name, String targetAccountNumber, BigDecimal amount, String description, String variableSymbol, String specificSymbol) {
         this.account = account;
         this.name = name;
         this.targetAccountNumber = targetAccountNumber;
         this.amount = amount;
         this.description = description;
+        this.variableSymbol = variableSymbol;
+        this.specificSymbol = specificSymbol;
         this.createdAt = OffsetDateTime.now();
     }
 
@@ -72,11 +82,25 @@ public class PaymentTemplate {
         return description;
     }
 
+    public String getVariableSymbol() {
+        return variableSymbol;
+    }
+
+    public String getSpecificSymbol() {
+        return specificSymbol;
+    }
+
     public void update(String name, String targetAccountNumber, BigDecimal amount, String description) {
+        update(name, targetAccountNumber, amount, description, null, null);
+    }
+
+    public void update(String name, String targetAccountNumber, BigDecimal amount, String description, String variableSymbol, String specificSymbol) {
         this.name = name;
         this.targetAccountNumber = targetAccountNumber;
         this.amount = amount;
         this.description = description;
+        this.variableSymbol = variableSymbol;
+        this.specificSymbol = specificSymbol;
     }
 
     public OffsetDateTime getCreatedAt() {

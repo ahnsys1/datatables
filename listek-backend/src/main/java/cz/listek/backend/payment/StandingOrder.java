@@ -31,6 +31,10 @@ public class StandingOrder {
     private BigDecimal amount;
     @Column(nullable = false, length = 120)
     private String description;
+    @Column(length = 10)
+    private String variableSymbol;
+    @Column(length = 10)
+    private String specificSymbol;
     @Column(nullable = false)
     private int dayOfMonth;
     @Column(nullable = false)
@@ -42,10 +46,16 @@ public class StandingOrder {
     }
 
     public StandingOrder(Account account, String targetAccountNumber, BigDecimal amount, String description, int dayOfMonth) {
+        this(account, targetAccountNumber, amount, description, dayOfMonth, null, null);
+    }
+
+    public StandingOrder(Account account, String targetAccountNumber, BigDecimal amount, String description, int dayOfMonth, String variableSymbol, String specificSymbol) {
         this.account = account;
         this.targetAccountNumber = targetAccountNumber;
         this.amount = amount;
         this.description = description;
+        this.variableSymbol = variableSymbol;
+        this.specificSymbol = specificSymbol;
         this.dayOfMonth = dayOfMonth;
         this.active = true;
         this.createdAt = OffsetDateTime.now();
@@ -71,6 +81,14 @@ public class StandingOrder {
         return description;
     }
 
+    public String getVariableSymbol() {
+        return variableSymbol;
+    }
+
+    public String getSpecificSymbol() {
+        return specificSymbol;
+    }
+
     public int getDayOfMonth() {
         return dayOfMonth;
     }
@@ -80,10 +98,16 @@ public class StandingOrder {
     }
 
     public void update(String targetAccountNumber, BigDecimal amount, String description, int dayOfMonth) {
+        update(targetAccountNumber, amount, description, dayOfMonth, null, null);
+    }
+
+    public void update(String targetAccountNumber, BigDecimal amount, String description, int dayOfMonth, String variableSymbol, String specificSymbol) {
         this.targetAccountNumber = targetAccountNumber;
         this.amount = amount;
         this.description = description;
         this.dayOfMonth = dayOfMonth;
+        this.variableSymbol = variableSymbol;
+        this.specificSymbol = specificSymbol;
     }
 
     public OffsetDateTime getCreatedAt() {
