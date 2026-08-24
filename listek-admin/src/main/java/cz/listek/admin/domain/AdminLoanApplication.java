@@ -2,6 +2,7 @@ package cz.listek.admin.domain;
 
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.time.LocalDate;
 import java.util.UUID;
 
 import jakarta.persistence.Column;
@@ -53,6 +54,18 @@ public class AdminLoanApplication {
     private Instant decidedAt;
     private String decisionNote;
 
+    @Column(length = 34)
+    private String repaymentAccountNumber;
+    @Column(length = 10)
+    private String variableSymbol;
+    @Column(length = 10)
+    private String specificSymbol;
+    private Integer repaymentDayOfMonth;
+    @Column(nullable = false, precision = 19, scale = 2)
+    private BigDecimal repaidAmount;
+    private Integer remainingInstallments;
+    private LocalDate dueDate;
+
     protected AdminLoanApplication() {
     }
 
@@ -62,16 +75,90 @@ public class AdminLoanApplication {
         this.decidedAt = Instant.now();
     }
 
-    public UUID getId() { return id; }
-    public AdminAccount getAccount() { return account; }
-    public String getType() { return type; }
-    public BigDecimal getAmount() { return amount; }
-    public int getRepaymentMonths() { return repaymentMonths; }
-    public BigDecimal getAnnualRate() { return annualRate; }
-    public BigDecimal getMonthlyPayment() { return monthlyPayment; }
-    public String getPurpose() { return purpose; }
-    public ApplicationStatus getStatus() { return status; }
-    public Instant getCreatedAt() { return createdAt; }
-    public Instant getDecidedAt() { return decidedAt; }
-    public String getDecisionNote() { return decisionNote; }
+    public UUID getId() {
+        return id;
+    }
+
+    public AdminAccount getAccount() {
+        return account;
+    }
+
+    public String getType() {
+        return type;
+    }
+
+    public BigDecimal getAmount() {
+        return amount;
+    }
+
+    public int getRepaymentMonths() {
+        return repaymentMonths;
+    }
+
+    public BigDecimal getAnnualRate() {
+        return annualRate;
+    }
+
+    public BigDecimal getMonthlyPayment() {
+        return monthlyPayment;
+    }
+
+    public String getPurpose() {
+        return purpose;
+    }
+
+    public ApplicationStatus getStatus() {
+        return status;
+    }
+
+    public Instant getCreatedAt() {
+        return createdAt;
+    }
+
+    public Instant getDecidedAt() {
+        return decidedAt;
+    }
+
+    public String getDecisionNote() {
+        return decisionNote;
+    }
+
+    public String getRepaymentAccountNumber() {
+        return repaymentAccountNumber;
+    }
+
+    public String getVariableSymbol() {
+        return variableSymbol;
+    }
+
+    public String getSpecificSymbol() {
+        return specificSymbol;
+    }
+
+    public Integer getRepaymentDayOfMonth() {
+        return repaymentDayOfMonth;
+    }
+
+    public BigDecimal getRepaidAmount() {
+        return repaidAmount;
+    }
+
+    public Integer getRemainingInstallments() {
+        return remainingInstallments;
+    }
+
+    public LocalDate getDueDate() {
+        return dueDate;
+    }
+
+    public void configureRepayment(String repaymentAccountNumber, String variableSymbol, String specificSymbol,
+            int repaymentDayOfMonth, LocalDate dueDate) {
+        this.repaymentAccountNumber = repaymentAccountNumber;
+        this.variableSymbol = variableSymbol;
+        this.specificSymbol = specificSymbol;
+        this.repaymentDayOfMonth = repaymentDayOfMonth;
+        this.dueDate = dueDate;
+        this.repaidAmount = BigDecimal.ZERO;
+        this.remainingInstallments = repaymentMonths;
+    }
 }

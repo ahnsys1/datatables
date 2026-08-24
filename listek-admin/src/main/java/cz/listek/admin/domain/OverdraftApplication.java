@@ -34,6 +34,9 @@ public class OverdraftApplication {
     @Column(nullable = false)
     private BigDecimal monthlyIncome;
 
+    @Column(precision = 7, scale = 4)
+    private BigDecimal annualRate;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private ApplicationStatus status;
@@ -55,18 +58,50 @@ public class OverdraftApplication {
         this.createdAt = Instant.now();
     }
 
+    public OverdraftApplication(AdminAccount account, BigDecimal requestedLimit, BigDecimal monthlyIncome, BigDecimal annualRate) {
+        this(account, requestedLimit, monthlyIncome);
+        this.annualRate = annualRate;
+    }
+
     public void decide(ApplicationStatus status, String note) {
         this.status = status;
         this.decisionNote = note;
         this.decidedAt = Instant.now();
     }
 
-    public UUID getId() { return id; }
-    public AdminAccount getAccount() { return account; }
-    public BigDecimal getRequestedLimit() { return requestedLimit; }
-    public BigDecimal getMonthlyIncome() { return monthlyIncome; }
-    public ApplicationStatus getStatus() { return status; }
-    public Instant getCreatedAt() { return createdAt; }
-    public Instant getDecidedAt() { return decidedAt; }
-    public String getDecisionNote() { return decisionNote; }
+    public UUID getId() {
+        return id;
+    }
+
+    public AdminAccount getAccount() {
+        return account;
+    }
+
+    public BigDecimal getRequestedLimit() {
+        return requestedLimit;
+    }
+
+    public BigDecimal getMonthlyIncome() {
+        return monthlyIncome;
+    }
+
+    public ApplicationStatus getStatus() {
+        return status;
+    }
+
+    public Instant getCreatedAt() {
+        return createdAt;
+    }
+
+    public Instant getDecidedAt() {
+        return decidedAt;
+    }
+
+    public String getDecisionNote() {
+        return decisionNote;
+    }
+
+    public BigDecimal getAnnualRate() {
+        return annualRate;
+    }
 }

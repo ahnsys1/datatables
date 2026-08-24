@@ -2,6 +2,7 @@ package cz.listek.backend.loan;
 
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.time.LocalDate;
 import java.util.UUID;
 
 import jakarta.validation.constraints.DecimalMin;
@@ -36,7 +37,14 @@ public final class LoanDtos {
             BigDecimal monthlyPayment,
             String purpose,
             LoanStatus status,
-            Instant createdAt) {
+            Instant createdAt,
+            String repaymentAccountNumber,
+            String variableSymbol,
+            String specificSymbol,
+            Integer repaymentDayOfMonth,
+            BigDecimal repaidAmount,
+            Integer remainingInstallments,
+            LocalDate dueDate) {
 
     }
 }

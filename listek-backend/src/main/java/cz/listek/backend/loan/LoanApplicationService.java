@@ -16,6 +16,9 @@ import cz.listek.backend.loan.LoanDtos.CreateLoanApplicationRequest;
 import cz.listek.backend.loan.LoanDtos.LoanApplicationResponse;
 import cz.listek.backend.settings.ProductInterestSettings;
 import cz.listek.backend.settings.ProductInterestSettingsRepository;
+import cz.listek.backend.transaction.Transaction;
+import cz.listek.backend.transaction.TransactionRepository;
+import cz.listek.backend.transaction.TransactionType;
 
 @Service
 public class LoanApplicationService {
@@ -28,12 +31,14 @@ public class LoanApplicationService {
     private final AccountRepository accountRepository;
     private final LoanApplicationRepository loanApplicationRepository;
     private final ProductInterestSettingsRepository interestSettingsRepository;
+    private final TransactionRepository transactionRepository;
 
     public LoanApplicationService(AccountRepository accountRepository, LoanApplicationRepository loanApplicationRepository,
-            ProductInterestSettingsRepository interestSettingsRepository) {
+            ProductInterestSettingsRepository interestSettingsRepository, TransactionRepository transactionRepository) {
         this.accountRepository = accountRepository;
         this.loanApplicationRepository = loanApplicationRepository;
         this.interestSettingsRepository = interestSettingsRepository;
+        this.transactionRepository = transactionRepository;
     }
 
     @Transactional(readOnly = true)
@@ -72,8 +77,25 @@ public class LoanApplicationService {
     }
 
     private LoanApplicationResponse toResponse(LoanApplication application) {
+        List<Transaction> repayments = transactionRepository.findByAccountIdOrderByCreatedAtDesc(application.getAccount().getId()).stream()
+                .filter(transaction -> transaction.getType() == TransactionType.DEBIT)
+                .filter(transaction -> application.getRepaymentAccountNumber() != null
+                && application.getRepaymentAccountNumber().equals(transaction.getCounterpartyAccountNumber()))
+                .filter(transaction -> sameSymbol(application.getVariableSymbol(), transaction.getVariableSymbol())
+                && sameSymbol(application.getSpecificSymbol(), transaction.getSpecificSymbol()))
+                .toList();
+        BigDecimal repaidAmount = repayments.stream().map(Transaction::getAmount).map(BigDecimal::abs)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        int remainingInstallments = Math.max(0, application.getRepaymentMonths() - repayments.size());
         return new LoanApplicationResponse(application.getId(), application.getType(), application.getAmount(),
                 application.getRepaymentMonths(), application.getAnnualRate(), application.getMonthlyPayment(),
-                application.getPurpose(), application.getStatus(), application.getCreatedAt());
+                application.getPurpose(), application.getStatus(), application.getCreatedAt(),
+                application.getRepaymentAccountNumber(), application.getVariableSymbol(), application.getSpecificSymbol(),
+                application.getRepaymentDayOfMonth(), repaidAmount, remainingInstallments,
+                application.getDueDate());
+    }
+
+    private boolean sameSymbol(String expected, String actual) {
+        return expected == null ? actual == null : expected.equals(actual);
     }
 }

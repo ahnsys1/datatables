@@ -78,10 +78,17 @@ export type LoanApplication = {
   purpose: string;
   status: "PENDING" | "APPROVED" | "REJECTED";
   createdAt: string;
+  repaymentAccountNumber?: string;
+  variableSymbol?: string;
+  specificSymbol?: string;
+  repaymentDayOfMonth?: number;
+  repaidAmount?: number;
+  remainingInstallments?: number;
+  dueDate?: string;
 };
 
 export type InterestSettings = { savingsRate: number; overdraftRate: number; personalLoanRate: number; homeLoanRate: number };
-export type OverdraftApplication = { id: string; category: "OVERDRAFT"; product: string; accountId: string; clientName: string; accountNumber: string; amount: number; monthlyIncome: number; status: "PENDING" | "APPROVED" | "REJECTED"; createdAt: string; decidedAt: string | null; decisionNote: string | null };
+export type OverdraftApplication = { id: string; category: "OVERDRAFT"; product: string; accountId: string; clientName: string; accountNumber: string; amount: number; monthlyIncome: number; annualRate?: number; status: "PENDING" | "APPROVED" | "REJECTED"; createdAt: string; decidedAt: string | null; decisionNote: string | null };
 
 const apiBase = process.env.NEXT_PUBLIC_API_BASE_URL ?? "/api/backend";
 const managerBase = "/api/manager";

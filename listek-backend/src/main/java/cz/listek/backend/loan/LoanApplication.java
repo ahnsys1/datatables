@@ -2,6 +2,7 @@ package cz.listek.backend.loan;
 
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.time.LocalDate;
 import java.util.UUID;
 
 import cz.listek.backend.account.Account;
@@ -55,6 +56,24 @@ public class LoanApplication {
     @Column(nullable = false)
     private Instant createdAt;
 
+    @Column(length = 34)
+    private String repaymentAccountNumber;
+
+    @Column(length = 10)
+    private String variableSymbol;
+
+    @Column(length = 10)
+    private String specificSymbol;
+
+    private Integer repaymentDayOfMonth;
+
+    @Column(nullable = false, precision = 19, scale = 2)
+    private BigDecimal repaidAmount = BigDecimal.ZERO;
+
+    private Integer remainingInstallments;
+
+    private LocalDate dueDate;
+
     protected LoanApplication() {
     }
 
@@ -69,6 +88,7 @@ public class LoanApplication {
         this.purpose = purpose;
         this.status = LoanStatus.PENDING;
         this.createdAt = Instant.now();
+        this.remainingInstallments = repaymentMonths;
     }
 
     public UUID getId() {
@@ -109,5 +129,48 @@ public class LoanApplication {
 
     public Instant getCreatedAt() {
         return createdAt;
+    }
+
+    public String getRepaymentAccountNumber() {
+        return repaymentAccountNumber;
+    }
+
+    public String getVariableSymbol() {
+        return variableSymbol;
+    }
+
+    public String getSpecificSymbol() {
+        return specificSymbol;
+    }
+
+    public Integer getRepaymentDayOfMonth() {
+        return repaymentDayOfMonth;
+    }
+
+    public BigDecimal getRepaidAmount() {
+        return repaidAmount;
+    }
+
+    public Integer getRemainingInstallments() {
+        return remainingInstallments;
+    }
+
+    public LocalDate getDueDate() {
+        return dueDate;
+    }
+
+    public void configureRepayment(String repaymentAccountNumber, String variableSymbol, String specificSymbol,
+            int repaymentDayOfMonth, LocalDate dueDate) {
+        this.repaymentAccountNumber = repaymentAccountNumber;
+        this.variableSymbol = variableSymbol;
+        this.specificSymbol = specificSymbol;
+        this.repaymentDayOfMonth = repaymentDayOfMonth;
+        this.dueDate = dueDate;
+    }
+
+    public void recordRepayment(BigDecimal amount) {
+        this.repaidAmount = this.repaidAmount.add(amount);
+        int installments = this.remainingInstallments == null ? repaymentMonths : this.remainingInstallments;
+        this.remainingInstallments = Math.max(0, installments - 1);
     }
 }

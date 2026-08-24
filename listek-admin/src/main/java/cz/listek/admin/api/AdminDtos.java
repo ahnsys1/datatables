@@ -2,6 +2,7 @@ package cz.listek.admin.api;
 
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.time.LocalDate;
 import java.util.UUID;
 
 import cz.listek.admin.domain.ApplicationStatus;
@@ -68,7 +69,10 @@ public final class AdminDtos {
     public record ApplicationResponse(UUID id, String category, String product, UUID accountId,
             String clientName, String accountNumber, BigDecimal amount, Integer repaymentMonths,
             BigDecimal monthlyIncome, BigDecimal monthlyPayment, String purpose,
-            ApplicationStatus status, Instant createdAt, Instant decidedAt, String decisionNote) {
+            ApplicationStatus status, Instant createdAt, Instant decidedAt, String decisionNote,
+            String repaymentAccountNumber, String variableSymbol, String specificSymbol,
+            Integer repaymentDayOfMonth, BigDecimal repaidAmount, Integer remainingInstallments,
+            LocalDate dueDate, BigDecimal annualRate) {
 
     }
 

@@ -35,6 +35,11 @@ public class AdminStandingOrder {
     @Column(nullable = false, length = 120)
     private String description;
 
+    @Column(length = 10)
+    private String variableSymbol;
+    @Column(length = 10)
+    private String specificSymbol;
+
     @Column(nullable = false)
     private int dayOfMonth;
 
@@ -49,10 +54,17 @@ public class AdminStandingOrder {
 
     public AdminStandingOrder(AdminAccount account, String targetAccountNumber, BigDecimal amount,
             String description, int dayOfMonth) {
+        this(account, targetAccountNumber, amount, description, dayOfMonth, null, null);
+    }
+
+    public AdminStandingOrder(AdminAccount account, String targetAccountNumber, BigDecimal amount,
+            String description, int dayOfMonth, String variableSymbol, String specificSymbol) {
         this.account = account;
         this.targetAccountNumber = targetAccountNumber;
         this.amount = amount;
         this.description = description;
+        this.variableSymbol = variableSymbol;
+        this.specificSymbol = specificSymbol;
         this.dayOfMonth = dayOfMonth;
         this.active = true;
         this.createdAt = OffsetDateTime.now();

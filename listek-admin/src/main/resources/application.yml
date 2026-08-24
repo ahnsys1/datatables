@@ -22,3 +22,6 @@ server:
 app:
   loan:
     repayment-account-number: ${APP_LOAN_REPAYMENT_ACCOUNT_NUMBER:LOAN-REPAYMENT}
+    variable-symbol: ${APP_LOAN_VARIABLE_SYMBOL:0}
+    specific-symbol: ${APP_LOAN_SPECIFIC_SYMBOL:0}
+    repayment-day-of-month: ${APP_LOAN_REPAYMENT_DAY_OF_MONTH:15}

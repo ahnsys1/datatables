@@ -9,6 +9,10 @@ import cz.listek.admin.domain.ApplicationStatus;
 import cz.listek.admin.domain.OverdraftApplication;
 
 public interface OverdraftApplicationRepository extends JpaRepository<OverdraftApplication, UUID> {
+
     List<OverdraftApplication> findAllByOrderByCreatedAtDesc();
+
     long countByStatus(ApplicationStatus status);
+
+    boolean existsByAccount_Id(UUID accountId);
 }

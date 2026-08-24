@@ -3,6 +3,7 @@ package cz.listek.admin.service;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDate;
+import java.time.YearMonth;
 import java.time.ZoneId;
 import java.util.List;
 import java.util.UUID;
@@ -47,6 +48,9 @@ public class AdminWorkflowService {
     private final AdminStandingOrderRepository standingOrderRepository;
     private final ProductInterestSettingsRepository interestSettingsRepository;
     private final String loanRepaymentAccountNumber;
+    private final String loanVariableSymbol;
+    private final String loanSpecificSymbol;
+    private final int loanRepaymentDayOfMonth;
 
     public AdminWorkflowService(AdminAccountRepository accountRepository,
             AdminLoanApplicationRepository loanRepository,
@@ -54,7 +58,10 @@ public class AdminWorkflowService {
             AdminTransactionRepository transactionRepository,
             AdminStandingOrderRepository standingOrderRepository,
             ProductInterestSettingsRepository interestSettingsRepository,
-            @Value("${app.loan.repayment-account-number:LOAN-REPAYMENT}") String loanRepaymentAccountNumber) {
+            @Value("${app.loan.repayment-account-number:LOAN-REPAYMENT}") String loanRepaymentAccountNumber,
+            @Value("${app.loan.variable-symbol:0}") String loanVariableSymbol,
+            @Value("${app.loan.specific-symbol:0}") String loanSpecificSymbol,
+            @Value("${app.loan.repayment-day-of-month:15}") int loanRepaymentDayOfMonth) {
         this.accountRepository = accountRepository;
         this.loanRepository = loanRepository;
         this.overdraftRepository = overdraftRepository;
@@ -62,6 +69,9 @@ public class AdminWorkflowService {
         this.standingOrderRepository = standingOrderRepository;
         this.interestSettingsRepository = interestSettingsRepository;
         this.loanRepaymentAccountNumber = loanRepaymentAccountNumber;
+        this.loanVariableSymbol = loanVariableSymbol;
+        this.loanSpecificSymbol = loanSpecificSymbol;
+        this.loanRepaymentDayOfMonth = loanRepaymentDayOfMonth;
     }
 
     @Transactional(readOnly = true)
@@ -103,8 +113,12 @@ public class AdminWorkflowService {
                     .orElseThrow(() -> notFound("Účet"));
             account.credit(application.getAmount());
             transactionRepository.save(new AdminTransaction(account, application.getAmount(), "CREDIT", "Čerpání půjčky"));
+            LocalDate dueDate = dueDate(application.getRepaymentMonths(), loanRepaymentDayOfMonth);
+            application.configureRepayment(loanRepaymentAccountNumber, loanVariableSymbol, loanSpecificSymbol,
+                    loanRepaymentDayOfMonth, dueDate);
             standingOrderRepository.save(new AdminStandingOrder(account, loanRepaymentAccountNumber,
-                    application.getMonthlyPayment(), "Splátka půjčky", LocalDate.now(ZoneId.of("Europe/Prague")).getDayOfMonth()));
+                    application.getMonthlyPayment(), "Splátka půjčky", loanRepaymentDayOfMonth,
+                    loanVariableSymbol, loanSpecificSymbol));
         }
         application.decide(request.status(), normalizeNote(request.note()));
         return loanResponse(application);
@@ -127,8 +141,11 @@ public class AdminWorkflowService {
     @Transactional
     public ApplicationResponse createOverdraft(CreateOverdraftRequest request) {
         AdminAccount account = accountRepository.findById(request.accountId()).orElseThrow(() -> notFound("Účet"));
+        if (overdraftRepository.existsByAccount_Id(request.accountId())) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Účet již má kontokorent");
+        }
         return overdraftResponse(overdraftRepository.save(new OverdraftApplication(account,
-                request.requestedLimit(), request.monthlyIncome())));
+                request.requestedLimit(), request.monthlyIncome(), settings().getOverdraftRate())));
     }
 
     @Transactional(readOnly = true)
@@ -165,17 +182,24 @@ public class AdminWorkflowService {
         return new ResponseStatusException(HttpStatus.NOT_FOUND, subject + " nebyla nalezena");
     }
 
+    private LocalDate dueDate(int repaymentMonths, int repaymentDayOfMonth) {
+        YearMonth month = YearMonth.now(ZoneId.of("Europe/Prague")).plusMonths(repaymentMonths);
+        return month.atDay(Math.min(repaymentDayOfMonth, month.lengthOfMonth()));
+    }
+
     private ApplicationResponse loanResponse(AdminLoanApplication item) {
         return new ApplicationResponse(item.getId(), "LOAN", item.getType(), item.getAccount().getId(),
                 item.getAccount().getOwnerName(), item.getAccount().getAccountNumber(), item.getAmount(),
                 item.getRepaymentMonths(), null, item.getMonthlyPayment(), item.getPurpose(), item.getStatus(),
-                item.getCreatedAt(), item.getDecidedAt(), item.getDecisionNote());
+                item.getCreatedAt(), item.getDecidedAt(), item.getDecisionNote(), item.getRepaymentAccountNumber(),
+                item.getVariableSymbol(), item.getSpecificSymbol(), item.getRepaymentDayOfMonth(), item.getRepaidAmount(),
+                item.getRemainingInstallments(), item.getDueDate(), item.getAnnualRate());
     }
 
     private ApplicationResponse overdraftResponse(OverdraftApplication item) {
         return new ApplicationResponse(item.getId(), "OVERDRAFT", "Kontokorent", item.getAccount().getId(),
                 item.getAccount().getOwnerName(), item.getAccount().getAccountNumber(), item.getRequestedLimit(),
                 null, item.getMonthlyIncome(), null, "Provozní rezerva", item.getStatus(), item.getCreatedAt(),
-                item.getDecidedAt(), item.getDecisionNote());
+                item.getDecidedAt(), item.getDecisionNote(), null, null, null, null, null, null, null, item.getAnnualRate());
     }
 }
