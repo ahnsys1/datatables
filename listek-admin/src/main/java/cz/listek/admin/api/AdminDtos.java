@@ -28,6 +28,21 @@ public final class AdminDtos {
     public record CreateAdminRequest(@NotBlank
             @Size(max = 80) String username,
             @NotBlank
+            @Size(max = 100) String firstName,
+            @NotBlank
+            @Size(max = 100) String lastName,
+            @NotBlank
+            @jakarta.validation.constraints.Pattern(regexp = "[0-9]{6}/?[0-9]{3,4}") String birthNumber,
+            @jakarta.validation.constraints.Email
+            @NotBlank
+            @Size(max = 160) String email,
+            @NotBlank
+            @Size(max = 160) String street,
+            @NotBlank
+            @Size(max = 100) String city,
+            @NotBlank
+            @jakarta.validation.constraints.Pattern(regexp = "[0-9]{3} ?[0-9]{2}") String postalCode,
+            @NotBlank
             @Size(min = 12, max = 200) String password) {
 
     }

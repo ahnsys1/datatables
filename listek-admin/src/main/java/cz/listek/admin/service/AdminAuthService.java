@@ -59,7 +59,9 @@ public class AdminAuthService {
         if (userRepository.existsById(username)) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Administrátor s tímto uživatelským jménem již existuje");
         }
-        AdminUser user = new AdminUser(username, request.password(), false);
+        AdminUser user = new AdminUser(username, request.firstName().trim(), request.lastName().trim(),
+                request.birthNumber().trim(), request.email().trim(), request.street().trim(),
+                request.city().trim(), request.postalCode().trim(), request.password(), false);
         userRepository.save(user);
         return new AdminUserResponse(user.getUsername());
     }

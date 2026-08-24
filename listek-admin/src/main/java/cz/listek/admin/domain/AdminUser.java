@@ -13,6 +13,27 @@ public class AdminUser {
     @Column(length = 80)
     private String username;
 
+    @Column(name = "first_name", length = 100)
+    private String firstName;
+
+    @Column(name = "last_name", length = 100)
+    private String lastName;
+
+    @Column(name = "birth_number", length = 10)
+    private String birthNumber;
+
+    @Column(length = 160)
+    private String email;
+
+    @Column(length = 160)
+    private String street;
+
+    @Column(length = 100)
+    private String city;
+
+    @Column(name = "postal_code", length = 6)
+    private String postalCode;
+
     @Column(name = "password_hash", nullable = false, length = 64)
     private String passwordHash;
 
@@ -23,7 +44,20 @@ public class AdminUser {
     }
 
     public AdminUser(String username, String passwordHash, boolean mustChangePassword) {
+        this(username, null, null, null, null, null, null, null, passwordHash, mustChangePassword);
+    }
+
+    public AdminUser(String username, String firstName, String lastName, String birthNumber,
+            String email, String street, String city, String postalCode, String passwordHash,
+            boolean mustChangePassword) {
         this.username = username;
+        this.firstName = firstName;
+        this.lastName = lastName;
+        this.birthNumber = birthNumber;
+        this.email = email;
+        this.street = street;
+        this.city = city;
+        this.postalCode = postalCode;
         this.passwordHash = passwordHash;
         this.mustChangePassword = mustChangePassword;
     }

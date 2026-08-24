@@ -9,6 +9,24 @@ const nextConfig: NextConfig = {
     return [{
       source: "/api/admin/:path*",
       destination: `${process.env.ADMIN_BACKEND_URL ?? "http://localhost:8090"}/api/admin/:path*`,
+    }, {
+      source: "/overview",
+      destination: "/",
+    }, {
+      source: "/loans",
+      destination: "/",
+    }, {
+      source: "/overdrafts",
+      destination: "/",
+    }, {
+      source: "/clients",
+      destination: "/",
+    }, {
+      source: "/settings",
+      destination: "/",
+    }, {
+      source: "/admins",
+      destination: "/",
     }];
   },
 };

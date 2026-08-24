@@ -64,7 +64,7 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
 
 export function adminLogin(input: { username: string; password: string }) { return request<AdminAuth>("/auth/login", { method: "POST", body: JSON.stringify(input) }); }
 export function changeAdminPassword(password: string) { return request<void>("/auth/password", { method: "PATCH", body: JSON.stringify({ password }) }); }
-export function createAdmin(input: { username: string; password: string }) { return request<AdminUser>("/users", { method: "POST", body: JSON.stringify(input) }); }
+export function createAdmin(input: { username: string; firstName: string; lastName: string; birthNumber: string; email: string; street: string; city: string; postalCode: string; password: string }) { return request<AdminUser>("/users", { method: "POST", body: JSON.stringify(input) }); }
 export function getPendingRegistrations() { return request<Account[]>("/registrations/pending"); }
 export function decideRegistration(id: string, status: "APPROVED" | "REJECTED") { return request<Account>(`/registrations/${id}/decision`, { method: "PATCH", body: JSON.stringify({ status }) }); }
 

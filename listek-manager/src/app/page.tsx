@@ -5,6 +5,7 @@ import {
   Eye, EyeOff, Landmark, LayoutDashboard, LogOut, Menu, Search, ShieldCheck, Users, WalletCards, X,
 } from "lucide-react";
 import { FormEvent, useEffect, useState } from "react";
+import { usePathname, useRouter } from "next/navigation";
 import {
   Account, BankApplication, Dashboard, InterestSettings, decideApplication, getAccounts,
   getDashboard, getInterestSettings, getLoans, getOverdrafts, updateInterestSettings,
@@ -13,6 +14,20 @@ import {
 } from "@/lib/api";
 
 type View = "overview" | "loans" | "overdrafts" | "clients" | "settings" | "admins";
+
+const viewPaths: Record<View, string> = {
+  overview: "/overview",
+  loans: "/loans",
+  overdrafts: "/overdrafts",
+  clients: "/clients",
+  settings: "/settings",
+  admins: "/admins",
+};
+
+function viewForPath(pathname: string): View {
+  const entry = (Object.entries(viewPaths) as [View, string][]).find(([, path]) => path === pathname);
+  return entry?.[0] ?? "overview";
+}
 
 const money = new Intl.NumberFormat("cs-CZ", { style: "currency", currency: "CZK", maximumFractionDigits: 0 });
 const date = new Intl.DateTimeFormat("cs-CZ", { dateStyle: "medium", timeStyle: "short" });
@@ -34,7 +49,9 @@ async function hashPassword(password: string, username: string) {
 }
 
 export default function Home() {
-  const [view, setView] = useState<View>("overview");
+  const pathname = usePathname();
+  const router = useRouter();
+  const view = viewForPath(pathname);
   const [dashboard, setDashboard] = useState<Dashboard | null>(null);
   const [loans, setLoans] = useState<BankApplication[]>([]);
   const [overdrafts, setOverdrafts] = useState<BankApplication[]>([]);
@@ -63,10 +80,13 @@ export default function Home() {
   const [logoutConfirmOpen, setLogoutConfirmOpen] = useState(false);
 
   useEffect(() => {
+    if (pathname === "/") {
+      return;
+    }
     const token = localStorage.getItem("listek-admin-session");
     const username = localStorage.getItem("listek-admin-user");
     if (!token || !username) {
-      queueMicrotask(() => { setAdminReady(true); setLoading(false); });
+      router.replace("/");
       return;
     }
     queueMicrotask(() => {
@@ -91,7 +111,7 @@ export default function Home() {
       void refreshData().catch(() => setError("Administraci se nepodařilo spojit s backendem."));
     }, 10000);
     return () => window.clearInterval(interval);
-  }, [adminReady]);
+  }, [adminReady, pathname, router]);
 
   async function signIn(event: FormEvent<HTMLFormElement>) {
     event.preventDefault(); setAuthSaving(true); setAuthError("");
@@ -100,7 +120,7 @@ export default function Home() {
       const username = String(form.get("username")).trim();
       const result = await adminLogin({ username, password: await hashPassword(String(form.get("password")), username) });
       localStorage.setItem("listek-admin-session", result.token); localStorage.setItem("listek-admin-user", result.username); localStorage.setItem("listek-admin-must-change", String(result.mustChangePassword));
-      setAdminUser(result.username); setMustChangePassword(result.mustChangePassword); setAdminReady(true); setLoading(true);
+      setAdminUser(result.username); setMustChangePassword(result.mustChangePassword); setAdminReady(true); setLoading(true); router.replace(viewPaths.overview);
       const [dashboardData, loanData, overdraftData, accountData, settingsData] = await Promise.all([getDashboard(), getLoans(), getOverdrafts(), getAccounts(), getInterestSettings()]);
       setDashboard(dashboardData); setLoans(loanData); setOverdrafts(overdraftData); setAccounts(accountData); setInterestSettings(settingsData); setPendingRegistrations([]); setLoading(false);
     } catch { setAuthError("Uživatelské jméno nebo heslo nesedí. Zkontrolujte zadané údaje."); }
@@ -170,11 +190,18 @@ export default function Home() {
     event.preventDefault();
     const form = new FormData(event.currentTarget);
     const username = String(form.get("newAdminUsername")).trim();
+    const firstName = String(form.get("newAdminFirstName")).trim();
+    const lastName = String(form.get("newAdminLastName")).trim();
+    const birthNumber = String(form.get("newAdminBirthNumber")).trim();
+    const email = String(form.get("newAdminEmail")).trim();
+    const street = String(form.get("newAdminStreet")).trim();
+    const city = String(form.get("newAdminCity")).trim();
+    const postalCode = String(form.get("newAdminPostalCode")).trim();
     const password = String(form.get("newAdminPassword"));
     if (password !== String(form.get("newAdminConfirmation"))) { setAdminFormError("Hesla se neshodují."); return; }
     setAdminFormSaving(true); setAdminFormError("");
     try {
-      await createAdmin({ username, password: await hashPassword(password, username) });
+      await createAdmin({ username, firstName, lastName, birthNumber, email, street, city, postalCode, password: await hashPassword(password, username) });
       event.currentTarget.reset();
       setAdminFormError("Administrátor byl vytvořen.");
     } catch (createError) { setAdminFormError(createError instanceof Error ? createError.message : "Administrátora se nepodařilo vytvořit."); }
@@ -207,7 +234,7 @@ export default function Home() {
         <p className="nav-label">Pracovní prostor</p>
         <nav>
           {navigation.map(({ id, label, icon: Icon }) => (
-            <button className={view === id ? "active" : ""} key={id} onClick={() => { setView(id); setSelected(null); setMenuOpen(false); }}>
+            <button className={view === id ? "active" : ""} key={id} onClick={() => { router.push(viewPaths[id]); setSelected(null); setMenuOpen(false); }}>
               <Icon size={19} /><span>{label}</span>
               {id !== "clients" && <b>{id === "loans" ? dashboard?.pendingLoans ?? 0 : id === "overdrafts" ? dashboard?.pendingOverdrafts ?? 0 : (dashboard?.pendingLoans ?? 0) + (dashboard?.pendingOverdrafts ?? 0)}</b>}
             </button>
@@ -274,7 +301,7 @@ export default function Home() {
 
           {view === "settings" && !loading && interestSettings && <section className="settings-card"><div className="panel-heading"><div><p>PRODUKTOVÉ PODMÍNKY</p><h2>Úrokové sazby</h2></div><span>% p. a.</span></div><form onSubmit={saveInterestSettings} className="rate-form"><label>Spořicí účet<input name="savingsRate" type="number" min="0" step="0.001" defaultValue={interestSettings.savingsRate} /></label><label>Kontokorent<input name="overdraftRate" type="number" min="0" step="0.001" defaultValue={interestSettings.overdraftRate} /></label><label>Půjčka na cokoliv<input name="personalLoanRate" type="number" min="0" step="0.001" defaultValue={interestSettings.personalLoanRate} /></label><label>Půjčka na bydlení<input name="homeLoanRate" type="number" min="0" step="0.001" defaultValue={interestSettings.homeLoanRate} /></label><button className="primary-button submit-button" type="submit" disabled={saving}>{saving ? "Ukládám..." : "Uložit sazby"}</button></form></section>}
 
-          {view === "admins" && <section className="settings-card admin-users-card"><div className="panel-heading"><div><p>SPRÁVA PŘÍSTUPŮ</p><h2>Nový administrátor</h2></div><ShieldCheck size={22} color="var(--green)" /></div><form onSubmit={saveNewAdmin} className="rate-form"><label>Uživatelské jméno<input name="newAdminUsername" required maxLength={80} autoComplete="off" /></label><label>Heslo<input name="newAdminPassword" required minLength={12} type="password" autoComplete="new-password" /></label><label>Potvrzení hesla<input name="newAdminConfirmation" required minLength={12} type="password" autoComplete="new-password" /></label>{adminFormError && <div className="notice admin-form-notice">{adminFormError}</div>}<button className="primary-button submit-button" type="submit" disabled={adminFormSaving}>{adminFormSaving ? "Vytvářím..." : "Vytvořit administrátora"}</button></form></section>}
+          {view === "admins" && <section className="settings-card admin-users-card"><div className="panel-heading"><div><p>SPRÁVA PŘÍSTUPŮ</p><h2>Nový administrátor</h2></div><ShieldCheck size={22} color="var(--green)" /></div><form onSubmit={saveNewAdmin} className="rate-form"><label>Uživatelské jméno<input name="newAdminUsername" required maxLength={80} autoComplete="username" /></label><label>Jméno<input name="newAdminFirstName" required maxLength={100} autoComplete="given-name" /></label><label>Příjmení<input name="newAdminLastName" required maxLength={100} autoComplete="family-name" /></label><label>Rodné číslo<input name="newAdminBirthNumber" required pattern="[0-9]{6}/?[0-9]{3,4}" placeholder="123456/7890" /></label><label>E-mail<input name="newAdminEmail" required type="email" maxLength={160} autoComplete="email" /></label><label>Ulice a číslo<input name="newAdminStreet" required maxLength={160} autoComplete="street-address" /></label><label>Město<input name="newAdminCity" required maxLength={100} autoComplete="address-level2" /></label><label>PSČ<input name="newAdminPostalCode" required pattern="[0-9]{3} ?[0-9]{2}" placeholder="110 00" autoComplete="postal-code" /></label><label>Heslo<input name="newAdminPassword" required minLength={12} type="password" autoComplete="new-password" /></label><label>Heslo znovu<input name="newAdminConfirmation" required minLength={12} type="password" autoComplete="new-password" /></label>{adminFormError && <div className="notice admin-form-notice">{adminFormError}</div>}<button className="primary-button submit-button" type="submit" disabled={adminFormSaving}>{adminFormSaving ? "Vytvářím..." : "Vytvořit administrátora"}</button></form></section>}
         </div>
       </main>
       {logoutConfirmOpen && <div className="modal-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setLogoutConfirmOpen(false); }}><section className="admin-modal logout-confirm-modal" role="dialog" aria-modal="true" aria-labelledby="logout-confirm-title"><button className="modal-close" type="button" onClick={() => setLogoutConfirmOpen(false)} aria-label="Zavřít potvrzení"><X size={18} /></button><p>ODHLÁŠENÍ</p><h2 id="logout-confirm-title">Opravdu se chcete odhlásit?</h2><span>Vaše administrátorská relace bude ukončena.</span><div className="logout-confirm-actions"><button className="reject" type="button" onClick={() => setLogoutConfirmOpen(false)}>Zrušit</button><button className="primary-button" type="button" onClick={confirmSignOut}><LogOut size={16} /> Odhlásit se</button></div></section></div>}
