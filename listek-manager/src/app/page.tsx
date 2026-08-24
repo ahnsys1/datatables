@@ -60,6 +60,7 @@ export default function Home() {
   const [showPasswordConfirmation, setShowPasswordConfirmation] = useState(false);
   const [adminFormError, setAdminFormError] = useState("");
   const [adminFormSaving, setAdminFormSaving] = useState(false);
+  const [logoutConfirmOpen, setLogoutConfirmOpen] = useState(false);
 
   useEffect(() => {
     const token = localStorage.getItem("listek-admin-session");
@@ -149,11 +150,11 @@ export default function Home() {
     }
   }
 
-  function signOut() {
+  function confirmSignOut() {
     localStorage.removeItem("listek-admin-session");
     localStorage.removeItem("listek-admin-user");
     localStorage.removeItem("listek-admin-must-change");
-    setAdminReady(false);
+    window.location.reload();
   }
 
   const titles: Record<View, [string, string]> = {
@@ -208,7 +209,7 @@ export default function Home() {
           {navigation.map(({ id, label, icon: Icon }) => (
             <button className={view === id ? "active" : ""} key={id} onClick={() => { setView(id); setSelected(null); setMenuOpen(false); }}>
               <Icon size={19} /><span>{label}</span>
-              {id !== "clients" && <b>{id === "loans" ? dashboard?.pendingLoans : id === "overdrafts" ? dashboard?.pendingOverdrafts : (dashboard?.pendingLoans ?? 0) + (dashboard?.pendingOverdrafts ?? 0)}</b>}
+              {id !== "clients" && <b>{id === "loans" ? dashboard?.pendingLoans ?? 0 : id === "overdrafts" ? dashboard?.pendingOverdrafts ?? 0 : (dashboard?.pendingLoans ?? 0) + (dashboard?.pendingOverdrafts ?? 0)}</b>}
             </button>
           ))}
         </nav>
@@ -221,7 +222,7 @@ export default function Home() {
           <button className="menu-button" onClick={() => setMenuOpen(true)} aria-label="Otevřít nabídku"><Menu /></button>
           <div className="environment"><i /> Systémy v pořádku</div>
           <button className="icon-button" aria-label="Oznámení"><Bell size={19} /><span /></button>
-          <button className="logout-button" type="button" onClick={signOut}><LogOut size={17} /> Odhlášení</button>
+          <button className="logout-button" type="button" onClick={() => setLogoutConfirmOpen(true)}><LogOut size={17} /> Odhlášení</button>
         </header>
 
         <div className="admin-content">
@@ -276,6 +277,7 @@ export default function Home() {
           {view === "admins" && <section className="settings-card admin-users-card"><div className="panel-heading"><div><p>SPRÁVA PŘÍSTUPŮ</p><h2>Nový administrátor</h2></div><ShieldCheck size={22} color="var(--green)" /></div><form onSubmit={saveNewAdmin} className="rate-form"><label>Uživatelské jméno<input name="newAdminUsername" required maxLength={80} autoComplete="off" /></label><label>Heslo<input name="newAdminPassword" required minLength={12} type="password" autoComplete="new-password" /></label><label>Potvrzení hesla<input name="newAdminConfirmation" required minLength={12} type="password" autoComplete="new-password" /></label>{adminFormError && <div className="notice admin-form-notice">{adminFormError}</div>}<button className="primary-button submit-button" type="submit" disabled={adminFormSaving}>{adminFormSaving ? "Vytvářím..." : "Vytvořit administrátora"}</button></form></section>}
         </div>
       </main>
+      {logoutConfirmOpen && <div className="modal-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setLogoutConfirmOpen(false); }}><section className="admin-modal logout-confirm-modal" role="dialog" aria-modal="true" aria-labelledby="logout-confirm-title"><button className="modal-close" type="button" onClick={() => setLogoutConfirmOpen(false)} aria-label="Zavřít potvrzení"><X size={18} /></button><p>ODHLÁŠENÍ</p><h2 id="logout-confirm-title">Opravdu se chcete odhlásit?</h2><span>Vaše administrátorská relace bude ukončena.</span><div className="logout-confirm-actions"><button className="reject" type="button" onClick={() => setLogoutConfirmOpen(false)}>Zrušit</button><button className="primary-button" type="button" onClick={confirmSignOut}><LogOut size={16} /> Odhlásit se</button></div></section></div>}
     </div>
   );
 }
