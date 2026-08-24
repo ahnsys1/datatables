@@ -149,7 +149,7 @@ export default function Home() {
   const allApplications = [...loans, ...overdrafts].sort((left, right) => right.createdAt.localeCompare(left.createdAt));
   const sourceApplications = view === "loans" ? loans : view === "overdrafts" ? overdrafts : allApplications;
   const visibleApplications = sourceApplications.filter((application) =>
-    (view === "overdrafts" || !pendingOnly || application.status === "PENDING")
+    (!pendingOnly || application.status === "PENDING")
       && (application.clientName.toLocaleLowerCase("cs").includes(search.toLocaleLowerCase("cs"))
         || application.accountNumber.includes(search)));
 
@@ -259,7 +259,7 @@ export default function Home() {
         <div className="admin-content">
           <section className="page-heading">
             <div><p>{currentDate ? new Intl.DateTimeFormat("cs-CZ", { day: "numeric", month: "long", year: "numeric" }).format(currentDate).toUpperCase() : "Načítám datum..."}</p><h1>{titles[view][0]}</h1><span>{titles[view][1]}</span></div>
-            {view !== "clients" && view !== "settings" && view !== "admins" && <div className="heading-actions"><div className="search"><Search size={18} /><input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Hledat klienta nebo účet" /></div>{view !== "overdrafts" && <label className="pending-filter"><input type="checkbox" checked={pendingOnly} onChange={(event) => setPendingOnly(event.target.checked)} /> Jen čekající</label>}</div>}
+            {view !== "clients" && view !== "settings" && view !== "admins" && <div className="heading-actions"><div className="search"><Search size={18} /><input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Hledat klienta nebo účet" /></div><label className="pending-filter"><input type="checkbox" checked={pendingOnly} onChange={(event) => setPendingOnly(event.target.checked)} /> Jen čekající</label></div>}
           </section>
 
           {error && <div className="notice">{error}</div>}

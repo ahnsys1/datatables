@@ -70,10 +70,16 @@ public class AdminWorkflowService {
         BigDecimal deposits = accountRepository.findAll().stream()
                 .map(AdminAccount::getBalance).reduce(BigDecimal.ZERO, BigDecimal::add);
         Instant startOfToday = LocalDate.now(ZoneId.of("Europe/Prague")).atStartOfDay(ZoneId.of("Europe/Prague")).toInstant();
-        long decidedToday = loanRepository.findAll().stream().filter(item -> item.getDecidedAt() != null && item.getDecidedAt().isAfter(startOfToday)).count()
-                + overdraftRepository.findAll().stream().filter(item -> item.getDecidedAt() != null && item.getDecidedAt().isAfter(startOfToday)).count();
+        long decidedToday = loanRepository.findAll().stream()
+                .filter(item -> isDecidedToday(item.getStatus(), item.getCreatedAt(), item.getDecidedAt(), startOfToday)).count()
+                + overdraftRepository.findAll().stream()
+                        .filter(item -> isDecidedToday(item.getStatus(), item.getCreatedAt(), item.getDecidedAt(), startOfToday)).count();
         return new DashboardResponse(accountRepository.count(), loanRepository.countByStatus(PENDING),
                 overdraftRepository.countByStatus(PENDING), deposits, decidedToday);
+    }
+
+    private boolean isDecidedToday(ApplicationStatus status, Instant createdAt, Instant decidedAt, Instant startOfToday) {
+        return status != PENDING && (decidedAt != null ? decidedAt : createdAt).isAfter(startOfToday);
     }
 
     @Transactional(readOnly = true)
