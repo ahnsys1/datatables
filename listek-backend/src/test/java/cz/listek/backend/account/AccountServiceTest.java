@@ -76,6 +76,23 @@ class AccountServiceTest {
     }
 
     @Test
+    void registersAccountImmediately() {
+        var request = new AccountDtos.RegisterAccountRequest(
+                "jan.novak", "Jan", "Novak", "010101/1234", "jan.novak@example.com",
+                "Hlavni 1", "Praha", "110 00", "bezpecneheslo");
+        when(accountRepository.existsByUsernameIgnoreCaseAndType("jan.novak", AccountType.CURRENT)).thenReturn(false);
+        when(accountRepository.existsByEmailIgnoreCase("jan.novak@example.com")).thenReturn(false);
+        when(accountRepository.existsByAccountNumber(any())).thenReturn(false);
+        when(accountRepository.save(any(Account.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        var account = accountService.register(request);
+
+        assertEquals("jan.novak", account.username());
+        assertEquals("jan.novak@example.com", account.email());
+        verify(accountRepository).save(any(Account.class));
+    }
+
+    @Test
     void doesNotChargeDailyOverdraftInterestWhenAccountIsInCredit() {
         var account = new Account("Client", "123456789", new BigDecimal("100.00"), CurrencyCode.CZK);
 

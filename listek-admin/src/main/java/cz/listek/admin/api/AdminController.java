@@ -56,6 +56,12 @@ public class AdminController {
         return authService.createAdmin(session, request);
     }
 
+    @GetMapping("/users")
+    public List<AdminUserResponse> users(
+            @org.springframework.web.bind.annotation.RequestHeader("X-Admin-Session") String session) {
+        return authService.listAdmins(session);
+    }
+
     @GetMapping("/dashboard")
     public DashboardResponse dashboard() {
         return workflowService.dashboard();

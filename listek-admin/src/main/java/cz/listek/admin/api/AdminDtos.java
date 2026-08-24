@@ -47,7 +47,7 @@ public final class AdminDtos {
 
     }
 
-    public record AdminUserResponse(String username) {
+    public record AdminUserResponse(String username, String firstName, String lastName, String email) {
 
     }
 

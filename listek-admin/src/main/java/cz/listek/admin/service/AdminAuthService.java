@@ -4,6 +4,7 @@ import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.SecureRandom;
 import java.util.HexFormat;
+import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.springframework.http.HttpStatus;
@@ -63,7 +64,16 @@ public class AdminAuthService {
                 request.birthNumber().trim(), request.email().trim(), request.street().trim(),
                 request.city().trim(), request.postalCode().trim(), request.password(), false);
         userRepository.save(user);
-        return new AdminUserResponse(user.getUsername());
+        return toResponse(user);
+    }
+
+    public List<AdminUserResponse> listAdmins(String session) {
+        requireSession(session);
+        return userRepository.findAll().stream().map(this::toResponse).toList();
+    }
+
+    private AdminUserResponse toResponse(AdminUser user) {
+        return new AdminUserResponse(user.getUsername(), user.getFirstName(), user.getLastName(), user.getEmail());
     }
 
     private void requireSession(String session) {

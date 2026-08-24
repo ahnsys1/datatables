@@ -18,7 +18,7 @@ export type Account = {
 };
 
 export type AdminAuth = { token: string; username: string; mustChangePassword: boolean };
-export type AdminUser = { username: string };
+export type AdminUser = { username: string; firstName: string; lastName: string; email: string };
 
 export type ApplicationStatus = "PENDING" | "APPROVED" | "REJECTED";
 
@@ -55,16 +55,24 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
     headers: { "Content-Type": "application/json", ...(token ? { "X-Admin-Session": token } : {}), ...init?.headers },
   });
   if (!response.ok) {
+    if (response.status === 401 && typeof window !== "undefined") {
+      localStorage.removeItem("listek-admin-session");
+      localStorage.removeItem("listek-admin-user");
+      localStorage.removeItem("listek-admin-must-change");
+      window.location.replace("/");
+      throw new Error("Administrátorská relace vypršela. Přihlaste se znovu.");
+    }
     const message = await response.text();
     throw new Error(message || "Požadavek se nepodařilo zpracovat.");
   }
-  if (response.status === 204) return undefined as T;
+  if (response.status  === 204) return undefined as T;
   return response.json() as Promise<T>;
 }
 
 export function adminLogin(input: { username: string; password: string }) { return request<AdminAuth>("/auth/login", { method: "POST", body: JSON.stringify(input) }); }
 export function changeAdminPassword(password: string) { return request<void>("/auth/password", { method: "PATCH", body: JSON.stringify({ password }) }); }
 export function createAdmin(input: { username: string; firstName: string; lastName: string; birthNumber: string; email: string; street: string; city: string; postalCode: string; password: string }) { return request<AdminUser>("/users", { method: "POST", body: JSON.stringify(input) }); }
+export function getAdmins() { return request<AdminUser[]>("/users"); }
 export function getPendingRegistrations() { return request<Account[]>("/registrations/pending"); }
 export function decideRegistration(id: string, status: "APPROVED" | "REJECTED") { return request<Account>(`/registrations/${id}/decision`, { method: "PATCH", body: JSON.stringify({ status }) }); }
 
