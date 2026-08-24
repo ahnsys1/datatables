@@ -149,7 +149,7 @@ export default function Home() {
   const allApplications = [...loans, ...overdrafts].sort((left, right) => right.createdAt.localeCompare(left.createdAt));
   const sourceApplications = view === "loans" ? loans : view === "overdrafts" ? overdrafts : allApplications;
   const visibleApplications = sourceApplications.filter((application) =>
-    (!pendingOnly || application.status === "PENDING")
+    (view === "overdrafts" || !pendingOnly || application.status === "PENDING")
       && (application.clientName.toLocaleLowerCase("cs").includes(search.toLocaleLowerCase("cs"))
         || application.accountNumber.includes(search)));
 
@@ -259,7 +259,7 @@ export default function Home() {
         <div className="admin-content">
           <section className="page-heading">
             <div><p>{currentDate ? new Intl.DateTimeFormat("cs-CZ", { day: "numeric", month: "long", year: "numeric" }).format(currentDate).toUpperCase() : "Načítám datum..."}</p><h1>{titles[view][0]}</h1><span>{titles[view][1]}</span></div>
-            {view !== "clients" && view !== "settings" && view !== "admins" && <div className="heading-actions"><div className="search"><Search size={18} /><input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Hledat klienta nebo účet" /></div><label className="pending-filter"><input type="checkbox" checked={pendingOnly} onChange={(event) => setPendingOnly(event.target.checked)} /> Jen čekající</label></div>}
+            {view !== "clients" && view !== "settings" && view !== "admins" && <div className="heading-actions"><div className="search"><Search size={18} /><input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Hledat klienta nebo účet" /></div>{view !== "overdrafts" && <label className="pending-filter"><input type="checkbox" checked={pendingOnly} onChange={(event) => setPendingOnly(event.target.checked)} /> Jen čekající</label>}</div>}
           </section>
 
           {error && <div className="notice">{error}</div>}
@@ -281,7 +281,7 @@ export default function Home() {
                   <button key={application.id} className={selected?.id === application.id ? "selected" : ""} onClick={() => { setSelected(application); setNote(application.decisionNote ?? ""); }}>
                     <span className={`application-type ${application.category.toLowerCase()}`}>{application.category === "LOAN" ? <CircleDollarSign size={20} /> : <WalletCards size={20} />}</span>
                     <div><strong>{application.clientName}</strong><small>{application.category === "LOAN" ? (application.product === "PERSONAL" ? "Půjčka na cokoliv" : "Půjčka na bydlení") : "Kontokorent"} · {application.accountNumber}</small></div>
-                    <div className="application-amount"><strong>{money.format(application.amount)}</strong><span className={`status ${application.status.toLowerCase()}`}>{application.status === "PENDING" ? "Čeká" : application.status === "APPROVED" ? "Schváleno" : "Zamítnuto"}</span></div>
+                    <div className="application-amount"><strong>{money.format(application.amount)}</strong><small>{application.category === "OVERDRAFT" ? "Limit k čerpání" : "Požadovaná částka"}</small><span className={`status ${application.status.toLowerCase()}`}>{application.status === "PENDING" ? "Čeká" : application.status === "APPROVED" ? "Schváleno" : "Zamítnuto"}</span></div>
                     <ChevronRight size={18} />
                   </button>
                 ))}
@@ -291,7 +291,7 @@ export default function Home() {
             <aside className="detail-panel">
               {!selected ? <div className="detail-empty"><ClipboardCheck size={34} /><h2>Vyberte žádost</h2><p>V detailu uvidíte finanční údaje a provedete rozhodnutí.</p></div> : <>
                 <div className="detail-head"><span className={`application-type ${selected.category.toLowerCase()}`}>{selected.category === "LOAN" ? <CircleDollarSign size={22} /> : <WalletCards size={22} />}</span><div><small>{selected.category === "LOAN" ? "ŽÁDOST O PŮJČKU" : "ŽÁDOST O KONTOKORENT"}</small><h2>{selected.clientName}</h2></div></div>
-                <dl><div><dt>Požadovaná částka</dt><dd>{money.format(selected.amount)}</dd></div><div><dt>Účet</dt><dd>{selected.accountNumber}</dd></div>{selected.repaymentMonths && <div><dt>Splatnost</dt><dd>{selected.repaymentMonths} měsíců</dd></div>}{selected.monthlyPayment && <div><dt>Měsíční splátka</dt><dd>{money.format(selected.monthlyPayment)}</dd></div>}{selected.monthlyIncome && <div><dt>Měsíční příjem</dt><dd>{money.format(selected.monthlyIncome)}</dd></div>}<div><dt>Účel</dt><dd>{selected.purpose}</dd></div><div><dt>Podáno</dt><dd>{date.format(new Date(selected.createdAt))}</dd></div></dl>
+                <dl><div><dt>{selected.category === "OVERDRAFT" ? "Limit k čerpání" : "Požadovaná částka"}</dt><dd>{money.format(selected.amount)}</dd></div><div><dt>Účet</dt><dd>{selected.accountNumber}</dd></div>{selected.repaymentMonths && <div><dt>Splatnost</dt><dd>{selected.repaymentMonths} měsíců</dd></div>}{selected.monthlyPayment && <div><dt>Měsíční splátka</dt><dd>{money.format(selected.monthlyPayment)}</dd></div>}{selected.monthlyIncome && <div><dt>Měsíční příjem</dt><dd>{money.format(selected.monthlyIncome)}</dd></div>}<div><dt>Účel</dt><dd>{selected.purpose}</dd></div><div><dt>Podáno</dt><dd>{date.format(new Date(selected.createdAt))}</dd></div></dl>
                 {selected.status === "PENDING" ? <div className="decision-box"><label>Poznámka k rozhodnutí<textarea value={note} onChange={(event) => setNote(event.target.value)} placeholder="Volitelná poznámka k rozhodnutí" maxLength={500} /></label><div><button className="reject" disabled={saving} onClick={() => decide("REJECTED")}><X size={17} /> Zamítnout</button><button className="approve" disabled={saving} onClick={() => decide("APPROVED")}><Check size={17} /> Schválit</button></div></div> : <div className={`decision-result ${selected.status.toLowerCase()}`}><strong>{selected.status === "APPROVED" ? "Žádost byla schválena" : "Žádost byla zamítnuta"}</strong><p>{selected.decisionNote || "Bez doplňující poznámky."}</p></div>}
               </>}
             </aside>
