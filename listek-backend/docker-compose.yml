@@ -53,9 +53,6 @@ services:
       listek-backend:
         condition: service_healthy
         restart: true
-      listek-admin:
-        condition: service_healthy
-        restart: true
     ports:
       - "3000:3000"
 
