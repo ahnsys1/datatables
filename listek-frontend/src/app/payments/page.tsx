@@ -50,6 +50,8 @@ export default function PaymentsPage() {
   const [toAccountNumber, setToAccountNumber] = useState(() => shouldPrefill ? initialParams?.get("toAccountNumber") ?? "" : "");
   const [amount, setAmount] = useState(() => shouldPrefill ? initialParams?.get("amount") ?? "" : "");
   const [description, setDescription] = useState(() => shouldPrefill ? initialParams?.get("description") ?? "" : "");
+  const [variableSymbol, setVariableSymbol] = useState(() => shouldPrefill ? initialParams?.get("variableSymbol") ?? "" : "");
+  const [specificSymbol, setSpecificSymbol] = useState(() => shouldPrefill ? initialParams?.get("specificSymbol") ?? "" : "");
   const [transactions, setTransactions] = useState<BankTransaction[]>([]);
   const [accountFilter, setAccountFilter] = useState(() => typeof window === "undefined" ? "" : new URLSearchParams(window.location.search).get("accountId") ?? "");
   const paymentFormRef = useRef<HTMLElement>(null);
@@ -83,6 +85,8 @@ export default function PaymentsPage() {
     const formAmount = Number(form.get("amount"));
     const paymentAmount = Number(amount);
     const paymentDescription = String(form.get("description") || "Platba");
+    const paymentVariableSymbol = String(form.get("variableSymbol") || "").trim();
+    const paymentSpecificSymbol = String(form.get("specificSymbol") || "").trim();
     if (!selectedFromAccountId || !selectedToAccountNumber) {
       setError("Vyplňte odesílající i cílový účet.");
       return;
@@ -97,6 +101,8 @@ export default function PaymentsPage() {
         toAccountNumber: selectedToAccountNumber,
         amount: paymentAmount,
         description: paymentDescription,
+        variableSymbol: paymentVariableSymbol || undefined,
+        specificSymbol: paymentSpecificSymbol || undefined,
       });
       await refreshTransactions(accounts);
       setSent(true);
@@ -234,6 +240,16 @@ export default function PaymentsPage() {
                     placeholder="Například oběd"
                   />
                 </label>
+                <div className="payment-fields payment-symbol-fields">
+                  <label>
+                    Variabilní symbol
+                    <input name="variableSymbol" value={variableSymbol} onChange={(event) => setVariableSymbol(event.target.value.replace(/\D/g, "").slice(0, 10))} inputMode="numeric" placeholder="Nepovinné" />
+                  </label>
+                  <label>
+                    Specifický symbol
+                    <input name="specificSymbol" value={specificSymbol} onChange={(event) => setSpecificSymbol(event.target.value.replace(/\D/g, "").slice(0, 10))} inputMode="numeric" placeholder="Nepovinné" />
+                  </label>
+                </div>
                 <button className="pay-button payment-submit" type="submit">
                   Odeslat platbu <ArrowRight size={18} />
                 </button>

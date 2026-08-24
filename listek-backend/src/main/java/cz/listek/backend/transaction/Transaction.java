@@ -42,6 +42,12 @@ public class Transaction {
     @Column(length = 34)
     private String counterpartyAccountNumber;
 
+    @Column(length = 10)
+    private String variableSymbol;
+
+    @Column(length = 10)
+    private String specificSymbol;
+
     @Column(nullable = false)
     private OffsetDateTime createdAt;
 
@@ -53,11 +59,18 @@ public class Transaction {
     }
 
     public Transaction(Account account, BigDecimal amount, TransactionType type, String description, String counterpartyAccountNumber) {
+        this(account, amount, type, description, counterpartyAccountNumber, null, null);
+    }
+
+    public Transaction(Account account, BigDecimal amount, TransactionType type, String description,
+            String counterpartyAccountNumber, String variableSymbol, String specificSymbol) {
         this.account = account;
         this.amount = amount;
         this.type = type;
         this.description = description;
         this.counterpartyAccountNumber = counterpartyAccountNumber;
+        this.variableSymbol = variableSymbol;
+        this.specificSymbol = specificSymbol;
         this.createdAt = OffsetDateTime.now();
     }
 
@@ -83,6 +96,14 @@ public class Transaction {
 
     public String getCounterpartyAccountNumber() {
         return counterpartyAccountNumber;
+    }
+
+    public String getVariableSymbol() {
+        return variableSymbol;
+    }
+
+    public String getSpecificSymbol() {
+        return specificSymbol;
     }
 
     public OffsetDateTime getCreatedAt() {

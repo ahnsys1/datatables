@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 import cz.listek.admin.api.AdminDtos.AccountResponse;
+import cz.listek.admin.api.AdminDtos.AdminUserResponse;
 import cz.listek.admin.api.AdminDtos.ApplicationResponse;
 import cz.listek.admin.api.AdminDtos.CreateOverdraftRequest;
 import cz.listek.admin.api.AdminDtos.DashboardResponse;
@@ -46,6 +47,13 @@ public class AdminController {
     public void changePassword(@RequestBody AdminDtos.PasswordRequest request,
             @org.springframework.web.bind.annotation.RequestHeader("X-Admin-Session") String session) {
         authService.changePassword(session, request.password());
+    }
+
+    @PostMapping("/users")
+    @ResponseStatus(HttpStatus.CREATED)
+    public AdminUserResponse createAdmin(@Valid @RequestBody AdminDtos.CreateAdminRequest request,
+            @org.springframework.web.bind.annotation.RequestHeader("X-Admin-Session") String session) {
+        return authService.createAdmin(session, request);
     }
 
     @GetMapping("/dashboard")

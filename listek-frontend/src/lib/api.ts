@@ -22,6 +22,8 @@ export type BankTransaction = {
   type: "CREDIT" | "DEBIT";
   description: string;
   counterpartyAccountNumber?: string;
+  variableSymbol?: string;
+  specificSymbol?: string;
   createdAt: string;
 };
 
@@ -233,6 +235,8 @@ export function transferMoney(input: {
   toAccountNumber: string;
   amount: number;
   description: string;
+  variableSymbol?: string;
+  specificSymbol?: string;
 }) {
   return request<void>("/transfers", {
     method: "POST",

@@ -113,6 +113,12 @@ public class AccountService {
 
     @Transactional
     public void transfer(UUID fromId, String toAccountNumber, BigDecimal amount, String description) {
+        transfer(fromId, toAccountNumber, amount, description, null, null);
+    }
+
+    @Transactional
+    public void transfer(UUID fromId, String toAccountNumber, BigDecimal amount, String description,
+            String variableSymbol, String specificSymbol) {
         var source = requireAccount(fromId);
         var target = accountRepository.findByAccountNumber(toAccountNumber.trim()).orElse(null);
         if (target != null && source.getId().equals(target.getId())) {
@@ -123,7 +129,7 @@ public class AccountService {
                 throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Na uctu neni dostatecny zustatek");
             }
             source.debit(amount);
-            transactionRepository.save(new Transaction(source, amount.negate(), TransactionType.DEBIT, description, toAccountNumber.trim()));
+            transactionRepository.save(new Transaction(source, amount.negate(), TransactionType.DEBIT, description, toAccountNumber.trim(), variableSymbol, specificSymbol));
             return;
         }
         transferBetweenAccounts(source, target, amount, description);
@@ -155,6 +161,6 @@ public class AccountService {
     }
 
     private TransactionResponse toResponse(Transaction transaction) {
-        return new TransactionResponse(transaction.getId(), transaction.getAccount().getId(), transaction.getAmount(), transaction.getType(), transaction.getDescription(), transaction.getCounterpartyAccountNumber(), transaction.getCreatedAt());
+        return new TransactionResponse(transaction.getId(), transaction.getAccount().getId(), transaction.getAmount(), transaction.getType(), transaction.getDescription(), transaction.getCounterpartyAccountNumber(), transaction.getVariableSymbol(), transaction.getSpecificSymbol(), transaction.getCreatedAt());
     }
 }

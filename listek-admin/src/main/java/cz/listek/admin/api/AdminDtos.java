@@ -7,6 +7,7 @@ import java.util.UUID;
 import cz.listek.admin.domain.ApplicationStatus;
 import jakarta.validation.constraints.DecimalMax;
 import jakarta.validation.constraints.DecimalMin;
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
@@ -21,6 +22,17 @@ public final class AdminDtos {
     }
 
     public record PasswordRequest(@jakarta.validation.constraints.NotBlank String password) {
+
+    }
+
+    public record CreateAdminRequest(@NotBlank
+            @Size(max = 80) String username,
+            @NotBlank
+            @Size(min = 12, max = 200) String password) {
+
+    }
+
+    public record AdminUserResponse(String username) {
 
     }
 

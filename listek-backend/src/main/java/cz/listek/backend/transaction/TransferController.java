@@ -24,6 +24,6 @@ public class TransferController {
     @PostMapping
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void transfer(@Valid @RequestBody TransferRequest request) {
-        accountService.transfer(request.fromAccountId(), request.toAccountNumber(), request.amount(), request.description());
+        accountService.transfer(request.fromAccountId(), request.toAccountNumber(), request.amount(), request.description(), request.variableSymbol(), request.specificSymbol());
     }
 }

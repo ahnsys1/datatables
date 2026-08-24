@@ -10,7 +10,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
+import cz.listek.admin.api.AdminDtos.AdminUserResponse;
 import cz.listek.admin.api.AdminDtos.AuthResponse;
+import cz.listek.admin.api.AdminDtos.CreateAdminRequest;
 import cz.listek.admin.api.AdminDtos.LoginRequest;
 import cz.listek.admin.domain.AdminUser;
 import cz.listek.admin.repository.AdminUserRepository;
@@ -49,6 +51,23 @@ public class AdminAuthService {
         }, () -> {
             throw invalidCredentials();
         });
+    }
+
+    public AdminUserResponse createAdmin(String session, CreateAdminRequest request) {
+        requireSession(session);
+        String username = request.username().trim();
+        if (userRepository.existsById(username)) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Administrátor s tímto uživatelským jménem již existuje");
+        }
+        AdminUser user = new AdminUser(username, request.password(), false);
+        userRepository.save(user);
+        return new AdminUserResponse(user.getUsername());
+    }
+
+    private void requireSession(String session) {
+        if (sessions.get(session) == null) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Neplatná administrátorská relace");
+        }
     }
 
     private static ResponseStatusException invalidCredentials() {

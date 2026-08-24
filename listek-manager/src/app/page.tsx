@@ -8,10 +8,11 @@ import { FormEvent, useEffect, useState } from "react";
 import {
   Account, BankApplication, Dashboard, InterestSettings, decideApplication, getAccounts,
   getDashboard, getInterestSettings, getLoans, getOverdrafts, updateInterestSettings,
-  adminLogin, changeAdminPassword, decideRegistration, getPendingRegistrations,
+  adminLogin, changeAdminPassword, decideRegistration,
+  createAdmin,
 } from "@/lib/api";
 
-type View = "overview" | "loans" | "overdrafts" | "clients" | "settings";
+type View = "overview" | "loans" | "overdrafts" | "clients" | "settings" | "admins";
 
 const money = new Intl.NumberFormat("cs-CZ", { style: "currency", currency: "CZK", maximumFractionDigits: 0 });
 const date = new Intl.DateTimeFormat("cs-CZ", { dateStyle: "medium", timeStyle: "short" });
@@ -21,6 +22,7 @@ const navigation = [
   { id: "overdrafts" as const, label: "Kontokorenty", icon: WalletCards },
   { id: "clients" as const, label: "Klienti", icon: Users },
   { id: "settings" as const, label: "Nastavení sazeb", icon: ClipboardCheck },
+  { id: "admins" as const, label: "Administrátoři", icon: ShieldCheck },
 ];
 
 async function hashPassword(password: string, username: string) {
@@ -46,7 +48,7 @@ export default function Home() {
   const [error, setError] = useState("");
   const [menuOpen, setMenuOpen] = useState(false);
   const [interestSettings, setInterestSettings] = useState<InterestSettings | null>(null);
-  const [currentDate, setCurrentDate] = useState<Date | null>(null);
+  const [currentDate] = useState<Date>(() => new Date());
   const [adminReady, setAdminReady] = useState(false);
   const [adminUser, setAdminUser] = useState("");
   const [mustChangePassword, setMustChangePassword] = useState(false);
@@ -56,15 +58,21 @@ export default function Home() {
   const [showLoginPassword, setShowLoginPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showPasswordConfirmation, setShowPasswordConfirmation] = useState(false);
+  const [adminFormError, setAdminFormError] = useState("");
+  const [adminFormSaving, setAdminFormSaving] = useState(false);
 
   useEffect(() => {
-    setCurrentDate(new Date());
     const token = localStorage.getItem("listek-admin-session");
     const username = localStorage.getItem("listek-admin-user");
-    if (!token || !username) { setAdminReady(true); setLoading(false); return; }
-    setAdminUser(username);
-    setMustChangePassword(localStorage.getItem("listek-admin-must-change") === "true");
-    setAdminReady(true);
+    if (!token || !username) {
+      queueMicrotask(() => { setAdminReady(true); setLoading(false); });
+      return;
+    }
+    queueMicrotask(() => {
+      setAdminUser(username);
+      setMustChangePassword(localStorage.getItem("listek-admin-must-change") === "true");
+      setAdminReady(true);
+    });
     async function refreshData() {
       const [dashboardData, loanData, overdraftData, accountData, settingsData] = await Promise.all([getDashboard(), getLoans(), getOverdrafts(), getAccounts(), getInterestSettings()]);
       setDashboard(dashboardData);
@@ -154,7 +162,23 @@ export default function Home() {
     overdrafts: ["Žádosti o kontokorent", "Rozhodujte o krátkodobých úvěrových rámcích."],
     clients: ["Klienti a účty", "Rychlý dohled nad klientským portfoliem banky."],
     settings: ["Nastavení sazeb", "Spravujte úrokové sazby produktů dostupných klientům."],
+    admins: ["Administrátoři", "Vytvářejte přístupy pro další členy administrace."],
   };
+
+  async function saveNewAdmin(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const form = new FormData(event.currentTarget);
+    const username = String(form.get("newAdminUsername")).trim();
+    const password = String(form.get("newAdminPassword"));
+    if (password !== String(form.get("newAdminConfirmation"))) { setAdminFormError("Hesla se neshodují."); return; }
+    setAdminFormSaving(true); setAdminFormError("");
+    try {
+      await createAdmin({ username, password: await hashPassword(password, username) });
+      event.currentTarget.reset();
+      setAdminFormError("Administrátor byl vytvořen.");
+    } catch (createError) { setAdminFormError(createError instanceof Error ? createError.message : "Administrátora se nepodařilo vytvořit."); }
+    finally { setAdminFormSaving(false); }
+  }
 
   async function saveInterestSettings(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -203,7 +227,7 @@ export default function Home() {
         <div className="admin-content">
           <section className="page-heading">
             <div><p>{currentDate ? new Intl.DateTimeFormat("cs-CZ", { day: "numeric", month: "long", year: "numeric" }).format(currentDate).toUpperCase() : "Načítám datum..."}</p><h1>{titles[view][0]}</h1><span>{titles[view][1]}</span></div>
-            {view !== "clients" && view !== "settings" && <div className="heading-actions"><div className="search"><Search size={18} /><input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Hledat klienta nebo účet" /></div><label className="pending-filter"><input type="checkbox" checked={pendingOnly} onChange={(event) => setPendingOnly(event.target.checked)} /> Jen čekající</label></div>}
+            {view !== "clients" && view !== "settings" && view !== "admins" && <div className="heading-actions"><div className="search"><Search size={18} /><input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Hledat klienta nebo účet" /></div><label className="pending-filter"><input type="checkbox" checked={pendingOnly} onChange={(event) => setPendingOnly(event.target.checked)} /> Jen čekající</label></div>}
           </section>
 
           {error && <div className="notice">{error}</div>}
@@ -248,6 +272,8 @@ export default function Home() {
           </section>}
 
           {view === "settings" && !loading && interestSettings && <section className="settings-card"><div className="panel-heading"><div><p>PRODUKTOVÉ PODMÍNKY</p><h2>Úrokové sazby</h2></div><span>% p. a.</span></div><form onSubmit={saveInterestSettings} className="rate-form"><label>Spořicí účet<input name="savingsRate" type="number" min="0" step="0.001" defaultValue={interestSettings.savingsRate} /></label><label>Kontokorent<input name="overdraftRate" type="number" min="0" step="0.001" defaultValue={interestSettings.overdraftRate} /></label><label>Půjčka na cokoliv<input name="personalLoanRate" type="number" min="0" step="0.001" defaultValue={interestSettings.personalLoanRate} /></label><label>Půjčka na bydlení<input name="homeLoanRate" type="number" min="0" step="0.001" defaultValue={interestSettings.homeLoanRate} /></label><button className="primary-button submit-button" type="submit" disabled={saving}>{saving ? "Ukládám..." : "Uložit sazby"}</button></form></section>}
+
+          {view === "admins" && <section className="settings-card admin-users-card"><div className="panel-heading"><div><p>SPRÁVA PŘÍSTUPŮ</p><h2>Nový administrátor</h2></div><ShieldCheck size={22} color="var(--green)" /></div><form onSubmit={saveNewAdmin} className="rate-form"><label>Uživatelské jméno<input name="newAdminUsername" required maxLength={80} autoComplete="off" /></label><label>Heslo<input name="newAdminPassword" required minLength={12} type="password" autoComplete="new-password" /></label><label>Potvrzení hesla<input name="newAdminConfirmation" required minLength={12} type="password" autoComplete="new-password" /></label>{adminFormError && <div className="notice admin-form-notice">{adminFormError}</div>}<button className="primary-button submit-button" type="submit" disabled={adminFormSaving}>{adminFormSaving ? "Vytvářím..." : "Vytvořit administrátora"}</button></form></section>}
         </div>
       </main>
     </div>
