@@ -71,7 +71,7 @@ public final class AdminDtos {
             BigDecimal monthlyIncome, BigDecimal monthlyPayment, String purpose,
             ApplicationStatus status, Instant createdAt, Instant decidedAt, String decisionNote,
             String repaymentAccountNumber, String variableSymbol, String specificSymbol,
-            Integer repaymentDayOfMonth, BigDecimal repaidAmount, Integer remainingInstallments,
+            Integer repaymentDayOfMonth, BigDecimal repaidAmount, BigDecimal remainingAmount, Integer remainingInstallments,
             LocalDate dueDate, BigDecimal annualRate) {
 
     }

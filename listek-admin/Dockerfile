@@ -8,6 +8,10 @@ RUN mvn -B -DskipTests package
 FROM eclipse-temurin:26-jre
 WORKDIR /app
 
+RUN apt-get update \
+	&& apt-get install -y --no-install-recommends curl \
+	&& rm -rf /var/lib/apt/lists/*
+
 COPY --from=build /app/target/listek-admin-*.jar app.jar
 
 EXPOSE 8090

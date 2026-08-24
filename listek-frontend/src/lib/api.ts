@@ -83,6 +83,7 @@ export type LoanApplication = {
   specificSymbol?: string;
   repaymentDayOfMonth?: number;
   repaidAmount?: number;
+  remainingAmount?: number;
   remainingInstallments?: number;
   dueDate?: string;
 };

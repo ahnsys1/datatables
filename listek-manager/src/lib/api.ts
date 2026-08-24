@@ -38,6 +38,15 @@ export type BankApplication = {
   createdAt: string;
   decidedAt: string | null;
   decisionNote: string | null;
+  annualRate: number | null;
+  repaymentAccountNumber: string | null;
+  variableSymbol: string | null;
+  specificSymbol: string | null;
+  repaymentDayOfMonth: number | null;
+  repaidAmount: number | null;
+  remainingAmount: number | null;
+  remainingInstallments: number | null;
+  dueDate: string | null;
 };
 
 export type InterestSettings = {

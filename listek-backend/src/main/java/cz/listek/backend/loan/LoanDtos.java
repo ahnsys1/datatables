@@ -43,6 +43,7 @@ public final class LoanDtos {
             String specificSymbol,
             Integer repaymentDayOfMonth,
             BigDecimal repaidAmount,
+            BigDecimal remainingAmount,
             Integer remainingInstallments,
             LocalDate dueDate) {
 

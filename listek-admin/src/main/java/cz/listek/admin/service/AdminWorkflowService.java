@@ -47,9 +47,6 @@ public class AdminWorkflowService {
     private final AdminTransactionRepository transactionRepository;
     private final AdminStandingOrderRepository standingOrderRepository;
     private final ProductInterestSettingsRepository interestSettingsRepository;
-    private final String loanRepaymentAccountNumber;
-    private final String loanVariableSymbol;
-    private final String loanSpecificSymbol;
     private final int loanRepaymentDayOfMonth;
 
     public AdminWorkflowService(AdminAccountRepository accountRepository,
@@ -58,9 +55,6 @@ public class AdminWorkflowService {
             AdminTransactionRepository transactionRepository,
             AdminStandingOrderRepository standingOrderRepository,
             ProductInterestSettingsRepository interestSettingsRepository,
-            @Value("${app.loan.repayment-account-number:LOAN-REPAYMENT}") String loanRepaymentAccountNumber,
-            @Value("${app.loan.variable-symbol:0}") String loanVariableSymbol,
-            @Value("${app.loan.specific-symbol:0}") String loanSpecificSymbol,
             @Value("${app.loan.repayment-day-of-month:15}") int loanRepaymentDayOfMonth) {
         this.accountRepository = accountRepository;
         this.loanRepository = loanRepository;
@@ -68,9 +62,6 @@ public class AdminWorkflowService {
         this.transactionRepository = transactionRepository;
         this.standingOrderRepository = standingOrderRepository;
         this.interestSettingsRepository = interestSettingsRepository;
-        this.loanRepaymentAccountNumber = loanRepaymentAccountNumber;
-        this.loanVariableSymbol = loanVariableSymbol;
-        this.loanSpecificSymbol = loanSpecificSymbol;
         this.loanRepaymentDayOfMonth = loanRepaymentDayOfMonth;
     }
 
@@ -114,11 +105,14 @@ public class AdminWorkflowService {
             account.credit(application.getAmount());
             transactionRepository.save(new AdminTransaction(account, application.getAmount(), "CREDIT", "Čerpání půjčky"));
             LocalDate dueDate = dueDate(application.getRepaymentMonths(), loanRepaymentDayOfMonth);
-            application.configureRepayment(loanRepaymentAccountNumber, loanVariableSymbol, loanSpecificSymbol,
+            String repaymentAccountNumber = repaymentAccountNumber(application.getId());
+            String variableSymbol = paymentSymbol(application.getId().getMostSignificantBits());
+            String specificSymbol = paymentSymbol(application.getId().getLeastSignificantBits());
+            application.configureRepayment(repaymentAccountNumber, variableSymbol, specificSymbol,
                     loanRepaymentDayOfMonth, dueDate);
-            standingOrderRepository.save(new AdminStandingOrder(account, loanRepaymentAccountNumber,
+            standingOrderRepository.save(new AdminStandingOrder(account, repaymentAccountNumber,
                     application.getMonthlyPayment(), "Splátka půjčky", loanRepaymentDayOfMonth,
-                    loanVariableSymbol, loanSpecificSymbol));
+                    variableSymbol, specificSymbol));
         }
         application.decide(request.status(), normalizeNote(request.note()));
         return loanResponse(application);
@@ -187,19 +181,29 @@ public class AdminWorkflowService {
         return month.atDay(Math.min(repaymentDayOfMonth, month.lengthOfMonth()));
     }
 
+    private String repaymentAccountNumber(UUID loanId) {
+        long accountSuffix = Long.remainderUnsigned(loanId.getLeastSignificantBits(), 1_000_000_000_000_000L);
+        return "9" + String.format("%015d", accountSuffix);
+    }
+
+    private String paymentSymbol(long value) {
+        String symbol = Long.toUnsignedString(value);
+        return symbol.length() > 10 ? symbol.substring(symbol.length() - 10) : symbol;
+    }
+
     private ApplicationResponse loanResponse(AdminLoanApplication item) {
         return new ApplicationResponse(item.getId(), "LOAN", item.getType(), item.getAccount().getId(),
                 item.getAccount().getOwnerName(), item.getAccount().getAccountNumber(), item.getAmount(),
                 item.getRepaymentMonths(), null, item.getMonthlyPayment(), item.getPurpose(), item.getStatus(),
                 item.getCreatedAt(), item.getDecidedAt(), item.getDecisionNote(), item.getRepaymentAccountNumber(),
                 item.getVariableSymbol(), item.getSpecificSymbol(), item.getRepaymentDayOfMonth(), item.getRepaidAmount(),
-                item.getRemainingInstallments(), item.getDueDate(), item.getAnnualRate());
+                item.getRemainingAmount(), item.getRemainingInstallments(), item.getDueDate(), item.getAnnualRate());
     }
 
     private ApplicationResponse overdraftResponse(OverdraftApplication item) {
         return new ApplicationResponse(item.getId(), "OVERDRAFT", "Kontokorent", item.getAccount().getId(),
                 item.getAccount().getOwnerName(), item.getAccount().getAccountNumber(), item.getRequestedLimit(),
                 null, item.getMonthlyIncome(), null, "Provozní rezerva", item.getStatus(), item.getCreatedAt(),
-                item.getDecidedAt(), item.getDecisionNote(), null, null, null, null, null, null, null, item.getAnnualRate());
+                item.getDecidedAt(), item.getDecisionNote(), null, null, null, null, null, null, null, null, item.getAnnualRate());
     }
 }

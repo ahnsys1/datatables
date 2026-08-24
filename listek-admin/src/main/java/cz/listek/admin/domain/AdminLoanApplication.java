@@ -63,6 +63,8 @@ public class AdminLoanApplication {
     private Integer repaymentDayOfMonth;
     @Column(nullable = false, precision = 19, scale = 2)
     private BigDecimal repaidAmount;
+    @Column(nullable = false, precision = 19, scale = 2)
+    private BigDecimal remainingAmount;
     private Integer remainingInstallments;
     private LocalDate dueDate;
 
@@ -143,6 +145,10 @@ public class AdminLoanApplication {
         return repaidAmount;
     }
 
+    public BigDecimal getRemainingAmount() {
+        return remainingAmount;
+    }
+
     public Integer getRemainingInstallments() {
         return remainingInstallments;
     }
@@ -159,6 +165,7 @@ public class AdminLoanApplication {
         this.repaymentDayOfMonth = repaymentDayOfMonth;
         this.dueDate = dueDate;
         this.repaidAmount = BigDecimal.ZERO;
+        this.remainingAmount = monthlyPayment.multiply(BigDecimal.valueOf(repaymentMonths));
         this.remainingInstallments = repaymentMonths;
     }
 }

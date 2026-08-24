@@ -379,18 +379,25 @@ button { color: inherit; }
 .loan-applications { margin-top: 28px; border: 1px solid var(--line); border-radius: 7px; background: white; overflow: hidden; }
 .loan-applications > .section-heading { padding: 16px 20px; border-bottom: 1px solid var(--line); }
 .loan-applications > .section-heading > span { color: var(--muted); font-size: 11px; }
-.loan-applications article { min-height: 72px; padding: 12px 20px; display: grid; grid-template-columns: 38px minmax(0, 1fr) 180px 130px; align-items: center; gap: 14px; border-bottom: 1px solid var(--line); }
-.loan-applications article:last-child { border-bottom: 0; }
-.loan-applications article > div { display: grid; gap: 4px; }
-.loan-applications article strong { font-size: 11px; }
-.loan-applications article small { color: var(--muted); font-size: 9px; }
-.loan-applications article .loan-rejection-reason { color: #a43b32; line-height: 1.4; overflow-wrap: anywhere; }
-.loan-applications article .loan-approved-label { color: var(--green); font-weight: 750; }
-.loan-applications article > b { justify-self: end; padding: 6px 9px; border-radius: 4px; background: #fff5de; color: #8e6819; font-size: 9px; white-space: nowrap; }
-.loan-applications article > b.status-approved { background: var(--soft-green); color: var(--green); }
-.loan-applications article > b.status-rejected { background: #fff0ec; color: #a43b32; }
-.loan-status { width: 34px; height: 34px; display: grid; place-items: center; border-radius: 50%; background: var(--soft-green); color: var(--green); }
-.loan-status-rejected { background: #fff0ec; color: #a43b32; }
+.loan-table-wrap { overflow-x: auto; }
+.loan-table { width: 100%; min-width: 980px; border-collapse: collapse; }
+.loan-table th, .loan-table td { padding: 14px 18px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: middle; }
+.loan-table th { color: var(--muted); background: #f7f9f5; font-size: 9px; font-weight: 800; text-transform: uppercase; }
+.loan-table td { font-size: 10px; }
+.loan-table tr:last-child td { border-bottom: 0; }
+.loan-table strong, .loan-table small { display: block; }
+.loan-table strong { font-size: 11px; }
+.loan-table small { margin-top: 4px; color: var(--muted); font-size: 9px; line-height: 1.45; }
+.loan-status-label { display: inline-block; padding: 5px 8px; border-radius: 4px; font-size: 9px; font-weight: 800; white-space: nowrap; }
+.loan-status-label.pending { color: #8e6819; background: #fff5de; }
+.loan-status-label.approved { color: var(--green); background: var(--soft-green); }
+.loan-status-label.rejected { color: #a43b32; background: #fff0ec; }
+.loan-repayment-actions { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 9px; }
+.loan-repayment-actions button { min-height: 28px; padding: 0 8px; border: 1px solid #9fc0a8; border-radius: 4px; color: var(--green); background: white; font-size: 9px; font-weight: 750; }
+.loan-repayment-actions button:last-child { color: white; background: var(--green); border-color: var(--green); }
+.loan-modal form > label:not(.loan-consent) { display: grid; gap: 7px; margin-top: 14px; color: var(--muted); font-size: 10px; font-weight: 750; }
+.loan-modal form > label input { height: 42px; padding: 0 10px; border: 1px solid var(--line); border-radius: 5px; font: inherit; }
+.modal-error { margin: 12px 0; padding: 9px 11px; border: 1px solid #eac4bd; border-radius: 5px; color: #8c382e; background: #fff1ee; font-size: 10px; line-height: 1.4; }
 .loan-application-summary { display: grid; gap: 0; margin-bottom: 18px; }
 .loan-application-summary div { padding: 10px 0; display: flex; justify-content: space-between; gap: 14px; border-bottom: 1px solid var(--line); font-size: 11px; }
 .loan-application-summary span { color: var(--muted); }
@@ -456,8 +463,7 @@ button { color: inherit; }
   .account-page-grid, .card-tools { grid-template-columns: 1fr; }
   .loan-products { grid-template-columns: 1fr; }
   .loan-calculator { padding: 25px 20px; }
-  .loan-applications article { grid-template-columns: 36px 1fr auto; padding: 12px 13px; }
-  .loan-applications article > div:nth-of-type(2) { display: none; }
+  .loan-table th, .loan-table td { padding: 12px 13px; }
   .card-details { grid-template-columns: 1fr 1fr; }
   .settings-panel { display: block; }
   .settings-panel .text-button { margin-top: 17px; }

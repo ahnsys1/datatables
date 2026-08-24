@@ -3,7 +3,7 @@
 import { ArrowRight, Check, CheckCircle2, HandCoins, Home, X } from "lucide-react";
 import { FormEvent, useEffect, useState } from "react";
 import BankShell from "../BankShell";
-import { InterestSettings, LoanApplication, createLoanApplication, getInterestSettings, getLoanApplications } from "../../lib/api";
+import { InterestSettings, LoanApplication, createLoanApplication, getInterestSettings, getLoanApplications, transferMoney } from "../../lib/api";
 import { getSession } from "../../lib/session";
 
 type LoanKind = "personal" | "home";
@@ -28,6 +28,9 @@ export default function LoansPage() {
   const [applications, setApplications] = useState<LoanApplication[]>([]);
   const [loadingApplications, setLoadingApplications] = useState(true);
   const [savingApplication, setSavingApplication] = useState(false);
+  const [repaymentLoan, setRepaymentLoan] = useState<LoanApplication | null>(null);
+  const [repaymentAmount, setRepaymentAmount] = useState(0);
+  const [savingRepayment, setSavingRepayment] = useState(false);
   const [error, setError] = useState("");
   const [rates, setRates] = useState<InterestSettings | null>(null);
 
@@ -81,6 +84,41 @@ export default function LoansPage() {
     setSubmitted(false);
   }
 
+  function openRepayment(application: LoanApplication, repayAll: boolean) {
+    const remainingPayments = application.remainingInstallments ?? application.repaymentMonths;
+    setRepaymentLoan(application);
+    setRepaymentAmount(repayAll ? Math.round(application.monthlyPayment * remainingPayments * 100) / 100 : application.monthlyPayment);
+    setError("");
+  }
+
+  async function submitRepayment(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const accountId = getSession()?.id;
+    if (!accountId || !repaymentLoan?.repaymentAccountNumber || repaymentAmount <= 0) {
+      setError("Splátku se nepodařilo připravit.");
+      return;
+    }
+    setSavingRepayment(true);
+    try {
+      await transferMoney({
+        fromAccountId: accountId,
+        toAccountNumber: repaymentLoan.repaymentAccountNumber,
+        amount: repaymentAmount,
+        description: "Mimořádná splátka půjčky",
+        variableSymbol: repaymentLoan.variableSymbol,
+        specificSymbol: repaymentLoan.specificSymbol,
+      });
+      const updatedApplications = await getLoanApplications(accountId);
+      setApplications(updatedApplications);
+      setRepaymentLoan(null);
+      setError("");
+    } catch (repaymentError) {
+      setError(repaymentError instanceof Error ? repaymentError.message : "Splátku se nepodařilo odeslat.");
+    } finally {
+      setSavingRepayment(false);
+    }
+  }
+
   return <BankShell><div className="bank-content section-page loans-page">
     <div className="page-hero"><div><p className="date-label">Financování podle vašich plánů</p><h1>Půjčky</h1><p className="page-lead">Spočítejte si měsíční splátku a odešlete nezávaznou žádost.</p></div></div>
 
@@ -101,8 +139,10 @@ export default function LoansPage() {
 
     {error && <p className="api-notice">{error}</p>}
     {loadingApplications && <p className="api-notice">Načítám vaše žádosti...</p>}
-    {applications.length > 0 && <section className="loan-applications"><div className="section-heading"><h2>Moje půjčky a žádosti</h2><span>{applications.length}</span></div>{applications.map((application) => <article key={application.id}><span className="loan-status"><CheckCircle2 size={18} /></span><div><strong>{products[application.type === "PERSONAL" ? "personal" : "home"].name}</strong><small>Odesláno {new Intl.DateTimeFormat("cs-CZ", { dateStyle: "medium" }).format(new Date(application.createdAt))}</small></div><div><strong>{currency.format(application.amount)}</strong><small>{currency.format(application.monthlyPayment)} měsíčně</small></div><div>{application.status === "APPROVED" && <small>Uhrazeno {currency.format(application.repaidAmount ?? 0)} · zbývá {application.remainingInstallments ?? application.repaymentMonths} splátek<br />Splatnost do {application.dueDate ? new Intl.DateTimeFormat("cs-CZ").format(new Date(application.dueDate)) : `${application.repaymentDayOfMonth}. dne v měsíci`}<br />Účet {application.repaymentAccountNumber} · VS {application.variableSymbol} · SS {application.specificSymbol}</small>}</div><b>{application.status === "PENDING" ? "Čeká na posouzení" : application.status === "APPROVED" ? "Schváleno" : "Zamítnuto"}</b></article>)}</section>}
+    {applications.length > 0 && <section className="loan-applications"><div className="section-heading"><h2>Moje půjčky a žádosti</h2><span>{applications.length}</span></div><div className="loan-table-wrap"><table className="loan-table"><thead><tr><th>Produkt</th><th>Částka a sazba</th><th>Stav splácení</th><th>Termín a symboly</th><th>Stav</th><th>Akce</th></tr></thead><tbody>{applications.map((application) => { const approved = application.status === "APPROVED"; return <tr key={application.id}><td><strong>{products[application.type === "PERSONAL" ? "personal" : "home"].name}</strong><small>Odesláno {new Intl.DateTimeFormat("cs-CZ", { dateStyle: "medium" }).format(new Date(application.createdAt))}</small></td><td><strong>{currency.format(application.amount)}</strong><small>{application.annualRate.toLocaleString("cs-CZ")} % p. a. · {currency.format(application.monthlyPayment)} měsíčně</small></td><td>{approved ? <><strong>Zbývá {currency.format(application.remainingAmount ?? 0)}</strong><small>Uhrazeno {currency.format(application.repaidAmount ?? 0)} · zbývá {application.remainingInstallments ?? application.repaymentMonths} splátek</small></> : <small>Údaje budou dostupné po schválení.</small>}</td><td>{approved ? <><strong>{application.dueDate ? new Intl.DateTimeFormat("cs-CZ").format(new Date(application.dueDate)) : `${application.repaymentDayOfMonth}. den v měsíci`}</strong><small>{application.repaymentAccountNumber}<br />VS {application.variableSymbol} · SS {application.specificSymbol}</small></> : <small>-</small>}</td><td><span className={`loan-status-label ${application.status.toLowerCase()}`}>{application.status === "PENDING" ? "Čeká na posouzení" : application.status === "APPROVED" ? "Schváleno" : "Zamítnuto"}</span></td><td>{approved ? <span className="loan-repayment-actions"><button type="button" onClick={() => openRepayment(application, false)}>Splátka</button><button type="button" onClick={() => openRepayment(application, true)}>Doplatit</button></span> : <small>-</small>}</td></tr>; })}</tbody></table></div></section>}
 
-    {applicationOpen && <div className="modal-backdrop" role="presentation" onMouseDown={(event) => event.target === event.currentTarget && closeApplication()}><section className="payment-modal loan-modal" role="dialog" aria-modal="true" aria-labelledby="loan-application-title"><button className="modal-close" onClick={closeApplication} aria-label="Zavřít"><X size={21} /></button>{submitted ? <div className="payment-success"><span><Check size={30} /></span><h2 id="loan-application-title">Žádost byla odeslána</h2><p>Žádost čeká na schválení v aplikaci Lístek Manager. Peníze budou připsány až po schválení.</p><button className="pay-button" onClick={closeApplication}>Hotovo</button></div> : <><p className="modal-kicker">Nezávazná žádost</p><h2 id="loan-application-title">Zkontrolujte nabídku</h2><div className="loan-application-summary"><div><span>Produkt</span><strong>{product.name}</strong></div><div><span>Částka</span><strong>{currency.format(amount)}</strong></div><div><span>Splatnost</span><strong>{months} měsíců</strong></div><div><span>Měsíční splátka</span><strong>{currency.format(installment)}</strong></div></div><form onSubmit={submitApplication}><label>Účel půjčky<select name="purpose" required defaultValue=""><option value="" disabled>Vyberte účel</option><option>Vybavení domácnosti</option><option>Auto</option><option>Rekonstrukce</option><option>Jiný účel</option></select></label><label className="loan-consent"><input type="checkbox" required /><span>Souhlasím s posouzením žádosti a ověřením údajů.</span></label><button className="pay-button payment-submit" type="submit" disabled={savingApplication}>{savingApplication ? "Odesílám..." : "Odeslat žádost"}</button></form></>}</section></div>}
+    {applicationOpen && <div className="modal-backdrop" role="presentation" onMouseDown={(event) => event.target === event.currentTarget && closeApplication()}><section className="payment-modal loan-modal" role="dialog" aria-modal="true" aria-labelledby="loan-application-title"><button className="modal-close" onClick={closeApplication} aria-label="Zavřít"><X size={21} /></button>{submitted ? <div className="payment-success"><span><Check size={30} /></span><h2 id="loan-application-title">Žádost byla odeslána</h2><p>Žádost čeká na schválení v aplikaci Lístek Manager. Peníze budou připsány až po schválení.</p><button className="pay-button" onClick={closeApplication}>Hotovo</button></div> : <><p className="modal-kicker">Nezávazná žádost</p><h2 id="loan-application-title">Zkontrolujte nabídku</h2>{error && <p className="modal-error" role="alert">{error}</p>}<div className="loan-application-summary"><div><span>Produkt</span><strong>{product.name}</strong></div><div><span>Částka</span><strong>{currency.format(amount)}</strong></div><div><span>Splatnost</span><strong>{months} měsíců</strong></div><div><span>Měsíční splátka</span><strong>{currency.format(installment)}</strong></div></div><form onSubmit={submitApplication}><label>Účel půjčky<select name="purpose" required defaultValue=""><option value="" disabled>Vyberte účel</option><option>Vybavení domácnosti</option><option>Auto</option><option>Rekonstrukce</option><option>Jiný účel</option></select></label><label className="loan-consent"><input type="checkbox" required /><span>Souhlasím s posouzením žádosti a ověřením údajů.</span></label><button className="pay-button payment-submit" type="submit" disabled={savingApplication}>{savingApplication ? "Odesílám..." : "Odeslat žádost"}</button></form></>}</section></div>}
+
+    {repaymentLoan && <div className="modal-backdrop" role="presentation" onMouseDown={(event) => event.target === event.currentTarget && setRepaymentLoan(null)}><section className="payment-modal loan-modal" role="dialog" aria-modal="true" aria-labelledby="loan-repayment-title"><button className="modal-close" onClick={() => setRepaymentLoan(null)} aria-label="Zavřít"><X size={21} /></button><p className="modal-kicker">Splácení půjčky</p><h2 id="loan-repayment-title">Odeslat splátku</h2><form onSubmit={submitRepayment}><div className="loan-application-summary"><div><span>Splátkový účet</span><strong>{repaymentLoan.repaymentAccountNumber}</strong></div><div><span>Symboly</span><strong>VS {repaymentLoan.variableSymbol} · SS {repaymentLoan.specificSymbol}</strong></div></div><label>Částka splátky<input type="number" min="1" step="0.01" value={repaymentAmount} onChange={(event) => setRepaymentAmount(Number(event.target.value))} required /></label><button className="pay-button payment-submit" type="submit" disabled={savingRepayment}>{savingRepayment ? "Odesílám..." : `Zaplatit ${currency.format(repaymentAmount)}`}</button></form></section></div>}
   </div></BankShell>;
 }

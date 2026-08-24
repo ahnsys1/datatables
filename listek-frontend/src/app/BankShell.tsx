@@ -43,7 +43,12 @@ export default function BankShell({ children }: { children: ReactNode }) {
       return;
     }
     getAccounts().then((accounts) => {
-      const currentAccount = accounts.find((candidate) => candidate.id === session.id) ?? session;
+      const currentAccount = accounts.find((candidate) => candidate.id === session.id);
+      if (!currentAccount) {
+        clearSession();
+        router.replace("/login");
+        return;
+      }
       setAccount(currentAccount);
       setProfileName(currentAccount.ownerName);
       setProfileEmail(currentAccount.email);

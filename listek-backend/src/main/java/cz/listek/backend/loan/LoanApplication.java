@@ -70,6 +70,9 @@ public class LoanApplication {
     @Column(nullable = false, precision = 19, scale = 2)
     private BigDecimal repaidAmount = BigDecimal.ZERO;
 
+    @Column(nullable = false, precision = 19, scale = 2)
+    private BigDecimal remainingAmount = BigDecimal.ZERO;
+
     private Integer remainingInstallments;
 
     private LocalDate dueDate;
@@ -89,6 +92,7 @@ public class LoanApplication {
         this.status = LoanStatus.PENDING;
         this.createdAt = Instant.now();
         this.remainingInstallments = repaymentMonths;
+        this.remainingAmount = monthlyPayment.multiply(BigDecimal.valueOf(repaymentMonths));
     }
 
     public UUID getId() {
@@ -151,6 +155,10 @@ public class LoanApplication {
         return repaidAmount;
     }
 
+    public BigDecimal getRemainingAmount() {
+        return remainingAmount;
+    }
+
     public Integer getRemainingInstallments() {
         return remainingInstallments;
     }
@@ -166,11 +174,14 @@ public class LoanApplication {
         this.specificSymbol = specificSymbol;
         this.repaymentDayOfMonth = repaymentDayOfMonth;
         this.dueDate = dueDate;
+        this.remainingAmount = monthlyPayment.multiply(BigDecimal.valueOf(repaymentMonths));
     }
 
     public void recordRepayment(BigDecimal amount) {
         this.repaidAmount = this.repaidAmount.add(amount);
-        int installments = this.remainingInstallments == null ? repaymentMonths : this.remainingInstallments;
-        this.remainingInstallments = Math.max(0, installments - 1);
+        BigDecimal totalRepayment = monthlyPayment.multiply(BigDecimal.valueOf(repaymentMonths));
+        this.remainingAmount = totalRepayment.subtract(repaidAmount).max(BigDecimal.ZERO);
+        this.remainingInstallments = remainingAmount.signum() == 0 ? 0
+                : remainingAmount.divide(monthlyPayment, 0, java.math.RoundingMode.CEILING).intValueExact();
     }
 }

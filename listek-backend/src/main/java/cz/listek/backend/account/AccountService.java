@@ -5,6 +5,7 @@ import java.security.SecureRandom;
 import java.util.List;
 import java.util.UUID;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -14,6 +15,7 @@ import cz.listek.backend.account.AccountDtos.AccountResponse;
 import cz.listek.backend.account.AccountDtos.CreateAccountRequest;
 import cz.listek.backend.account.AccountDtos.RegisterAccountRequest;
 import cz.listek.backend.account.AccountDtos.UpdateAccountRequest;
+import cz.listek.backend.loan.LoanApplicationRepository;
 import cz.listek.backend.transaction.Transaction;
 import cz.listek.backend.transaction.TransactionDtos.TransactionResponse;
 import cz.listek.backend.transaction.TransactionRepository;
@@ -26,10 +28,18 @@ public class AccountService {
 
     private final AccountRepository accountRepository;
     private final TransactionRepository transactionRepository;
+    private final LoanApplicationRepository loanApplicationRepository;
 
-    public AccountService(AccountRepository accountRepository, TransactionRepository transactionRepository) {
+    AccountService(AccountRepository accountRepository, TransactionRepository transactionRepository) {
+        this(accountRepository, transactionRepository, null);
+    }
+
+    @Autowired
+    public AccountService(AccountRepository accountRepository, TransactionRepository transactionRepository,
+            LoanApplicationRepository loanApplicationRepository) {
         this.accountRepository = accountRepository;
         this.transactionRepository = transactionRepository;
+        this.loanApplicationRepository = loanApplicationRepository;
     }
 
     @Transactional(readOnly = true)
@@ -130,6 +140,11 @@ public class AccountService {
             }
             source.debit(amount);
             transactionRepository.save(new Transaction(source, amount.negate(), TransactionType.DEBIT, description, toAccountNumber.trim(), variableSymbol, specificSymbol));
+            if (loanApplicationRepository != null) {
+                loanApplicationRepository.findByAccount_IdAndRepaymentAccountNumberAndVariableSymbolAndSpecificSymbol(
+                        source.getId(), toAccountNumber.trim(), variableSymbol, specificSymbol)
+                        .ifPresent(loan -> loan.recordRepayment(amount));
+            }
             return;
         }
         transferBetweenAccounts(source, target, amount, description);
