@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.UUID;
 
 import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -96,6 +97,12 @@ public class AdminController {
     @PatchMapping("/overdrafts/{id}/decision")
     public ApplicationResponse decideOverdraft(@PathVariable UUID id, @Valid @RequestBody DecisionRequest request) {
         return workflowService.decideOverdraft(id, request);
+    }
+
+    @DeleteMapping("/overdrafts/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void terminateOverdraft(@PathVariable UUID id) {
+        workflowService.terminateOverdraft(id);
     }
 
     @GetMapping("/settings/interest")

@@ -135,6 +135,10 @@ export function createOverdraftApplication(input: { accountId: string; requested
   return requestFrom<OverdraftApplication>(managerBase, "/overdrafts", { method: "POST", body: JSON.stringify(input) });
 }
 
+export function terminateOverdraft(id: string) {
+  return requestFrom<void>(managerBase, `/overdrafts/${id}`, { method: "DELETE" });
+}
+
 export function createAccount(input: {
   ownerName: string;
   email: string;

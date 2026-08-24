@@ -341,6 +341,7 @@ export default function LoansPage() {
                 <tbody>
                   {applications.map((application) => {
                     const approved = application.status === "APPROVED";
+                    const repaid = approved && (application.remainingAmount ?? 0) <= 0;
                     const canRepay =
                       approved && (application.remainingAmount ?? 0) > 0;
                     const rejected = application.status === "REJECTED";
@@ -438,7 +439,9 @@ export default function LoansPage() {
                             {application.status === "PENDING"
                               ? "Čeká na posouzení"
                               : application.status === "APPROVED"
-                                ? "Schváleno"
+                                ? repaid
+                                  ? "Splaceno"
+                                  : "Schváleno"
                                 : "Zamítnuto"}
                           </span>
                         </td>

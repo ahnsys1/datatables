@@ -133,6 +133,22 @@ public class AdminWorkflowService {
     }
 
     @Transactional
+    public void terminateOverdraft(UUID id) {
+        OverdraftApplication application = overdraftRepository.findById(id)
+                .orElseThrow(() -> notFound("Žádost o kontokorent"));
+        if (application.getStatus() != APPROVED) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Kontokorent není schválený");
+        }
+        AdminAccount account = accountRepository.findWithLockById(application.getAccount().getId())
+                .orElseThrow(() -> notFound("Účet"));
+        if (account.getBalance().signum() <= 0) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT,
+                    "Kontokorent lze ukončit pouze při kladném zůstatku účtu");
+        }
+        overdraftRepository.delete(application);
+    }
+
+    @Transactional
     public ApplicationResponse createOverdraft(CreateOverdraftRequest request) {
         AdminAccount account = accountRepository.findById(request.accountId()).orElseThrow(() -> notFound("Účet"));
         if (overdraftRepository.existsByAccount_Id(request.accountId())) {
