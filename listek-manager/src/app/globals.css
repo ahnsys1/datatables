@@ -61,7 +61,7 @@ button { cursor: pointer; }
 .notice { margin-bottom: 18px; padding: 12px 15px; border: 1px solid #eac4bd; border-radius: 5px; color: #8c382e; background: #fff1ee; font-size: 11px; }
 .loading { min-height: 300px; display: grid; place-items: center; color: var(--muted); font-size: 12px; }
 
-.metrics { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 23px; }
+.metrics { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 23px; }
 .metrics article { min-width: 0; padding: 19px; display: flex; align-items: flex-start; gap: 13px; border: 1px solid var(--line); border-radius: 7px; background: white; box-shadow: 0 7px 24px rgba(27,52,38,.04); }
 .metric-icon { flex: none; width: 39px; height: 39px; display: grid; place-items: center; border-radius: 50%; }
 .metric-icon.green { color: var(--green); background: var(--soft-green); }

@@ -60,6 +60,7 @@ export default function LoansPage() {
   const [repaymentAmount, setRepaymentAmount] = useState(0);
   const [savingRepayment, setSavingRepayment] = useState(false);
   const [expandedLoanId, setExpandedLoanId] = useState<string | null>(null);
+  const [onlyUnpaid, setOnlyUnpaid] = useState(true);
   const [error, setError] = useState("");
   const [rates, setRates] = useState<InterestSettings | null>(null);
 
@@ -71,6 +72,13 @@ export default function LoansPage() {
     : product.rate;
   const installment = monthlyPayment(amount, months, productRate);
   const total = installment * months;
+  const visibleApplications = onlyUnpaid
+    ? applications.filter(
+        (application) =>
+          application.status !== "APPROVED" ||
+          (application.remainingAmount ?? 0) > 0,
+      )
+    : applications;
 
   useEffect(() => {
     const session = getSession();
@@ -324,7 +332,17 @@ export default function LoansPage() {
           <section className="loan-applications">
             <div className="section-heading">
               <h2>Moje půjčky a žádosti</h2>
-              <span>{applications.length}</span>
+              <div className="loan-list-controls">
+                <label className="loan-filter">
+                  <input
+                    type="checkbox"
+                    checked={onlyUnpaid}
+                    onChange={(event) => setOnlyUnpaid(event.target.checked)}
+                  />
+                  Jen nesplacené
+                </label>
+                <span>{visibleApplications.length}</span>
+              </div>
             </div>
             <div className="loan-table-wrap">
               <table className="loan-table">
@@ -339,7 +357,7 @@ export default function LoansPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {applications.map((application) => {
+                  {visibleApplications.map((application) => {
                     const approved = application.status === "APPROVED";
                     const repaid = approved && (application.remainingAmount ?? 0) <= 0;
                     const canRepay =
@@ -359,6 +377,13 @@ export default function LoansPage() {
                           )
                         }
                       >
+                      {visibleApplications.length === 0 && (
+                        <tr>
+                          <td colSpan={6} className="loan-table-empty">
+                            Všechny půjčky jsou splacené.
+                          </td>
+                        </tr>
+                      )}
                         <td>
                           {canRepay ? (
                             <span className="loan-repayment-actions">
