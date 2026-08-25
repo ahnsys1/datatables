@@ -330,12 +330,12 @@ export default function LoansPage() {
               <table className="loan-table">
                 <thead>
                   <tr>
+                    <th>Akce</th>
                     <th>Produkt</th>
                     <th>Částka a sazba</th>
                     <th>Stav splácení</th>
                     <th>Termín a symboly</th>
                     <th>Stav</th>
-                    <th>Akce</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -349,7 +349,7 @@ export default function LoansPage() {
                       <>
                       <tr
                         key={application.id}
-                        className={approved ? "loan-row-expandable" : ""}
+                        className={`${approved ? "loan-row-expandable" : ""}${repaid ? " loan-row-repaid" : ""}`}
                         onClick={() =>
                           approved &&
                           setExpandedLoanId((currentId) =>
@@ -359,6 +359,32 @@ export default function LoansPage() {
                           )
                         }
                       >
+                        <td>
+                          {canRepay ? (
+                            <span className="loan-repayment-actions">
+                              <button
+                                type="button"
+                                onClick={(event) => {
+                                  event.stopPropagation();
+                                  openRepayment(application, false);
+                                }}
+                              >
+                                Splátka
+                              </button>
+                              <button
+                                type="button"
+                                onClick={(event) => {
+                                  event.stopPropagation();
+                                  openRepayment(application, true);
+                                }}
+                              >
+                                Doplatit
+                              </button>
+                            </span>
+                          ) : (
+                            <small>-</small>
+                          )}
+                        </td>
                         <td>
                           <strong>
                             {
@@ -444,32 +470,6 @@ export default function LoansPage() {
                                   : "Schváleno"
                                 : "Zamítnuto"}
                           </span>
-                        </td>
-                        <td>
-                          {canRepay ? (
-                            <span className="loan-repayment-actions">
-                              <button
-                                type="button"
-                                onClick={(event) => {
-                                  event.stopPropagation();
-                                  openRepayment(application, false);
-                                }}
-                              >
-                                Splátka
-                              </button>
-                              <button
-                                type="button"
-                                onClick={(event) => {
-                                  event.stopPropagation();
-                                  openRepayment(application, true);
-                                }}
-                              >
-                                Doplatit
-                              </button>
-                            </span>
-                          ) : (
-                            <small>-</small>
-                          )}
                         </td>
                       </tr>
                       {expandedLoanId === application.id && approved && (
