@@ -227,11 +227,11 @@ button { color: inherit; }
 .automation-modal { max-height: calc(100vh - 40px); overflow-y: auto; }
 .automation-list { display: grid; gap: 8px; max-height: min(620px, calc(100vh - 250px)); margin-top: 24px; padding-top: 18px; overflow-y: auto; border-top: 1px solid var(--line); scrollbar-color: var(--green) #eef2ed; scrollbar-width: thin; }
 .automation-list > strong { font-size: 12px; }
-.automation-list > div, .selectable-list > button, .selectable-list > a { padding: 11px 0; display: grid; gap: 4px; border: 0; border-bottom: 1px solid #edf0eb; background: transparent; color: var(--ink); text-align: left; text-decoration: none; }
-.automation-list span, .selectable-list > button span { font-size: 11px; font-weight: 750; }
-.automation-list small, .selectable-list > button small { color: var(--muted); font-size: 10px; }
+.automation-list > div, .selectable-list > button, .selectable-list > a { padding: 14px 0; display: grid; justify-items: center; gap: 6px; border: 0; border-bottom: 1px solid #edf0eb; background: transparent; color: var(--ink); text-align: center; text-decoration: none; }
+.automation-list span, .selectable-list > button span { font-size: 13px; font-weight: 750; }
+.automation-list small, .selectable-list > button small { color: var(--muted); font-size: 11px; }
 .automation-item { position: relative; }
-.automation-actions { display: flex; gap: 8px; margin-top: 8px; }
+.automation-actions { display: flex; justify-content: center; gap: 8px; margin-top: 8px; }
 .automation-actions button, .automation-actions a { display: inline-flex; align-items: center; gap: 5px; padding: 5px 8px; border: 1px solid var(--line); border-radius: 5px; background: transparent; color: var(--ink); font: inherit; font-size: 11px; cursor: pointer; text-decoration: none; }
 .automation-actions button:last-child, .automation-actions a:last-child { color: #a43b32; }
 .selectable-list > button, .selectable-list > a { width: 100%; cursor: pointer; }
