@@ -305,6 +305,8 @@ button { color: inherit; }
 .goal-ring strong, .goal-ring span { transform: rotate(-25deg); }
 .goal-ring strong { font-size: 29px; }
 .goal-ring span { color: var(--muted); font-size: 10px; }
+.goal-ring-empty { border-color: rgba(22,122,69,.18); }
+.savings-actions { display: flex; align-items: center; gap: 22px; }
 .savings-heading { margin-top: 36px; }
 .goal-list { display: grid; gap: 12px; margin-top: 14px; }
 .goal-list article { display: grid; grid-template-columns: 42px 1fr 44px; align-items: center; gap: 14px; padding: 17px 20px; border: 1px solid var(--line); border-radius: 7px; background: white; }
