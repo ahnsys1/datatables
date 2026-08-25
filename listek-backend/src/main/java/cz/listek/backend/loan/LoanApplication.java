@@ -73,6 +73,9 @@ public class LoanApplication {
     @Column(nullable = false, precision = 19, scale = 2)
     private BigDecimal remainingAmount = BigDecimal.ZERO;
 
+    @Column(nullable = false, precision = 19, scale = 2)
+    private BigDecimal principalBalance = BigDecimal.ZERO;
+
     private Integer remainingInstallments;
 
     private LocalDate dueDate;
@@ -93,6 +96,7 @@ public class LoanApplication {
         this.createdAt = Instant.now();
         this.remainingInstallments = repaymentMonths;
         this.remainingAmount = monthlyPayment.multiply(BigDecimal.valueOf(repaymentMonths));
+        this.principalBalance = amount;
     }
 
     public UUID getId() {
@@ -168,7 +172,7 @@ public class LoanApplication {
     }
 
     public BigDecimal calculateEarlyRepaymentAmount() {
-        return remainingAmount.setScale(2, java.math.RoundingMode.HALF_UP);
+        return this.principalBalance.setScale(2, java.math.RoundingMode.HALF_UP);
     }
 
     public void configureRepayment(String repaymentAccountNumber, String variableSymbol, String specificSymbol,
@@ -178,25 +182,39 @@ public class LoanApplication {
         this.specificSymbol = specificSymbol;
         this.repaymentDayOfMonth = repaymentDayOfMonth;
         this.dueDate = dueDate;
-        this.remainingAmount = amount;
+        this.remainingAmount = monthlyPayment.multiply(BigDecimal.valueOf(repaymentMonths));
+        this.principalBalance = amount;
     }
 
-    public void recordRepayment(BigDecimal amount) {
-        this.repaidAmount = this.repaidAmount.add(amount);
-        if (amount.compareTo(remainingAmount) >= 0) {
+    public void recordRepayment(BigDecimal amount, boolean earlyRepayment) {
+        if (amount.compareTo(calculateEarlyRepaymentAmount()) >= 0) {
+            this.repaidAmount = this.repaidAmount.add(amount);
             this.remainingAmount = BigDecimal.ZERO.setScale(2);
             this.remainingInstallments = 0;
             return;
         }
-        int paidInstallments = repaidAmount.divide(monthlyPayment, 0, java.math.RoundingMode.FLOOR).intValue();
+        this.repaidAmount = this.repaidAmount.add(amount);
+        if (earlyRepayment) {
+            this.principalBalance = this.principalBalance.subtract(amount).max(BigDecimal.ZERO);
+        } else {
+            BigDecimal monthlyRate = annualRate.divide(new BigDecimal("1200"), 12, java.math.RoundingMode.HALF_UP);
+            BigDecimal interest = this.principalBalance.multiply(monthlyRate).setScale(2, java.math.RoundingMode.HALF_UP);
+            this.principalBalance = this.principalBalance.subtract(amount.subtract(interest)).max(BigDecimal.ZERO);
+            this.remainingInstallments = Math.max(0, remainingInstallments - 1);
+        }
+        this.remainingAmount = calculateRemainingAmount()
+                .setScale(2, java.math.RoundingMode.HALF_UP);
+    }
+
+    private BigDecimal calculateRemainingAmount() {
+        if (principalBalance.signum() == 0 || remainingInstallments == 0) {
+            return BigDecimal.ZERO;
+        }
         BigDecimal monthlyRate = annualRate.divide(new BigDecimal("1200"), 12, java.math.RoundingMode.HALF_UP);
         double rate = monthlyRate.doubleValue();
-        double factor = Math.pow(1 + rate, paidInstallments);
-        double principalBalance = rate == 0
-                ? this.amount.doubleValue() - monthlyPayment.doubleValue() * paidInstallments
-                : this.amount.doubleValue() * factor - monthlyPayment.doubleValue() * (factor - 1) / rate;
-        this.remainingAmount = BigDecimal.valueOf(Math.max(0, principalBalance))
-                .setScale(2, java.math.RoundingMode.HALF_UP);
-        this.remainingInstallments = remainingAmount.signum() == 0 ? 0 : repaymentMonths - paidInstallments;
+        double principal = principalBalance.doubleValue();
+        double months = remainingInstallments;
+        double payment = rate == 0 ? principal : principal * rate / (1 - Math.pow(1 + rate, -months));
+        return BigDecimal.valueOf(payment * months);
     }
 }

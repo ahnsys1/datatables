@@ -59,7 +59,9 @@ export default function Home() {
   const [admins, setAdmins] = useState<AdminUser[]>([]);
   const [selected, setSelected] = useState<BankApplication | null>(null);
   const [search, setSearch] = useState("");
+  const [loanSearch, setLoanSearch] = useState("");
   const [pendingOnly, setPendingOnly] = useState(true);
+  const [onlyUnprocessedLoans, setOnlyUnprocessedLoans] = useState(true);
   const [note, setNote] = useState("");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -152,6 +154,10 @@ export default function Home() {
     (!pendingOnly || application.status === "PENDING")
       && (application.clientName.toLocaleLowerCase("cs").includes(search.toLocaleLowerCase("cs"))
         || application.accountNumber.includes(search)));
+  const visibleLoans = loans.filter((loan) =>
+    loan.status === "APPROVED" && (!onlyUnprocessedLoans || (loan.remainingAmount ?? 0) > 0)
+      && (loan.clientName.toLocaleLowerCase("cs").includes(loanSearch.toLocaleLowerCase("cs"))
+        || loan.accountNumber.includes(loanSearch)));
 
   async function decide(status: "APPROVED" | "REJECTED") {
     if (!selected) return;
@@ -303,9 +309,9 @@ export default function Home() {
           </section>}
 
           {view === "loans" && !loading && <section className="clients-panel loan-records-panel">
-            <div className="panel-heading"><div><p>EVIDENCE ÚVĚRŮ</p><h2>Přehled půjček</h2></div><span>{loans.filter((loan) => loan.status === "APPROVED").length} aktivních</span></div>
-            <div className="loan-records-table"><div className="table-head"><span>Klient a účet</span><span>Částka</span><span>Splaceno</span><span>Zbývá</span><span>Úrok</span><span>Splátkový účet</span><span>VS / SS</span></div>{loans.filter((loan) => loan.status === "APPROVED").map((loan) => <article key={loan.id}><span><strong>{loan.clientName}</strong><small>{loan.accountNumber}</small></span><strong>{money.format(loan.amount)}</strong><strong>{money.format(loan.repaidAmount ?? 0)}</strong><strong>{money.format(loan.remainingAmount ?? 0)}</strong><strong>{loan.annualRate?.toLocaleString("cs-CZ") ?? "-"} % p. a.</strong><span><strong>{loan.repaymentAccountNumber ?? "-"}</strong><small>{loan.repaymentDayOfMonth ? `${loan.repaymentDayOfMonth}. den v měsíci` : "-"}</small></span><span><strong>VS {loan.variableSymbol ?? "-"}</strong><small>SS {loan.specificSymbol ?? "-"}</small></span></article>)}</div>
-            {loans.every((loan) => loan.status !== "APPROVED") && <div className="empty-state"><Check size={25} /><strong>Žádné schválené půjčky</strong><span>Po schválení se zde zobrazí evidence splácení.</span></div>}
+            <div className="panel-heading"><div><p>EVIDENCE ÚVĚRŮ</p><h2>Přehled půjček</h2></div><div className="loan-records-controls"><div className="search"><Search size={18} /><input value={loanSearch} onChange={(event) => setLoanSearch(event.target.value)} placeholder="Hledej klienta nebo účet" /></div><label className="pending-filter"><input type="checkbox" checked={onlyUnprocessedLoans} onChange={(event) => setOnlyUnprocessedLoans(event.target.checked)} /> Jen nesplacené</label><span>{visibleLoans.length} aktivních</span></div></div>
+            <div className="loan-records-table"><div className="table-head"><span>Klient a účet</span><span>Částka</span><span>Splaceno</span><span>Zbývá</span><span>Úrok</span><span>Splátkový účet</span></div>{visibleLoans.map((loan) => <article key={loan.id}><span><strong>{loan.clientName}</strong><small>{loan.accountNumber}</small></span><strong>{money.format(loan.amount)}</strong><strong>{money.format(loan.repaidAmount ?? 0)}</strong><strong>{money.format(loan.remainingAmount ?? 0)}</strong><strong>{loan.annualRate?.toLocaleString("cs-CZ") ?? "-"} % p. a.</strong><span><strong>{loan.repaymentAccountNumber ?? "-"}</strong><small>{loan.repaymentDayOfMonth ? `${loan.repaymentDayOfMonth}. den v měsíci` : "-"}</small><small>VS {loan.variableSymbol ?? "-"} · SS {loan.specificSymbol ?? "-"}</small></span></article>)}</div>
+            {visibleLoans.length === 0 && <div className="empty-state"><Check size={25} /><strong>{onlyUnprocessedLoans ? "Žádné nezpracované půjčky" : "Žádné schválené půjčky"}</strong><span>{onlyUnprocessedLoans ? "Všechny schválené půjčky jsou již uzavřené." : "Po schválení se zde zobrazí evidence splácení."}</span></div>}
           </section>}
 
           {view === "settings" && !loading && interestSettings && <section className="settings-card"><div className="panel-heading"><div><p>PRODUKTOVÉ PODMÍNKY</p><h2>Úrokové sazby</h2></div><span>% p. a.</span></div><form onSubmit={saveInterestSettings} className="rate-form"><label>Spořicí účet<input name="savingsRate" type="number" min="0" step="0.001" defaultValue={interestSettings.savingsRate} /></label><label>Kontokorent<input name="overdraftRate" type="number" min="0" step="0.001" defaultValue={interestSettings.overdraftRate} /></label><label>Půjčka na cokoliv<input name="personalLoanRate" type="number" min="0" step="0.001" defaultValue={interestSettings.personalLoanRate} /></label><label>Půjčka na bydlení<input name="homeLoanRate" type="number" min="0" step="0.001" defaultValue={interestSettings.homeLoanRate} /></label><button className="primary-button submit-button" type="submit" disabled={saving}>{saving ? "Ukládám..." : "Uložit sazby"}</button></form></section>}

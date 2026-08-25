@@ -419,17 +419,18 @@ button { color: inherit; }
 .pay-button:disabled:hover { background: var(--green); }
 .loan-table-wrap { overflow-x: auto; }
 .loan-table { width: 100%; min-width: 0; border-collapse: collapse; table-layout: fixed; }
-.loan-table th, .loan-table td { width: 16.666%; padding: 14px 18px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: middle; overflow-wrap: anywhere; }
-.loan-table th:first-child, .loan-table td:first-child { width: 20%; }
-.loan-table th:not(:first-child), .loan-table td:not(:first-child) { width: 16%; }
+.loan-table th, .loan-table td { width: 16.666%; padding: 14px 0; border-bottom: 1px solid var(--line); text-align: left; vertical-align: middle; overflow-wrap: anywhere; }
+.loan-table th:first-child, .loan-table td:first-child { width: calc(15% - 30px); }
+.loan-table th:not(:first-child), .loan-table td:not(:first-child) { width: calc(17% + 6px); }
 .loan-table th { color: var(--muted); background: #f7f9f5; font-size: 9px; font-weight: 800; text-transform: uppercase; }
 .loan-table td { font-size: 10px; }
 .loan-table tr:last-child td { border-bottom: 0; }
 .loan-table-empty { padding: 42px 18px !important; color: var(--muted); text-align: center !important; }
 .loan-table .loan-row-expandable { cursor: pointer; }
 .loan-table .loan-row-expandable:hover td { background: #fbfcfa; }
-.loan-table .loan-row-repaid td { color: #8a948d; text-decoration: line-through; text-decoration-color: #aab5ad; }
+.loan-table .loan-row-repaid td { color: inherit; background: transparent; text-decoration: none; }
 .loan-table .loan-row-repaid .loan-status-label { text-decoration: none; }
+.loan-table .loan-row-repaid .loan-status-label.approved { color: #536b73; background: #dce8ea; }
 .loan-table .loan-movement-row td { padding: 0; background: #f7f9f5; }
 .loan-movement-detail { padding: 16px 18px 18px; border-top: 1px solid #d7e4d2; }
 .loan-movement-detail > strong, .loan-movement-detail > small { display: block; }

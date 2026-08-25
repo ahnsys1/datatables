@@ -165,7 +165,7 @@ public class AdminLoanApplication {
         this.repaymentDayOfMonth = repaymentDayOfMonth;
         this.dueDate = dueDate;
         this.repaidAmount = BigDecimal.ZERO;
-        this.remainingAmount = amount;
+        this.remainingAmount = monthlyPayment.multiply(BigDecimal.valueOf(repaymentMonths));
         this.remainingInstallments = repaymentMonths;
     }
 }

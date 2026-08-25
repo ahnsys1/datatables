@@ -143,7 +143,7 @@ public class AccountService {
             if (loanApplicationRepository != null) {
                 loanApplicationRepository.findByAccount_IdAndRepaymentAccountNumberAndVariableSymbolAndSpecificSymbol(
                         source.getId(), toAccountNumber.trim(), variableSymbol, specificSymbol)
-                        .ifPresent(loan -> loan.recordRepayment(amount));
+                        .ifPresent(loan -> loan.recordRepayment(amount, description.contains("Mimořádná")));
             }
             return;
         }

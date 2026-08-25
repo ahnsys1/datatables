@@ -122,9 +122,11 @@ button { cursor: pointer; }
 .decision-result p { margin: 5px 0 0; }
 
 .client-table { min-width: 720px; }
-.loan-records-panel { overflow-x: auto; }
-.loan-records-table { min-width: 980px; }
-.loan-records-table .table-head, .loan-records-table article { min-height: 61px; padding: 8px 22px; display: grid; grid-template-columns: 1.35fr 110px 110px 110px 100px 1.2fr 110px; align-items: center; gap: 18px; border-bottom: 1px solid #edf0eb; font-size: 10px; }
+.loan-records-panel { overflow-x: hidden; }
+.loan-records-table { min-width: 0; }
+.loan-records-table .table-head, .loan-records-table article { min-height: 61px; padding: 8px 16px; display: grid; grid-template-columns: repeat(6, 1fr); align-items: center; gap: 4px; border-bottom: 1px solid #edf0eb; font-size: 10px; }
+.loan-records-controls { display: flex; align-items: center; gap: 12px; }
+.loan-records-controls .search { width: 240px; }
 .loan-records-table .table-head { min-height: 38px; color: var(--muted); background: #f8faf6; font-size: 8px; font-weight: 800; text-transform: uppercase; }
 .loan-records-table article { min-height: 68px; }
 .loan-records-table article > span { display: grid; gap: 4px; min-width: 0; }

@@ -57,8 +57,10 @@ export default function LoansPage() {
   const [repaymentLoan, setRepaymentLoan] = useState<LoanApplication | null>(
     null,
   );
-  const [repaymentAmount, setRepaymentAmount] = useState(0);
+  const [repaymentAmount, setRepaymentAmount] = useState<number | string>(0);
   const [savingRepayment, setSavingRepayment] = useState(false);
+  const [earlyRepayment, setEarlyRepayment] = useState(false);
+  const [repaymentError, setRepaymentError] = useState("");
   const [expandedLoanId, setExpandedLoanId] = useState<string | null>(null);
   const [onlyUnpaid, setOnlyUnpaid] = useState(true);
   const [error, setError] = useState("");
@@ -75,7 +77,7 @@ export default function LoansPage() {
   const visibleApplications = onlyUnpaid
     ? applications.filter(
         (application) =>
-          application.status !== "APPROVED" ||
+          application.status === "APPROVED" &&
           (application.remainingAmount ?? 0) > 0,
       )
     : applications;
@@ -143,6 +145,7 @@ export default function LoansPage() {
   function openRepayment(application: LoanApplication, repayAll: boolean) {
     const remainingPayments =
       application.remainingInstallments ?? application.repaymentMonths;
+    setEarlyRepayment(repayAll);
     setRepaymentLoan(application);
     setRepaymentAmount(
       repayAll
@@ -152,7 +155,7 @@ export default function LoansPage() {
               100)
         : application.monthlyPayment,
     );
-    setError("");
+    setRepaymentError("");
   }
 
   async function submitRepayment(event: FormEvent<HTMLFormElement>) {
@@ -161,9 +164,9 @@ export default function LoansPage() {
     if (
       !accountId ||
       !repaymentLoan?.repaymentAccountNumber ||
-      repaymentAmount <= 0
+      Number(repaymentAmount) <= 0
     ) {
-      setError("Splátku se nepodařilo připravit.");
+      setRepaymentError("Zadejte částku splátky.");
       return;
     }
     setSavingRepayment(true);
@@ -171,8 +174,8 @@ export default function LoansPage() {
       await transferMoney({
         fromAccountId: accountId,
         toAccountNumber: repaymentLoan.repaymentAccountNumber,
-        amount: repaymentAmount,
-        description: "Mimořádná splátka půjčky",
+        amount: Number(repaymentAmount),
+        description: earlyRepayment ? "Mimořádná splátka půjčky" : "Splátka půjčky",
         variableSymbol: repaymentLoan.variableSymbol,
         specificSymbol: repaymentLoan.specificSymbol,
       });
@@ -182,10 +185,14 @@ export default function LoansPage() {
       setRepaymentLoan(null);
       setError("");
     } catch (repaymentError) {
-      setError(
-        repaymentError instanceof Error
-          ? repaymentError.message
-          : "Splátku se nepodařilo odeslat.",
+      const message = repaymentError instanceof Error
+        ? repaymentError.message
+        : "Splátku se nepodařilo odeslat.";
+      setRepaymentError(
+        message.toLocaleLowerCase("cs-CZ").includes("nedostatečný") ||
+          message.toLocaleLowerCase("cs-CZ").includes("nedostatecny")
+          ? "Nemáte dostatečný zůstatek na účtu pro provedení splátky."
+          : message,
       );
     } finally {
       setSavingRepayment(false);
@@ -681,12 +688,15 @@ export default function LoansPage() {
                     min="1"
                     step="0.01"
                     value={repaymentAmount}
-                    onChange={(event) =>
-                      setRepaymentAmount(Number(event.target.value))
-                    }
+                    onChange={(event) => setRepaymentAmount(event.target.value)}
                     required
                   />
                 </label>
+                {repaymentError && (
+                  <p className="modal-error" role="alert">
+                    {repaymentError}
+                  </p>
+                )}
                 <button
                   className="pay-button payment-submit"
                   type="submit"
@@ -694,7 +704,9 @@ export default function LoansPage() {
                 >
                   {savingRepayment
                     ? "Odesílám..."
-                    : `Zaplatit ${currency.format(repaymentAmount)}`}
+                    : repaymentAmount === ""
+                      ? "Zaplatit"
+                      : `Zaplatit ${currency.format(Number(repaymentAmount))}`}
                 </button>
               </form>
             </section>
