@@ -95,8 +95,8 @@ public class LoanApplication {
         this.status = LoanStatus.PENDING;
         this.createdAt = Instant.now();
         this.remainingInstallments = repaymentMonths;
-        this.remainingAmount = monthlyPayment.multiply(BigDecimal.valueOf(repaymentMonths));
         this.principalBalance = amount;
+        this.remainingAmount = calculateRemainingAmount();
     }
 
     public UUID getId() {
@@ -182,12 +182,16 @@ public class LoanApplication {
         this.specificSymbol = specificSymbol;
         this.repaymentDayOfMonth = repaymentDayOfMonth;
         this.dueDate = dueDate;
-        this.remainingAmount = monthlyPayment.multiply(BigDecimal.valueOf(repaymentMonths));
         this.principalBalance = amount;
+        this.remainingAmount = calculateRemainingAmount();
     }
 
     public void recordRepayment(BigDecimal amount, boolean earlyRepayment) {
-        if (amount.compareTo(calculateEarlyRepaymentAmount()) >= 0) {
+        BigDecimal monthlyRate = annualRate.divide(new BigDecimal("1200"), 12, java.math.RoundingMode.HALF_UP);
+        BigDecimal interest = principalBalance.multiply(monthlyRate)
+                .setScale(2, java.math.RoundingMode.HALF_UP);
+        BigDecimal scheduledPayment = principalBalance.add(interest);
+        if (amount.compareTo(earlyRepayment ? calculateEarlyRepaymentAmount() : scheduledPayment) >= 0) {
             this.repaidAmount = this.repaidAmount.add(amount);
             this.remainingAmount = BigDecimal.ZERO.setScale(2);
             this.remainingInstallments = 0;
@@ -196,14 +200,53 @@ public class LoanApplication {
         this.repaidAmount = this.repaidAmount.add(amount);
         if (earlyRepayment) {
             this.principalBalance = this.principalBalance.subtract(amount).max(BigDecimal.ZERO);
+            this.remainingInstallments = calculateRemainingInstallments(remainingInstallments);
         } else {
-            BigDecimal monthlyRate = annualRate.divide(new BigDecimal("1200"), 12, java.math.RoundingMode.HALF_UP);
-            BigDecimal interest = this.principalBalance.multiply(monthlyRate).setScale(2, java.math.RoundingMode.HALF_UP);
-            this.principalBalance = this.principalBalance.subtract(amount.subtract(interest)).max(BigDecimal.ZERO);
-            this.remainingInstallments = Math.max(0, remainingInstallments - 1);
+            int scheduledInstallments = remainingInstallments;
+            BigDecimal unpaidAmount = amount;
+            int paidInstallments = 0;
+            BigDecimal balance = principalBalance;
+            while (unpaidAmount.signum() > 0 && balance.signum() > 0
+                    && paidInstallments < scheduledInstallments) {
+                BigDecimal currentInterest = balance.multiply(monthlyRate)
+                        .setScale(2, java.math.RoundingMode.HALF_UP);
+                BigDecimal currentPayment = monthlyPayment.min(balance.add(currentInterest));
+                if (unpaidAmount.compareTo(currentPayment) < 0) {
+                    BigDecimal principalPayment = unpaidAmount.subtract(currentInterest).max(BigDecimal.ZERO);
+                    balance = balance.subtract(principalPayment).max(BigDecimal.ZERO);
+                    unpaidAmount = BigDecimal.ZERO;
+                    break;
+                }
+                balance = balance.subtract(currentPayment.subtract(currentInterest)).max(BigDecimal.ZERO);
+                unpaidAmount = unpaidAmount.subtract(currentPayment);
+                paidInstallments++;
+            }
+            this.principalBalance = balance;
+            this.remainingAmount = this.remainingAmount.subtract(amount).max(BigDecimal.ZERO);
+            this.remainingInstallments = this.remainingAmount.signum() == 0
+                    ? 0
+                    : this.remainingAmount.divide(monthlyPayment, 0, java.math.RoundingMode.CEILING).intValue();
         }
-        this.remainingAmount = calculateRemainingAmount()
-                .setScale(2, java.math.RoundingMode.HALF_UP);
+        if (earlyRepayment) {
+            this.remainingAmount = calculateRemainingAmount()
+                    .setScale(2, java.math.RoundingMode.HALF_UP);
+        }
+    }
+
+    private int calculateRemainingInstallments(int maximumInstallments) {
+        if (principalBalance.signum() == 0) {
+            return 0;
+        }
+        BigDecimal monthlyRate = annualRate.divide(new BigDecimal("1200"), 12, java.math.RoundingMode.HALF_UP);
+        BigDecimal balance = principalBalance;
+        int installments = 0;
+        while (balance.signum() > 0 && installments < maximumInstallments) {
+            BigDecimal interest = balance.multiply(monthlyRate).setScale(2, java.math.RoundingMode.HALF_UP);
+            BigDecimal payment = monthlyPayment.min(balance.add(interest));
+            balance = balance.subtract(payment.subtract(interest)).max(BigDecimal.ZERO);
+            installments++;
+        }
+        return installments;
     }
 
     private BigDecimal calculateRemainingAmount() {
@@ -211,10 +254,14 @@ public class LoanApplication {
             return BigDecimal.ZERO;
         }
         BigDecimal monthlyRate = annualRate.divide(new BigDecimal("1200"), 12, java.math.RoundingMode.HALF_UP);
-        double rate = monthlyRate.doubleValue();
-        double principal = principalBalance.doubleValue();
-        double months = remainingInstallments;
-        double payment = rate == 0 ? principal : principal * rate / (1 - Math.pow(1 + rate, -months));
-        return BigDecimal.valueOf(payment * months);
+        BigDecimal balance = principalBalance;
+        BigDecimal total = BigDecimal.ZERO;
+        for (int month = 0; month < remainingInstallments && balance.signum() > 0; month++) {
+            BigDecimal interest = balance.multiply(monthlyRate).setScale(2, java.math.RoundingMode.HALF_UP);
+            BigDecimal payment = monthlyPayment.min(balance.add(interest));
+            total = total.add(payment);
+            balance = balance.subtract(payment.subtract(interest)).max(BigDecimal.ZERO);
+        }
+        return total.setScale(2, java.math.RoundingMode.HALF_UP);
     }
 }

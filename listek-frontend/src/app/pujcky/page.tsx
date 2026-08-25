@@ -41,7 +41,26 @@ const currency = new Intl.NumberFormat("cs-CZ", {
 
 function monthlyPayment(amount: number, months: number, annualRate: number) {
   const monthlyRate = annualRate / 1200;
-  return (amount * monthlyRate) / (1 - (1 + monthlyRate) ** -months);
+  const payment = (amount * monthlyRate) / (1 - (1 + monthlyRate) ** -months);
+  return Math.round(payment * 100) / 100;
+}
+
+function totalRepayment(
+  amount: number,
+  months: number,
+  annualRate: number,
+  payment: number,
+) {
+  const monthlyRate = annualRate / 1200;
+  let balance = amount;
+  let total = 0;
+  for (let month = 0; month < months && balance > 0; month += 1) {
+    const interest = Math.round(balance * monthlyRate * 100) / 100;
+    const currentPayment = Math.min(payment, balance + interest);
+    total += currentPayment;
+    balance = Math.max(0, balance - (currentPayment - interest));
+  }
+  return Math.round(total * 100) / 100;
 }
 
 export default function LoansPage() {
@@ -73,7 +92,8 @@ export default function LoansPage() {
       : rates.homeLoanRate
     : product.rate;
   const installment = monthlyPayment(amount, months, productRate);
-  const total = installment * months;
+  const total = totalRepayment(amount, months, productRate, installment);
+  const totalInterest = total - amount;
   const visibleApplications = onlyUnpaid
     ? applications.filter(
         (application) =>
@@ -316,6 +336,10 @@ export default function LoansPage() {
               <div>
                 <dt>Celkem zaplatíte</dt>
                 <dd>{currency.format(total)}</dd>
+              </div>
+              <div>
+                <dt>Úrok celkem</dt>
+                <dd>{currency.format(totalInterest)}</dd>
               </div>
             </dl>
             <button
