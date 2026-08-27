@@ -80,6 +80,8 @@ public class LoanApplication {
 
     private LocalDate dueDate;
 
+    private Instant repaidAt;
+
     protected LoanApplication() {
     }
 
@@ -171,6 +173,10 @@ public class LoanApplication {
         return dueDate;
     }
 
+    public Instant getRepaidAt() {
+        return repaidAt;
+    }
+
     public BigDecimal calculateEarlyRepaymentAmount() {
         return this.principalBalance.setScale(2, java.math.RoundingMode.HALF_UP);
     }
@@ -195,6 +201,7 @@ public class LoanApplication {
             this.repaidAmount = this.repaidAmount.add(amount);
             this.remainingAmount = BigDecimal.ZERO.setScale(2);
             this.remainingInstallments = 0;
+            this.repaidAt = Instant.now();
             return;
         }
         this.repaidAmount = this.repaidAmount.add(amount);

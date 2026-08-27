@@ -76,6 +76,14 @@ public final class AdminDtos {
 
     }
 
+    public record LoanReportResponse(UUID id, String clientName, String clientEmail, String accountNumber,
+            BigDecimal amount, String purpose, ApplicationStatus status, Instant requestedAt,
+            String approvedBy, Instant approvedAt, Instant repaidAt, BigDecimal repaidAmount,
+            BigDecimal remainingAmount, Integer remainingInstallments, LocalDate dueDate,
+            BigDecimal monthlyPayment, BigDecimal annualRate, boolean hasOutstandingBalance, boolean overdue) {
+
+    }
+
     public record DecisionRequest(@NotNull ApplicationStatus status, @Size(max = 500) String note) {
 
     }

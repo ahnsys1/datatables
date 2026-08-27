@@ -52,6 +52,10 @@ public class AdminLoanApplication {
     private Instant createdAt;
 
     private Instant decidedAt;
+    @Column(length = 80)
+    private String approvedBy;
+    private Instant approvedAt;
+    private Instant repaidAt;
     private String decisionNote;
     @Column(nullable = false)
     private int mortgageApprovalCount;
@@ -75,10 +79,14 @@ public class AdminLoanApplication {
     protected AdminLoanApplication() {
     }
 
-    public void decide(ApplicationStatus status, String note) {
+    public void decide(ApplicationStatus status, String note, String approver) {
         this.status = status;
         this.decisionNote = note;
         this.decidedAt = Instant.now();
+        if (status == ApplicationStatus.APPROVED) {
+            this.approvedBy = approver;
+            this.approvedAt = this.decidedAt;
+        }
     }
 
     public void recordMortgageApproval(String approver) {
@@ -133,6 +141,14 @@ public class AdminLoanApplication {
         return decidedAt;
     }
 
+    public String getApprovedBy() {
+        return approvedBy;
+    }
+
+    public Instant getApprovedAt() {
+        return approvedAt;
+    }
+
     public String getDecisionNote() {
         return decisionNote;
     }
@@ -175,6 +191,10 @@ public class AdminLoanApplication {
 
     public LocalDate getDueDate() {
         return dueDate;
+    }
+
+    public Instant getRepaidAt() {
+        return repaidAt;
     }
 
     public void configureRepayment(String repaymentAccountNumber, String variableSymbol, String specificSymbol,

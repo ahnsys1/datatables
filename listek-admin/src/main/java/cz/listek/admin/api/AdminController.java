@@ -21,6 +21,7 @@ import cz.listek.admin.api.AdminDtos.CreateOverdraftRequest;
 import cz.listek.admin.api.AdminDtos.DashboardResponse;
 import cz.listek.admin.api.AdminDtos.DecisionRequest;
 import cz.listek.admin.api.AdminDtos.InterestSettingsResponse;
+import cz.listek.admin.api.AdminDtos.LoanReportResponse;
 import cz.listek.admin.api.AdminDtos.UpdateInterestSettingsRequest;
 import cz.listek.admin.service.AdminAuthService;
 import cz.listek.admin.service.AdminWorkflowService;
@@ -76,6 +77,13 @@ public class AdminController {
     @GetMapping("/loans")
     public List<ApplicationResponse> loans() {
         return workflowService.loans();
+    }
+
+    @GetMapping("/reports/loans")
+    public List<LoanReportResponse> loanReport(
+            @org.springframework.web.bind.annotation.RequestHeader("X-Admin-Session") String session) {
+        authService.usernameForSession(session);
+        return workflowService.loanReport();
     }
 
     @PatchMapping("/loans/{id}/decision")

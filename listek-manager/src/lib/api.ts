@@ -58,6 +58,28 @@ export type InterestSettings = {
   mortgageMinimumEquityPercent: number;
 };
 
+export type LoanReport = {
+  id: string;
+  clientName: string;
+  clientEmail: string;
+  accountNumber: string;
+  amount: number;
+  purpose: string;
+  status: ApplicationStatus;
+  requestedAt: string;
+  approvedBy: string | null;
+  approvedAt: string | null;
+  repaidAt: string | null;
+  repaidAmount: number | null;
+  remainingAmount: number | null;
+  remainingInstallments: number | null;
+  dueDate: string | null;
+  monthlyPayment: number;
+  annualRate: number;
+  hasOutstandingBalance: boolean;
+  overdue: boolean;
+};
+
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const token = typeof window === "undefined" ? null : localStorage.getItem("listek-admin-session");
   const response = await fetch(`/api/admin${path}`, {
@@ -90,6 +112,7 @@ export function decideRegistration(id: string, status: "APPROVED" | "REJECTED") 
 export function getDashboard() { return request<Dashboard>("/dashboard"); }
 export function getAccounts() { return request<Account[]>("/accounts"); }
 export function getLoans() { return request<BankApplication[]>("/loans"); }
+export function getLoanReport() { return request<LoanReport[]>("/reports/loans"); }
 export function getOverdrafts() { return request<BankApplication[]>("/overdrafts"); }
 export function getInterestSettings() { return request<InterestSettings>("/settings/interest"); }
 export function updateInterestSettings(input: InterestSettings) {

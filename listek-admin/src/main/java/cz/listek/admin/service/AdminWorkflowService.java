@@ -20,6 +20,7 @@ import cz.listek.admin.api.AdminDtos.CreateOverdraftRequest;
 import cz.listek.admin.api.AdminDtos.DashboardResponse;
 import cz.listek.admin.api.AdminDtos.DecisionRequest;
 import cz.listek.admin.api.AdminDtos.InterestSettingsResponse;
+import cz.listek.admin.api.AdminDtos.LoanReportResponse;
 import cz.listek.admin.api.AdminDtos.UpdateInterestSettingsRequest;
 import cz.listek.admin.domain.AdminAccount;
 import cz.listek.admin.domain.AdminLoanApplication;
@@ -94,6 +95,20 @@ public class AdminWorkflowService {
     }
 
     @Transactional(readOnly = true)
+    public List<LoanReportResponse> loanReport() {
+        LocalDate today = LocalDate.now(ZoneId.of("Europe/Prague"));
+        return loanRepository.findAllByOrderByCreatedAtDesc().stream().map(loan -> {
+            BigDecimal remaining = loan.getRemainingAmount() == null ? BigDecimal.ZERO : loan.getRemainingAmount();
+            return new LoanReportResponse(loan.getId(), loan.getAccount().getOwnerName(), loan.getAccount().getEmail(),
+                    loan.getAccount().getAccountNumber(), loan.getAmount(), loan.getPurpose(), loan.getStatus(),
+                    loan.getCreatedAt(), loan.getApprovedBy(), loan.getApprovedAt(), loan.getRepaidAt(),
+                    loan.getRepaidAmount(), remaining, loan.getRemainingInstallments(), loan.getDueDate(),
+                    loan.getMonthlyPayment(), loan.getAnnualRate(), remaining.signum() > 0,
+                    loan.getDueDate() != null && loan.getDueDate().isBefore(today) && remaining.signum() > 0);
+        }).toList();
+    }
+
+    @Transactional(readOnly = true)
     public List<ApplicationResponse> overdrafts() {
         return overdraftRepository.findAllByOrderByCreatedAtDesc().stream().map(this::overdraftResponse).toList();
     }
@@ -132,7 +147,7 @@ public class AdminWorkflowService {
                     application.getMonthlyPayment(), "Splátka půjčky", loanRepaymentDayOfMonth,
                     variableSymbol, specificSymbol));
         }
-        application.decide(request.status(), normalizeNote(request.note()));
+        application.decide(request.status(), normalizeNote(request.note()), approver);
         return loanResponse(application);
     }
 

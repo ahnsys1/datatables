@@ -16,6 +16,9 @@ const nextConfig: NextConfig = {
       source: "/loans",
       destination: "/",
     }, {
+      source: "/reports",
+      destination: "/",
+    }, {
       source: "/overdrafts",
       destination: "/",
     }, {
