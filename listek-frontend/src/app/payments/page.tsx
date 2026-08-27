@@ -40,6 +40,16 @@ function sortTransactions(transactions: BankTransaction[], accounts: Account[]) 
   });
 }
 
+async function loadTransactions(accountList: Account[], selectedAccountId: string) {
+  const selectedAccounts = selectedAccountId
+    ? accountList.filter((account) => account.id === selectedAccountId)
+    : accountList;
+  const accountTransactions = await Promise.all(
+    selectedAccounts.map((account) => getTransactions(account.id)),
+  );
+  return sortTransactions(accountTransactions.flat(), selectedAccounts);
+}
+
 export default function PaymentsPage() {
   const initialParams = typeof window === "undefined" ? null : new URLSearchParams(window.location.search);
   const shouldPrefill = initialParams?.get("prefill") === "1";
@@ -53,29 +63,19 @@ export default function PaymentsPage() {
   const [variableSymbol, setVariableSymbol] = useState(() => shouldPrefill ? initialParams?.get("variableSymbol") ?? "" : "");
   const [specificSymbol, setSpecificSymbol] = useState(() => shouldPrefill ? initialParams?.get("specificSymbol") ?? "" : "");
   const [transactions, setTransactions] = useState<BankTransaction[]>([]);
-  const [accountFilter, setAccountFilter] = useState(() => typeof window === "undefined" ? "" : new URLSearchParams(window.location.search).get("accountId") ?? "");
+  const [accountFilter] = useState(() => typeof window === "undefined" ? "" : new URLSearchParams(window.location.search).get("accountId") ?? "");
   const paymentFormRef = useRef<HTMLElement>(null);
-
-  async function refreshTransactions(accountList: Account[]) {
-    const selectedAccounts = accountFilter
-      ? accountList.filter((account) => account.id === accountFilter)
-      : accountList;
-    const accountTransactions = await Promise.all(
-      selectedAccounts.map((account) => getTransactions(account.id)),
-    );
-    setTransactions(sortTransactions(accountTransactions.flat(), selectedAccounts));
-  }
 
   useEffect(() => {
     getAccounts()
       .then(async (loadedAccounts) => {
         setAccounts(loadedAccounts);
-        await refreshTransactions(loadedAccounts);
+        setTransactions(await loadTransactions(loadedAccounts, accountFilter));
       })
       .catch(() =>
         setError("Backend není dostupný. Platby nelze načíst ani odeslat."),
       );
-  }, []);
+  }, [accountFilter]);
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -104,7 +104,7 @@ export default function PaymentsPage() {
         variableSymbol: paymentVariableSymbol || undefined,
         specificSymbol: paymentSpecificSymbol || undefined,
       });
-      await refreshTransactions(accounts);
+      setTransactions(await loadTransactions(accounts, accountFilter));
       setSent(true);
       setError("");
     } catch (transferError) {

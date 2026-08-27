@@ -176,7 +176,6 @@ export default function BankDashboard() {
         <div className="sidebar-bottom">
           <Link href="/help"><HelpCircle size={20} /><span>Pomoc a kontakt</span></Link>
           <Link href="/settings"><Settings size={20} /><span>Nastavení</span></Link>
-          <button onClick={() => setNoticeOpen("logout")}><LogOut size={20} /><span>Odhlásit se</span></button>
         </div>
       </aside>
       {menuOpen && <button className="menu-scrim" onClick={() => setMenuOpen(false)} aria-label="Zavřít nabídku" />}

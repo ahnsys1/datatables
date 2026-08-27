@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowRight, Check, CheckCircle2, WalletCards, X } from "lucide-react";
+import { ArrowRight, CheckCircle2, WalletCards, X } from "lucide-react";
 import { FormEvent, useEffect, useState } from "react";
 import BankShell from "../BankShell";
 import { Account, InterestSettings, OverdraftApplication, createOverdraftApplication, getAccounts, getInterestSettings, getOverdraftApplications, terminateOverdraft } from "../../lib/api";
