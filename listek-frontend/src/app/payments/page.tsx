@@ -186,7 +186,7 @@ export default function PaymentsPage() {
                     </option>
                     {accounts.map((account) => (
                       <option key={account.id} value={account.id}>
-                        {formatAccountNumber(account.accountNumber)} (
+                        {account.type === "SAVINGS" ? "Spořicí účet" : "Běžný účet"} · {formatAccountNumber(account.accountNumber)} (
                         {account.balance.toLocaleString("cs-CZ")}{" "}
                         {account.currency})
                       </option>

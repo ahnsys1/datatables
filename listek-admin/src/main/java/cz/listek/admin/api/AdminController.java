@@ -79,8 +79,9 @@ public class AdminController {
     }
 
     @PatchMapping("/loans/{id}/decision")
-    public ApplicationResponse decideLoan(@PathVariable UUID id, @Valid @RequestBody DecisionRequest request) {
-        return workflowService.decideLoan(id, request);
+    public ApplicationResponse decideLoan(@PathVariable UUID id, @Valid @RequestBody DecisionRequest request,
+            @org.springframework.web.bind.annotation.RequestHeader("X-Admin-Session") String session) {
+        return workflowService.decideLoan(id, request, authService.usernameForSession(session));
     }
 
     @GetMapping("/overdrafts")

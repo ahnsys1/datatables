@@ -99,11 +99,23 @@ public class AdminWorkflowService {
     }
 
     @Transactional
-    public ApplicationResponse decideLoan(UUID id, DecisionRequest request) {
+    public ApplicationResponse decideLoan(UUID id, DecisionRequest request, String approver) {
         validateDecision(request.status());
         AdminLoanApplication application = loanRepository.findById(id).orElseThrow(() -> notFound("Žádost o půjčku"));
         if (application.getStatus() != PENDING) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "O žádosti již bylo rozhodnuto");
+        }
+        if (request.status() == APPROVED && "MORTGAGE".equals(application.getType())
+                && application.getAmount().compareTo(new BigDecimal("1000000.00")) > 0) {
+            if (application.getMortgageApprovalCount() == 0) {
+                application.recordMortgageApproval(approver);
+                return loanResponse(application);
+            }
+            if (approver.equals(application.getFirstMortgageApprover())) {
+                throw new ResponseStatusException(HttpStatus.CONFLICT,
+                        "Hypotéku nad 1 000 000 Kč musí schválit druhý administrátor");
+            }
+            application.recordMortgageApproval(approver);
         }
         if (request.status() == APPROVED) {
             AdminAccount account = accountRepository.findWithLockById(application.getAccount().getId())
@@ -172,7 +184,8 @@ public class AdminWorkflowService {
     @Transactional
     public InterestSettingsResponse updateInterestSettings(UpdateInterestSettingsRequest request) {
         ProductInterestSettings settings = settings();
-        settings.update(request.savingsRate(), request.overdraftRate(), request.personalLoanRate(), request.homeLoanRate());
+        settings.update(request.savingsRate(), request.overdraftRate(), request.personalLoanRate(), request.homeLoanRate(),
+                request.mortgageRate(), request.mortgageMinimumEquityPercent());
         return settingsResponse(interestSettingsRepository.save(settings));
     }
 
@@ -181,7 +194,8 @@ public class AdminWorkflowService {
     }
 
     private InterestSettingsResponse settingsResponse(ProductInterestSettings settings) {
-        return new InterestSettingsResponse(settings.getSavingsRate(), settings.getOverdraftRate(), settings.getPersonalLoanRate(), settings.getHomeLoanRate());
+        return new InterestSettingsResponse(settings.getSavingsRate(), settings.getOverdraftRate(), settings.getPersonalLoanRate(),
+                settings.getHomeLoanRate(), settings.getMortgageRate(), settings.getMortgageMinimumEquityPercent());
     }
 
     private void validateDecision(ApplicationStatus status) {

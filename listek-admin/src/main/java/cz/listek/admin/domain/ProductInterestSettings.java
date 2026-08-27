@@ -16,6 +16,8 @@ public class ProductInterestSettings {
     private BigDecimal overdraftRate;
     private BigDecimal personalLoanRate;
     private BigDecimal homeLoanRate;
+    private BigDecimal mortgageRate;
+    private BigDecimal mortgageMinimumEquityPercent;
 
     protected ProductInterestSettings() {
     }
@@ -36,10 +38,21 @@ public class ProductInterestSettings {
         return homeLoanRate;
     }
 
-    public void update(BigDecimal savingsRate, BigDecimal overdraftRate, BigDecimal personalLoanRate, BigDecimal homeLoanRate) {
+    public BigDecimal getMortgageRate() {
+        return mortgageRate;
+    }
+
+    public BigDecimal getMortgageMinimumEquityPercent() {
+        return mortgageMinimumEquityPercent;
+    }
+
+    public void update(BigDecimal savingsRate, BigDecimal overdraftRate, BigDecimal personalLoanRate,
+            BigDecimal homeLoanRate, BigDecimal mortgageRate, BigDecimal mortgageMinimumEquityPercent) {
         this.savingsRate = savingsRate;
         this.overdraftRate = overdraftRate;
         this.personalLoanRate = personalLoanRate;
         this.homeLoanRate = homeLoanRate;
+        this.mortgageRate = mortgageRate;
+        this.mortgageMinimumEquityPercent = mortgageMinimumEquityPercent;
     }
 }

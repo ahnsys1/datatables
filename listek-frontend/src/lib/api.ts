@@ -70,7 +70,7 @@ export type BankCard = {
 
 export type LoanApplication = {
   id: string;
-  type: "PERSONAL" | "HOME";
+  type: "PERSONAL" | "HOME" | "MORTGAGE";
   amount: number;
   repaymentMonths: number;
   annualRate: number;
@@ -89,7 +89,7 @@ export type LoanApplication = {
   dueDate?: string;
 };
 
-export type InterestSettings = { savingsRate: number; overdraftRate: number; personalLoanRate: number; homeLoanRate: number };
+export type InterestSettings = { savingsRate: number; overdraftRate: number; personalLoanRate: number; homeLoanRate: number; mortgageRate: number; mortgageMinimumEquityPercent: number };
 export type OverdraftApplication = { id: string; category: "OVERDRAFT"; product: string; accountId: string; clientName: string; accountNumber: string; amount: number; monthlyIncome: number; annualRate?: number; status: "PENDING" | "APPROVED" | "REJECTED"; createdAt: string; decidedAt: string | null; decisionNote: string | null };
 
 const apiBase = process.env.NEXT_PUBLIC_API_BASE_URL ?? "/api/backend";

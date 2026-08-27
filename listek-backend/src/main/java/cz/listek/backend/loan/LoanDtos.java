@@ -22,7 +22,7 @@ public final class LoanDtos {
             @NotNull
             @DecimalMin(value = "20000.00") BigDecimal amount,
             @Min(12)
-            @Max(120) int repaymentMonths,
+            @Max(360) int repaymentMonths,
             @NotBlank
             @Size(max = 80) String purpose) {
 

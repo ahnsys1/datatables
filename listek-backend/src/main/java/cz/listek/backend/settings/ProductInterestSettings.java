@@ -16,6 +16,8 @@ public class ProductInterestSettings {
     private BigDecimal overdraftRate;
     private BigDecimal personalLoanRate;
     private BigDecimal homeLoanRate;
+    private BigDecimal mortgageRate;
+    private BigDecimal mortgageMinimumEquityPercent;
 
     protected ProductInterestSettings() {
     }
@@ -34,5 +36,13 @@ public class ProductInterestSettings {
 
     public BigDecimal getHomeLoanRate() {
         return homeLoanRate;
+    }
+
+    public BigDecimal getMortgageRate() {
+        return mortgageRate;
+    }
+
+    public BigDecimal getMortgageMinimumEquityPercent() {
+        return mortgageMinimumEquityPercent;
     }
 }

@@ -54,6 +54,8 @@ export type InterestSettings = {
   overdraftRate: number;
   personalLoanRate: number;
   homeLoanRate: number;
+  mortgageRate: number;
+  mortgageMinimumEquityPercent: number;
 };
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {

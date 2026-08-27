@@ -396,6 +396,17 @@ button { color: inherit; }
 .loan-summary dd { margin: 0; font-weight: 750; }
 .loan-summary .pay-button { width: 100%; }
 .loan-summary > small { display: block; margin-top: 14px; color: var(--muted); font-size: 9px; line-height: 1.5; }
+.mortgage-form { display: grid; gap: 18px; }
+.mortgage-range-field { display: grid; gap: 12px; padding: 18px 0; border-top: 1px solid var(--line); }
+.mortgage-range-field > span, .mortgage-range-field > small { display: flex; justify-content: space-between; gap: 16px; }
+.mortgage-range-field strong { font-size: 12px; }
+.mortgage-range-field b { color: var(--green-dark); font-size: 15px; }
+.mortgage-range-field small { color: var(--muted); font-size: 9px; }
+.mortgage-range-field input[type="range"] { width: 100%; accent-color: var(--green); }
+.mortgage-purpose-field { display: grid; gap: 8px; color: var(--ink); font-size: 12px; font-weight: 750; }
+.mortgage-purpose-field input { width: 100%; height: 44px; padding: 0 12px; border: 1px solid #ccd3cc; border-radius: 5px; background: white; color: var(--ink); font: inherit; font-weight: 500; outline: 0; }
+.mortgage-purpose-field input:focus { border-color: var(--green); box-shadow: 0 0 0 3px rgba(22,122,69,.1); }
+.mortgage-form .payment-submit { margin-top: 0; }
 .loan-applications { margin-top: 28px; border: 1px solid var(--line); border-radius: 7px; background: white; overflow: hidden; }
 .loan-applications > .section-heading { padding: 16px 20px; display: flex; align-items: center; justify-content: space-between; gap: 18px; border-bottom: 1px solid var(--line); }
 .loan-applications > .section-heading > span { color: var(--muted); font-size: 11px; }
@@ -434,6 +445,9 @@ button { color: inherit; }
 .loan-table .loan-row-repaid .loan-status-label { text-decoration: none; }
 .loan-table .loan-row-repaid .loan-status-label.approved { color: #536b73; background: #dce8ea; }
 .loan-table .loan-movement-row td { padding: 0; background: #f7f9f5; }
+.mortgage-eligible, .mortgage-ineligible { display: flex; align-items: center; gap: 7px; margin: 18px 0 0; font-size: 11px; font-weight: 700; }
+.mortgage-eligible { color: var(--green); }
+.mortgage-ineligible { color: #a43b32; }
 .loan-movement-detail { padding: 16px 18px 18px; border-top: 1px solid #d7e4d2; }
 .loan-movement-detail > strong, .loan-movement-detail > small { display: block; }
 .loan-movement-detail > strong { font-size: 11px; }

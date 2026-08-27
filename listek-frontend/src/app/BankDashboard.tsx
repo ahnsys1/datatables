@@ -29,6 +29,7 @@ const navigation = [
   { label: "Přehled", href: "/", icon: Home }, { label: "Účty", href: "/ucty", icon: Landmark },
   { label: "Platby", href: "/payments", icon: Send }, { label: "Karty", href: "/karty", icon: CreditCard },
   { label: "Spoření", href: "/sporeni", icon: TrendingUp }, { label: "Půjčky", href: "/pujcky", icon: HandCoins },
+  { label: "Hypotéky", href: "/hypoteky", icon: Home },
   { label: "Kontokorent", href: "/kontokorent", icon: WalletCards },
   { label: "Dokumenty", href: "/dokumenty", icon: FileText },
 ];
@@ -98,14 +99,19 @@ export default function BankDashboard() {
     getAccounts()
       .then(async (loadedAccounts) => {
         const currentAccounts = loadedAccounts.filter((account) => account.id === session.id);
-        const availableAccounts = loadedAccounts.length > 0 ? loadedAccounts : [session];
-        setAccounts(availableAccounts);
-        const accountTransactions = await Promise.all((currentAccounts.length > 0 ? currentAccounts : [session]).map((account) => getTransactions(account.id)));
+        if (currentAccounts.length === 0) {
+          clearSession();
+          router.replace("/login");
+          return;
+        }
+        setAccounts(loadedAccounts);
+        const accountTransactions = await Promise.all(currentAccounts.map((account) => getTransactions(account.id)));
         setApiTransactions(accountTransactions.flat().sort((first, second) => new Date(second.createdAt).getTime() - new Date(first.createdAt).getTime()));
       })
       .catch(() => {
-        setAccounts([session]);
-        setApiError("Backend není dostupný. Zobrazuji poslední známé údaje.");
+        setAccounts([]);
+        setApiTransactions([]);
+        setApiError("Účty se nepodařilo načíst.");
       })
       .finally(() => { setLoading(false); setSessionReady(true); });
   }, [router]);

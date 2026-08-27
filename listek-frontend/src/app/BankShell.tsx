@@ -17,6 +17,7 @@ const navigation = [
   { label: "Karty", href: "/karty", icon: CreditCard },
   { label: "Spoření", href: "/sporeni", icon: TrendingUp },
   { label: "Půjčky", href: "/pujcky", icon: HandCoins },
+  { label: "Hypotéky", href: "/hypoteky", icon: Home },
   { label: "Kontokorent", href: "/kontokorent", icon: WalletCards },
   { label: "Dokumenty", href: "/dokumenty", icon: FileText },
 ];
@@ -107,7 +108,6 @@ export default function BankShell({ children }: { children: ReactNode }) {
         <div className="sidebar-bottom">
           <Link href="/help" onClick={() => setMenuOpen(false)}><HelpCircle size={20} /><span>Pomoc a kontakt</span></Link>
           <Link href="/settings" onClick={() => setMenuOpen(false)}><Settings size={20} /><span>Nastavení</span></Link>
-          <button onClick={() => setNoticeOpen("logout")}><LogOut size={20} /><span>Odhlásit se</span></button>
         </div>
       </aside>
       {menuOpen && <button className="menu-scrim" onClick={() => setMenuOpen(false)} aria-label="Zavřít nabídku" />}

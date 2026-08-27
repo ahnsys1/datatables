@@ -12,6 +12,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import cz.listek.backend.account.Account;
 import cz.listek.backend.account.AccountRepository;
+import cz.listek.backend.account.AccountType;
 import cz.listek.backend.loan.LoanDtos.CreateLoanApplicationRequest;
 import cz.listek.backend.loan.LoanDtos.LoanApplicationResponse;
 import cz.listek.backend.settings.ProductInterestSettings;
@@ -25,6 +26,7 @@ public class LoanApplicationService {
     private static final BigDecimal HOME_RATE = new BigDecimal("5.4000");
     private static final BigDecimal PERSONAL_MAX = new BigDecimal("800000.00");
     private static final BigDecimal HOME_MAX = new BigDecimal("1500000.00");
+    private static final BigDecimal MORTGAGE_MAX = new BigDecimal("20000000.00");
 
     private final AccountRepository accountRepository;
     private final LoanApplicationRepository loanApplicationRepository;
@@ -48,14 +50,28 @@ public class LoanApplicationService {
     @Transactional
     public LoanApplicationResponse create(UUID accountId, CreateLoanApplicationRequest request) {
         Account account = requireAccount(accountId);
-        BigDecimal maximum = request.type() == LoanType.PERSONAL ? PERSONAL_MAX : HOME_MAX;
+        BigDecimal maximum = request.type() == LoanType.PERSONAL ? PERSONAL_MAX
+                : request.type() == LoanType.HOME ? HOME_MAX : MORTGAGE_MAX;
         if (request.amount().compareTo(maximum) > 0) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Castka pujcky presahuje povoleny limit");
         }
         ProductInterestSettings settings = interestSettingsRepository.findById(true).orElse(null);
+        if (request.type() == LoanType.MORTGAGE) {
+            BigDecimal minimumEquityPercent = settings == null ? new BigDecimal("20.00")
+                    : settings.getMortgageMinimumEquityPercent();
+            BigDecimal requiredEquity = request.amount().multiply(minimumEquityPercent)
+                    .divide(new BigDecimal("100"), 2, RoundingMode.HALF_UP);
+            BigDecimal savingsBalance = accountRepository.findByEmailIgnoreCaseAndType(account.getEmail(), AccountType.SAVINGS)
+                    .map(Account::getBalance).orElse(BigDecimal.ZERO);
+            if (savingsBalance.compareTo(requiredEquity) < 0) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                        "Pro hypotéku potřebujete na spořicím účtu alespoň " + requiredEquity + " Kč vlastních prostředků");
+            }
+        }
         BigDecimal annualRate = settings == null
-                ? request.type() == LoanType.PERSONAL ? PERSONAL_RATE : HOME_RATE
-                : request.type() == LoanType.PERSONAL ? settings.getPersonalLoanRate() : settings.getHomeLoanRate();
+                ? request.type() == LoanType.PERSONAL ? PERSONAL_RATE : request.type() == LoanType.HOME ? HOME_RATE : new BigDecimal("4.2000")
+                : request.type() == LoanType.PERSONAL ? settings.getPersonalLoanRate()
+                : request.type() == LoanType.HOME ? settings.getHomeLoanRate() : settings.getMortgageRate();
         BigDecimal monthlyPayment = monthlyPayment(request.amount(), request.repaymentMonths(), annualRate);
         LoanApplication application = new LoanApplication(account, request.type(), request.amount(), request.repaymentMonths(),
                 annualRate, monthlyPayment, request.purpose().trim());

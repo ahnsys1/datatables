@@ -90,7 +90,8 @@ public final class AdminDtos {
     }
 
     public record InterestSettingsResponse(BigDecimal savingsRate, BigDecimal overdraftRate,
-            BigDecimal personalLoanRate, BigDecimal homeLoanRate) {
+            BigDecimal personalLoanRate, BigDecimal homeLoanRate, BigDecimal mortgageRate,
+            BigDecimal mortgageMinimumEquityPercent) {
 
     }
 
@@ -101,7 +102,12 @@ public final class AdminDtos {
             @NotNull
             @DecimalMin("0.00") BigDecimal personalLoanRate,
             @NotNull
-            @DecimalMin("0.00") BigDecimal homeLoanRate) {
+            @DecimalMin("0.00") BigDecimal homeLoanRate,
+            @NotNull
+            @DecimalMin("0.00") BigDecimal mortgageRate,
+            @NotNull
+            @DecimalMin("0.00")
+            @jakarta.validation.constraints.DecimalMax("100.00") BigDecimal mortgageMinimumEquityPercent) {
 
     }
 }

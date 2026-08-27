@@ -53,6 +53,10 @@ public class AdminLoanApplication {
 
     private Instant decidedAt;
     private String decisionNote;
+    @Column(nullable = false)
+    private int mortgageApprovalCount;
+    @Column(length = 80)
+    private String firstMortgageApprover;
 
     @Column(length = 34)
     private String repaymentAccountNumber;
@@ -75,6 +79,14 @@ public class AdminLoanApplication {
         this.status = status;
         this.decisionNote = note;
         this.decidedAt = Instant.now();
+    }
+
+    public void recordMortgageApproval(String approver) {
+        this.mortgageApprovalCount++;
+        if (firstMortgageApprover == null) {
+            firstMortgageApprover = approver;
+        }
+        this.decisionNote = "Čeká na druhé schválení hypotéky";
     }
 
     public UUID getId() {
@@ -123,6 +135,14 @@ public class AdminLoanApplication {
 
     public String getDecisionNote() {
         return decisionNote;
+    }
+
+    public int getMortgageApprovalCount() {
+        return mortgageApprovalCount;
+    }
+
+    public String getFirstMortgageApprover() {
+        return firstMortgageApprover;
     }
 
     public String getRepaymentAccountNumber() {

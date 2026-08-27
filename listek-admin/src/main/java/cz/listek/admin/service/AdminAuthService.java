@@ -72,6 +72,14 @@ public class AdminAuthService {
         return userRepository.findAll().stream().map(this::toResponse).toList();
     }
 
+    public String usernameForSession(String session) {
+        String username = sessions.get(session);
+        if (username == null) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Neplatná administrátorská relace");
+        }
+        return username;
+    }
+
     private AdminUserResponse toResponse(AdminUser user) {
         return new AdminUserResponse(user.getUsername(), user.getFirstName(), user.getLastName(), user.getEmail());
     }

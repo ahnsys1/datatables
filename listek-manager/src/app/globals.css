@@ -44,8 +44,8 @@ button { cursor: pointer; }
 .environment i { width: 7px; height: 7px; border-radius: 50%; background: #35a56b; box-shadow: 0 0 0 4px #e5f2e9; }
 .icon-button { position: relative; width: 40px; height: 40px; display: grid; place-items: center; border: 1px solid var(--line); border-radius: 50%; background: white; }
 .icon-button span { position: absolute; top: 7px; right: 7px; width: 7px; height: 7px; border: 2px solid white; border-radius: 50%; background: #ef664d; }
-.logout-button { min-height: 38px; padding: 0 12px; display: inline-flex; align-items: center; gap: 7px; border: 1px solid #e2b7b0; border-radius: 5px; color: var(--danger); background: white; font-size: 10px; font-weight: 800; white-space: nowrap; }
-.logout-button:hover { color: white; background: var(--danger); }
+.logout-button { min-height: 38px; padding: 0 12px; display: inline-flex; align-items: center; gap: 7px; border: 1px solid var(--danger); border-radius: 5px; color: white; background: var(--danger); font-size: 10px; font-weight: 800; white-space: nowrap; }
+.logout-button:hover { color: white; background: #b83d32; }
 .admin-content { max-width: 1500px; margin: auto; padding: 38px 4vw 64px; }
 .page-heading { margin-bottom: 28px; display: flex; align-items: flex-end; justify-content: space-between; gap: 24px; }
 .page-heading p, .panel-heading p { margin: 0 0 6px; color: var(--green); font-size: 9px; font-weight: 800; }
