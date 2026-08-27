@@ -6,9 +6,10 @@ import {
 } from "lucide-react";
 import { FormEvent, useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
+import Reports from "./reports/Reports";
 import {
-  Account, AdminUser, BankApplication, Dashboard, InterestSettings, LoanReport, decideApplication, getAccounts,
-  getDashboard, getInterestSettings, getLoanReport, getLoans, getOverdrafts, updateInterestSettings,
+  Account, AdminUser, BankApplication, Dashboard, InterestSettings, decideApplication, getAccounts,
+  getDashboard, getInterestSettings, getLoans, getOverdrafts, updateInterestSettings,
   adminLogin, changeAdminPassword, decideRegistration, getAdmins,
   createAdmin,
 } from "@/lib/api";
@@ -56,7 +57,6 @@ export default function Home() {
   const view = viewForPath(pathname);
   const [dashboard, setDashboard] = useState<Dashboard | null>(null);
   const [loans, setLoans] = useState<BankApplication[]>([]);
-  const [loanReport, setLoanReport] = useState<LoanReport[]>([]);
   const [overdrafts, setOverdrafts] = useState<BankApplication[]>([]);
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [admins, setAdmins] = useState<AdminUser[]>([]);
@@ -101,10 +101,9 @@ export default function Home() {
       setAdminReady(true);
     });
     async function refreshData() {
-      const [dashboardData, loanData, reportData, overdraftData, accountData, settingsData, adminData] = await Promise.all([getDashboard(), getLoans(), getLoanReport(), getOverdrafts(), getAccounts(), getInterestSettings(), getAdmins()]);
+      const [dashboardData, loanData, overdraftData, accountData, settingsData, adminData] = await Promise.all([getDashboard(), getLoans(), getOverdrafts(), getAccounts(), getInterestSettings(), getAdmins()]);
       setDashboard(dashboardData);
       setLoans(loanData);
-      setLoanReport(reportData);
       setOverdrafts(overdraftData);
       setAccounts(accountData);
       setInterestSettings(settingsData);
@@ -129,8 +128,8 @@ export default function Home() {
       const result = await adminLogin({ username, password: await hashPassword(String(form.get("password")), username) });
       localStorage.setItem("listek-admin-session", result.token); localStorage.setItem("listek-admin-user", result.username); localStorage.setItem("listek-admin-must-change", String(result.mustChangePassword));
       setAdminUser(result.username); setMustChangePassword(result.mustChangePassword); setAdminReady(true); setLoading(true); router.replace(viewPaths.overview);
-      const [dashboardData, loanData, reportData, overdraftData, accountData, settingsData, adminData] = await Promise.all([getDashboard(), getLoans(), getLoanReport(), getOverdrafts(), getAccounts(), getInterestSettings(), getAdmins()]);
-      setDashboard(dashboardData); setLoans(loanData); setLoanReport(reportData); setOverdrafts(overdraftData); setAccounts(accountData); setInterestSettings(settingsData); setAdmins(adminData); setPendingRegistrations([]); setLoading(false);
+      const [dashboardData, loanData, overdraftData, accountData, settingsData, adminData] = await Promise.all([getDashboard(), getLoans(), getOverdrafts(), getAccounts(), getInterestSettings(), getAdmins()]);
+      setDashboard(dashboardData); setLoans(loanData); setOverdrafts(overdraftData); setAccounts(accountData); setInterestSettings(settingsData); setAdmins(adminData); setPendingRegistrations([]); setLoading(false);
     } catch { setAuthError("Uživatelské jméno nebo heslo nesedí. Zkontrolujte zadané údaje."); }
     finally { setAuthSaving(false); }
   }
@@ -252,7 +251,7 @@ export default function Home() {
           {navigation.map(({ id, label, icon: Icon }) => (
             <button className={view === id ? "active" : ""} key={id} onClick={() => { router.push(viewPaths[id]); setSelected(null); setMenuOpen(false); }}>
               <Icon size={19} /><span>{label}</span>
-              {id !== "clients" && id !== "settings" && id !== "admins" && id !== "reports" && <b>{id === "loans" ? dashboard?.pendingLoans ?? 0 : id === "overdrafts" ? dashboard?.pendingOverdrafts ?? 0 : (dashboard?.pendingLoans ?? 0) + (dashboard?.pendingOverdrafts ?? 0)}</b>}
+              {id !== "clients" && id !== "settings" && id !== "admins" && <b>{id === "loans" ? dashboard?.pendingLoans ?? 0 : id === "overdrafts" ? dashboard?.pendingOverdrafts ?? 0 : (dashboard?.pendingLoans ?? 0) + (dashboard?.pendingOverdrafts ?? 0)}</b>}
             </button>
           ))}
         </nav>
@@ -308,6 +307,8 @@ export default function Home() {
             </aside>
           </section>}
 
+          {view === "reports" && !loading && <Reports />}
+
           {view === "clients" && !loading && <section className="clients-panel">
             <div className="panel-heading"><div><p>KLIENTSKÝ KMEN</p><h2>Účty a zůstatky</h2></div><span>{accounts.length} klientů</span></div>
             <div className="client-table"><div className="table-head"><span>Klient</span><span>Číslo účtu</span><span>Kontakt</span><span>Zůstatek</span></div>{accounts.map((account) => <article key={account.id}><span className="client-name"><i>{account.ownerName.split(" ").map((part) => part[0]).slice(0, 2).join("")}</i><strong>{account.ownerName}</strong></span><span>{account.accountNumber}</span><span>{account.email}</span><strong>{money.format(account.balance)}</strong></article>)}</div>
@@ -318,12 +319,6 @@ export default function Home() {
             <div className="panel-heading"><div><p>EVIDENCE ÚVĚRŮ</p><h2>Přehled půjček</h2></div><div className="loan-records-controls"><div className="search"><Search size={18} /><input value={loanSearch} onChange={(event) => setLoanSearch(event.target.value)} placeholder="Hledej klienta nebo účet" /></div><label className="pending-filter"><input type="checkbox" checked={onlyUnprocessedLoans} onChange={(event) => setOnlyUnprocessedLoans(event.target.checked)} /> Jen nesplacené</label><span>{visibleLoans.length} aktivních</span></div></div>
             <div className="loan-records-table"><div className="table-head"><span>Klient a účet</span><span>Částka</span><span>Splaceno</span><span>Zbývá</span><span>Úrok</span><span>Splátkový účet</span></div>{visibleLoans.map((loan) => <article key={loan.id}><span><strong>{loan.clientName}</strong><small>{loan.accountNumber}</small></span><strong>{money.format(loan.amount)}</strong><strong>{money.format(loan.repaidAmount ?? 0)}</strong><strong>{money.format(loan.remainingAmount ?? 0)}</strong><strong>{loan.annualRate?.toLocaleString("cs-CZ") ?? "-"} % p. a.</strong><span><strong>{loan.repaymentAccountNumber ?? "-"}</strong><small>{loan.repaymentDayOfMonth ? `${loan.repaymentDayOfMonth}. den v měsíci` : "-"}</small><small>VS {loan.variableSymbol ?? "-"} · SS {loan.specificSymbol ?? "-"}</small></span></article>)}</div>
             {visibleLoans.length === 0 && <div className="empty-state"><Check size={25} /><strong>{onlyUnprocessedLoans ? "Žádné nezpracované půjčky" : "Žádné schválené půjčky"}</strong><span>{onlyUnprocessedLoans ? "Všechny schválené půjčky jsou již uzavřené." : "Po schválení se zde zobrazí evidence splácení."}</span></div>}
-          </section>}
-
-          {view === "reports" && !loading && <section className="clients-panel loan-records-panel report-panel">
-            <div className="panel-heading"><div><p>AUDIT A SPLÁCENÍ</p><h2>Report půjček</h2></div><span>{loanReport.length} žádostí</span></div>
-            <div className="loan-records-table report-table"><div className="table-head"><span>Žadatel</span><span>Požadováno</span><span>Schválení</span><span>Splacení</span><span>Zůstatek</span><span>Stav</span></div>{loanReport.map((loan) => <article key={loan.id}><span><strong>{loan.clientName}</strong><small>{loan.clientEmail}</small><small>{loan.accountNumber}</small></span><span><strong>{money.format(loan.amount)}</strong><small>{loan.purpose}</small><small>{date.format(new Date(loan.requestedAt))}</small></span><span><strong>{loan.approvedBy ?? (loan.status === "APPROVED" ? "Neuveden" : "-")}</strong><small>{loan.approvedAt ? date.format(new Date(loan.approvedAt)) : loan.status === "APPROVED" ? "Schváleno před zavedením evidence" : "Neschváleno"}</small></span><span><strong>{loan.repaidAt ? date.format(new Date(loan.repaidAt)) : "-"}</strong><small>{money.format(loan.repaidAmount ?? 0)} splaceno</small></span><span><strong>{money.format(loan.remainingAmount ?? 0)}</strong><small>{loan.overdue ? "Nedoplatek po splatnosti" : loan.hasOutstandingBalance ? `${loan.remainingInstallments ?? 0} splátek zbývá` : "Bez nedoplatku"}</small></span><span className={`status ${loan.status.toLowerCase()}`}>{loan.status === "APPROVED" ? "Schváleno" : loan.status === "REJECTED" ? "Zamítnuto" : "Čeká"}</span></article>)}</div>
-            {loanReport.length === 0 && <div className="empty-state"><Check size={25} /><strong>Report neobsahuje žádná data</strong><span>Po založení žádostí se zde zobrazí jejich audit.</span></div>}
           </section>}
 
           {view === "settings" && !loading && interestSettings && <section className="settings-card"><div className="panel-heading"><div><p>PRODUKTOVÉ PODMÍNKY</p><h2>Úrokové sazby</h2></div><span>% p. a.</span></div><form onSubmit={saveInterestSettings} className="rate-form"><label>Spořicí účet<input name="savingsRate" type="number" min="0" step="0.001" defaultValue={interestSettings.savingsRate} /></label><label>Kontokorent<input name="overdraftRate" type="number" min="0" step="0.001" defaultValue={interestSettings.overdraftRate} /></label><label>Půjčka na cokoliv<input name="personalLoanRate" type="number" min="0" step="0.001" defaultValue={interestSettings.personalLoanRate} /></label><label>Půjčka na bydlení<input name="homeLoanRate" type="number" min="0" step="0.001" defaultValue={interestSettings.homeLoanRate} /></label><label>Hypotéka<input name="mortgageRate" type="number" min="0" step="0.001" defaultValue={interestSettings.mortgageRate} /></label><label>Vlastní prostředky pro hypotéku (%)<input name="mortgageMinimumEquityPercent" type="number" min="0" max="100" step="0.01" defaultValue={interestSettings.mortgageMinimumEquityPercent} /></label><button className="primary-button submit-button" type="submit" disabled={saving}>{saving ? "Ukládám..." : "Uložit sazby"}</button></form></section>}
