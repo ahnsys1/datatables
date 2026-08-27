@@ -251,7 +251,7 @@ export default function Home() {
           {navigation.map(({ id, label, icon: Icon }) => (
             <button className={view === id ? "active" : ""} key={id} onClick={() => { router.push(viewPaths[id]); setSelected(null); setMenuOpen(false); }}>
               <Icon size={19} /><span>{label}</span>
-              {id !== "clients" && id !== "settings" && id !== "admins" && <b>{id === "loans" ? dashboard?.pendingLoans ?? 0 : id === "overdrafts" ? dashboard?.pendingOverdrafts ?? 0 : (dashboard?.pendingLoans ?? 0) + (dashboard?.pendingOverdrafts ?? 0)}</b>}
+              {(id === "overview" || id === "loans" || id === "overdrafts") && <b>{id === "loans" ? dashboard?.pendingLoans ?? 0 : id === "overdrafts" ? dashboard?.pendingOverdrafts ?? 0 : (dashboard?.pendingLoans ?? 0) + (dashboard?.pendingOverdrafts ?? 0)}</b>}
             </button>
           ))}
         </nav>

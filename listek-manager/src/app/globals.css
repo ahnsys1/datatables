@@ -122,6 +122,15 @@ button { cursor: pointer; }
 .decision-result p { margin: 5px 0 0; }
 
 .client-table { min-width: 720px; }
+.report-catalog { display: grid; gap: 12px; max-width: 760px; }
+.report-card { min-height: 92px; padding: 18px 22px; display: grid; grid-template-columns: 48px 1fr 20px; align-items: center; gap: 15px; border: 1px solid var(--line); border-radius: 7px; color: var(--ink); background: white; text-align: left; box-shadow: 0 7px 24px rgba(27,52,38,.04); }
+.report-card:hover { border-color: #b8cbbb; background: #fbfdf9; }
+.report-card-icon { width: 46px; height: 46px; display: grid; place-items: center; border-radius: 50%; color: var(--green); background: var(--soft-green); }
+.report-card-copy { display: grid; gap: 5px; }
+.report-card-copy strong { font-size: 14px; }
+.report-card-copy small { color: var(--muted); font-size: 10px; }
+.report-back-button { margin-bottom: 9px; padding: 0; display: inline-flex; align-items: center; gap: 5px; border: 0; color: var(--green); background: transparent; font-size: 9px; font-weight: 800; }
+.report-back-button:hover { color: var(--green-dark); }
 .loan-records-panel { overflow-x: hidden; }
 .loan-records-table { min-width: 0; }
 .loan-records-table .table-head, .loan-records-table article { min-height: 61px; padding: 8px 16px; display: grid; grid-template-columns: repeat(6, 1fr); align-items: center; gap: 4px; border-bottom: 1px solid #edf0eb; font-size: 10px; }

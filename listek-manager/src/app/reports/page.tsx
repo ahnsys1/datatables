@@ -1,16 +1,19 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Reports from "./Reports";
+import { Dashboard, getDashboard } from "@/lib/api";
 
 import { Bell, CircleDollarSign, ClipboardCheck, LayoutDashboard, LogOut, ShieldCheck, Users, WalletCards } from "lucide-react";
 
 export default function ReportsPage() {
   const router = useRouter();
+  const [dashboard, setDashboard] = useState<Dashboard | null>(null);
 
   useEffect(() => {
     if (!localStorage.getItem("listek-admin-session")) router.replace("/");
+    else getDashboard().then(setDashboard).catch(() => undefined);
   }, [router]);
 
   if (typeof window !== "undefined" && !localStorage.getItem("listek-admin-session")) return null;
@@ -36,7 +39,7 @@ export default function ReportsPage() {
       <aside className="admin-sidebar">
         <div className="brand"><span className="brand-mark"><i /></span><span>Lístek<small>Manager</small></span></div>
         <p className="nav-label">Pracovní prostor</p>
-        <nav>{navigation.map(({ href, label, icon: Icon }) => <button className={href === "/reports" ? "active" : ""} key={href} onClick={() => router.push(href)}><Icon size={19} /><span>{label}</span></button>)}</nav>
+        <nav>{navigation.map(({ href, label, icon: Icon }) => <button className={href === "/reports" ? "active" : ""} key={href} onClick={() => router.push(href)}><Icon size={19} /><span>{label}</span>{(href === "/overview" || href === "/loans" || href === "/overdrafts") && <b>{href === "/loans" ? dashboard?.pendingLoans ?? 0 : href === "/overdrafts" ? dashboard?.pendingOverdrafts ?? 0 : (dashboard?.pendingLoans ?? 0) + (dashboard?.pendingOverdrafts ?? 0)}</b>}</button>)}</nav>
         <div className="sidebar-foot"><ShieldCheck size={18} /><span>Zabezpečená administrace<small>Produkční prostředí</small></span></div>
       </aside>
       <main className="admin-main">
