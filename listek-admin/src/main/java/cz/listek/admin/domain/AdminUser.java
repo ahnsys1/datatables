@@ -86,6 +86,33 @@ public class AdminUser {
         return mustChangePassword;
     }
 
+    public String getBirthNumber() {
+        return birthNumber;
+    }
+
+    public String getStreet() {
+        return street;
+    }
+
+    public String getCity() {
+        return city;
+    }
+
+    public String getPostalCode() {
+        return postalCode;
+    }
+
+    public void updateProfile(String firstName, String lastName, String birthNumber, String email,
+            String street, String city, String postalCode) {
+        this.firstName = firstName;
+        this.lastName = lastName;
+        this.birthNumber = birthNumber;
+        this.email = email;
+        this.street = street;
+        this.city = city;
+        this.postalCode = postalCode;
+    }
+
     public void changePassword(String passwordHash) {
         this.passwordHash = passwordHash;
         this.mustChangePassword = false;

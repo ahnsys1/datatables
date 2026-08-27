@@ -3,17 +3,21 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Reports from "./Reports";
+import Header from "../Header";
 import { Dashboard, getDashboard } from "@/lib/api";
 
-import { Bell, CircleDollarSign, ClipboardCheck, LayoutDashboard, LogOut, ShieldCheck, Users, WalletCards } from "lucide-react";
+import { CircleDollarSign, ClipboardCheck, LayoutDashboard, ShieldCheck, Users, WalletCards } from "lucide-react";
 
 export default function ReportsPage() {
   const router = useRouter();
   const [dashboard, setDashboard] = useState<Dashboard | null>(null);
+  const [adminUser] = useState(() => typeof window === "undefined" ? "" : localStorage.getItem("listek-admin-user") ?? "");
 
   useEffect(() => {
     if (!localStorage.getItem("listek-admin-session")) router.replace("/");
-    else getDashboard().then(setDashboard).catch(() => undefined);
+    else {
+      getDashboard().then(setDashboard).catch(() => undefined);
+    }
   }, [router]);
 
   if (typeof window !== "undefined" && !localStorage.getItem("listek-admin-session")) return null;
@@ -43,7 +47,7 @@ export default function ReportsPage() {
         <div className="sidebar-foot"><ShieldCheck size={18} /><span>Zabezpečená administrace<small>Produkční prostředí</small></span></div>
       </aside>
       <main className="admin-main">
-        <header className="topbar"><div className="environment"><i /> Systémy v pořádku</div><button className="icon-button" aria-label="Oznámení"><Bell size={19} /><span /></button><button className="logout-button" type="button" onClick={signOut}><LogOut size={17} /> Odhlášení</button></header>
+        <Header adminUser={adminUser} onSignOut={signOut} />
         <div className="admin-content">
           <section className="page-heading"><div><p>27. SRPNA 2026</p><h1>Reporty</h1><span>Sledujte schválení, splácení a zůstatky půjček.</span></div></section>
           <Reports />

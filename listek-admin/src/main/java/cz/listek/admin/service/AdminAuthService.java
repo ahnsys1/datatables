@@ -11,10 +11,12 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
+import cz.listek.admin.api.AdminDtos.AdminProfileResponse;
 import cz.listek.admin.api.AdminDtos.AdminUserResponse;
 import cz.listek.admin.api.AdminDtos.AuthResponse;
 import cz.listek.admin.api.AdminDtos.CreateAdminRequest;
 import cz.listek.admin.api.AdminDtos.LoginRequest;
+import cz.listek.admin.api.AdminDtos.UpdateAdminProfileRequest;
 import cz.listek.admin.domain.AdminUser;
 import cz.listek.admin.repository.AdminUserRepository;
 
@@ -42,16 +44,20 @@ public class AdminAuthService {
     }
 
     public void changePassword(String session, String password) {
-        String username = sessions.get(session);
-        if (username == null) {
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Neplatná administrátorská relace");
-        }
-        userRepository.findById(username).ifPresentOrElse(user -> {
-            user.changePassword(password);
-            userRepository.save(user);
-        }, () -> {
-            throw invalidCredentials();
-        });
+        AdminUser user = userForSession(session);
+        user.changePassword(password);
+        userRepository.save(user);
+    }
+
+    public AdminProfileResponse profile(String session) {
+        return toProfileResponse(userForSession(session));
+    }
+
+    public AdminProfileResponse updateProfile(String session, UpdateAdminProfileRequest request) {
+        AdminUser user = userForSession(session);
+        user.updateProfile(request.firstName().trim(), request.lastName().trim(), request.birthNumber().trim(),
+                request.email().trim(), request.street().trim(), request.city().trim(), request.postalCode().trim());
+        return toProfileResponse(userRepository.save(user));
     }
 
     public AdminUserResponse createAdmin(String session, CreateAdminRequest request) {
@@ -73,15 +79,24 @@ public class AdminAuthService {
     }
 
     public String usernameForSession(String session) {
+        return userForSession(session).getUsername();
+    }
+
+    private AdminUser userForSession(String session) {
         String username = sessions.get(session);
         if (username == null) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Neplatná administrátorská relace");
         }
-        return username;
+        return userRepository.findById(username).orElseThrow(AdminAuthService::invalidCredentials);
     }
 
     private AdminUserResponse toResponse(AdminUser user) {
         return new AdminUserResponse(user.getUsername(), user.getFirstName(), user.getLastName(), user.getEmail());
+    }
+
+    private AdminProfileResponse toProfileResponse(AdminUser user) {
+        return new AdminProfileResponse(user.getUsername(), user.getFirstName(), user.getLastName(), user.getBirthNumber(),
+                user.getEmail(), user.getStreet(), user.getCity(), user.getPostalCode());
     }
 
     private void requireSession(String session) {

@@ -19,6 +19,7 @@ export type Account = {
 
 export type AdminAuth = { token: string; username: string; mustChangePassword: boolean };
 export type AdminUser = { username: string; firstName: string; lastName: string; email: string };
+export type AdminProfile = { username: string; firstName: string; lastName: string; birthNumber: string; email: string; street: string; city: string; postalCode: string };
 
 export type ApplicationStatus = "PENDING" | "APPROVED" | "REJECTED";
 
@@ -104,6 +105,8 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
 
 export function adminLogin(input: { username: string; password: string }) { return request<AdminAuth>("/auth/login", { method: "POST", body: JSON.stringify(input) }); }
 export function changeAdminPassword(password: string) { return request<void>("/auth/password", { method: "PATCH", body: JSON.stringify({ password }) }); }
+export function getAdminProfile() { return request<AdminProfile>("/auth/profile"); }
+export function updateAdminProfile(profile: Omit<AdminProfile, "username">) { return request<AdminProfile>("/auth/profile", { method: "PATCH", body: JSON.stringify(profile) }); }
 export function createAdmin(input: { username: string; firstName: string; lastName: string; birthNumber: string; email: string; street: string; city: string; postalCode: string; password: string }) { return request<AdminUser>("/users", { method: "POST", body: JSON.stringify(input) }); }
 export function getAdmins() { return request<AdminUser[]>("/users"); }
 export function getPendingRegistrations() { return request<Account[]>("/registrations/pending"); }

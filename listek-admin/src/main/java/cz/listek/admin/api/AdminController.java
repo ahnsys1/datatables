@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 import cz.listek.admin.api.AdminDtos.AccountResponse;
+import cz.listek.admin.api.AdminDtos.AdminProfileResponse;
 import cz.listek.admin.api.AdminDtos.AdminUserResponse;
 import cz.listek.admin.api.AdminDtos.ApplicationResponse;
 import cz.listek.admin.api.AdminDtos.CreateOverdraftRequest;
@@ -22,6 +23,7 @@ import cz.listek.admin.api.AdminDtos.DashboardResponse;
 import cz.listek.admin.api.AdminDtos.DecisionRequest;
 import cz.listek.admin.api.AdminDtos.InterestSettingsResponse;
 import cz.listek.admin.api.AdminDtos.LoanReportResponse;
+import cz.listek.admin.api.AdminDtos.UpdateAdminProfileRequest;
 import cz.listek.admin.api.AdminDtos.UpdateInterestSettingsRequest;
 import cz.listek.admin.service.AdminAuthService;
 import cz.listek.admin.service.AdminWorkflowService;
@@ -49,6 +51,17 @@ public class AdminController {
     public void changePassword(@RequestBody AdminDtos.PasswordRequest request,
             @org.springframework.web.bind.annotation.RequestHeader("X-Admin-Session") String session) {
         authService.changePassword(session, request.password());
+    }
+
+    @GetMapping("/auth/profile")
+    public AdminProfileResponse profile(@org.springframework.web.bind.annotation.RequestHeader("X-Admin-Session") String session) {
+        return authService.profile(session);
+    }
+
+    @PatchMapping("/auth/profile")
+    public AdminProfileResponse updateProfile(@Valid @RequestBody UpdateAdminProfileRequest request,
+            @org.springframework.web.bind.annotation.RequestHeader("X-Admin-Session") String session) {
+        return authService.updateProfile(session, request);
     }
 
     @PostMapping("/users")

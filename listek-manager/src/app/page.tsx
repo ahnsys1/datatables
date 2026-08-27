@@ -1,12 +1,13 @@
 "use client";
 
 import {
-  Bell, Check, ChevronRight, CircleDollarSign, ClipboardCheck,
-  Eye, EyeOff, Landmark, LayoutDashboard, LogOut, Menu, Search, ShieldCheck, Users, WalletCards, X,
+  Check, ChevronRight, CircleDollarSign, ClipboardCheck,
+  Eye, EyeOff, Landmark, LayoutDashboard, Search, ShieldCheck, Users, WalletCards, X,
 } from "lucide-react";
 import { FormEvent, useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import Reports from "./reports/Reports";
+import Header from "./Header";
 import {
   Account, AdminUser, BankApplication, Dashboard, InterestSettings, decideApplication, getAccounts,
   getDashboard, getInterestSettings, getLoans, getOverdrafts, updateInterestSettings,
@@ -83,7 +84,6 @@ export default function Home() {
   const [showPasswordConfirmation, setShowPasswordConfirmation] = useState(false);
   const [adminFormError, setAdminFormError] = useState("");
   const [adminFormSaving, setAdminFormSaving] = useState(false);
-  const [logoutConfirmOpen, setLogoutConfirmOpen] = useState(false);
 
   useEffect(() => {
     if (pathname === "/") {
@@ -181,13 +181,6 @@ export default function Home() {
     }
   }
 
-  function confirmSignOut() {
-    localStorage.removeItem("listek-admin-session");
-    localStorage.removeItem("listek-admin-user");
-    localStorage.removeItem("listek-admin-must-change");
-    window.location.reload();
-  }
-
   const titles: Record<View, [string, string]> = {
     overview: ["Operační přehled", "Dnes máte pod kontrolou vše důležité."],
     loans: ["Žádosti o půjčku", "Posuďte žádosti, riziko a schopnost klienta splácet."],
@@ -260,12 +253,7 @@ export default function Home() {
       {menuOpen && <button className="menu-scrim" aria-label="Zavřít nabídku" onClick={() => setMenuOpen(false)} />}
 
       <main className="admin-main">
-        <header className="topbar">
-          <button className="menu-button" onClick={() => setMenuOpen(true)} aria-label="Otevřít nabídku"><Menu /></button>
-          <div className="environment"><i /> Systémy v pořádku</div>
-          <button className="icon-button" aria-label="Oznámení"><Bell size={19} /><span /></button>
-          <button className="logout-button" type="button" onClick={() => setLogoutConfirmOpen(true)}><LogOut size={17} /> Odhlášení</button>
-        </header>
+        <Header adminUser={adminUser} onMenuOpen={() => setMenuOpen(true)} onSignOut={() => window.location.reload()} />
 
         <div className="admin-content">
           <section className="page-heading">
@@ -326,7 +314,6 @@ export default function Home() {
           {view === "admins" && <section className="settings-card admin-users-card"><div className="panel-heading"><div><p>SPRÁVA PŘÍSTUPŮ</p><h2>Administrátoři</h2></div><ShieldCheck size={22} color="var(--green)" /></div><div className="admin-list"><div className="admin-list-head"><span>Login</span><span>Jméno a příjmení</span><span>E-mail</span></div>{admins.map((admin) => <div className="admin-list-row" key={admin.username}><strong>{admin.username}</strong><span>{admin.firstName} {admin.lastName}</span><span>{admin.email}</span></div>)}</div><div className="admin-create-heading"><p>SPRÁVA PŘÍSTUPŮ</p><h2>Nový administrátor</h2></div><form onSubmit={saveNewAdmin} className="rate-form"><label>Uživatelské jméno<input name="newAdminUsername" required maxLength={80} autoComplete="username" /></label><label>Jméno<input name="newAdminFirstName" required maxLength={100} autoComplete="given-name" /></label><label>Příjmení<input name="newAdminLastName" required maxLength={100} autoComplete="family-name" /></label><label>Rodné číslo<input name="newAdminBirthNumber" required pattern="[0-9]{6}/?[0-9]{3,4}" placeholder="123456/7890" /></label><label>E-mail<input name="newAdminEmail" required type="email" maxLength={160} autoComplete="email" /></label><label>Ulice a číslo<input name="newAdminStreet" required maxLength={160} autoComplete="street-address" /></label><label>Město<input name="newAdminCity" required maxLength={100} autoComplete="address-level2" /></label><label>PSČ<input name="newAdminPostalCode" required pattern="[0-9]{3} ?[0-9]{2}" placeholder="110 00" autoComplete="postal-code" /></label><label>Heslo<input name="newAdminPassword" required minLength={12} type="password" autoComplete="new-password" /></label><label>Heslo znovu<input name="newAdminConfirmation" required minLength={12} type="password" autoComplete="new-password" /></label>{adminFormError && <div className="notice admin-form-notice">{adminFormError}</div>}<button className="primary-button submit-button" type="submit" disabled={adminFormSaving}>{adminFormSaving ? "Vytvářím..." : "Vytvořit administrátora"}</button></form></section>}
         </div>
       </main>
-      {logoutConfirmOpen && <div className="modal-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setLogoutConfirmOpen(false); }}><section className="admin-modal logout-confirm-modal" role="dialog" aria-modal="true" aria-labelledby="logout-confirm-title"><button className="modal-close" type="button" onClick={() => setLogoutConfirmOpen(false)} aria-label="Zavřít potvrzení"><X size={18} /></button><p>ODHLÁŠENÍ</p><h2 id="logout-confirm-title">Opravdu se chcete odhlásit?</h2><span>Vaše administrátorská relace bude ukončena.</span><div className="logout-confirm-actions"><button className="reject" type="button" onClick={() => setLogoutConfirmOpen(false)}>Zrušit</button><button className="primary-button" type="button" onClick={confirmSignOut}><LogOut size={16} /> Odhlásit se</button></div></section></div>}
     </div>
   );
 }

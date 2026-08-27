@@ -42,6 +42,8 @@ button { cursor: pointer; }
 .topbar { height: 74px; padding: 0 4vw; display: flex; align-items: center; justify-content: flex-end; gap: 16px; border-bottom: 1px solid var(--line); background: rgba(255,255,255,.88); }
 .environment { margin-right: auto; display: flex; align-items: center; gap: 7px; color: var(--muted); font-size: 10px; font-weight: 700; }
 .environment i { width: 7px; height: 7px; border-radius: 50%; background: #35a56b; box-shadow: 0 0 0 4px #e5f2e9; }
+.current-user { color: var(--ink); font-size: 11px; font-weight: 800; }
+.current-user:hover { color: var(--green); text-decoration: underline; }
 .icon-button { position: relative; width: 40px; height: 40px; display: grid; place-items: center; border: 1px solid var(--line); border-radius: 50%; background: white; }
 .icon-button span { position: absolute; top: 7px; right: 7px; width: 7px; height: 7px; border: 2px solid white; border-radius: 50%; background: #ef664d; }
 .logout-button { min-height: 38px; padding: 0 12px; display: inline-flex; align-items: center; gap: 7px; border: 1px solid var(--danger); border-radius: 5px; color: white; background: var(--danger); font-size: 10px; font-weight: 800; white-space: nowrap; }
@@ -164,6 +166,13 @@ button { cursor: pointer; }
 .admin-modal label { margin-top: 15px; display: grid; gap: 7px; color: var(--muted); font-size: 9px; font-weight: 750; }
 .admin-modal input, .admin-modal select { width: 100%; height: 44px; padding: 0 11px; border: 1px solid #ccd3cc; border-radius: 5px; outline: 0; background: white; }
 .admin-modal input:focus, .admin-modal select:focus { border-color: var(--green); box-shadow: 0 0 0 3px rgba(22,122,69,.08); }
+.profile-modal { width: min(100%, 620px); max-height: 90vh; overflow-y: auto; }
+.profile-form { display: grid; grid-template-columns: 1fr 1fr; gap: 0 12px; margin-top: 14px; }
+.profile-form label, .profile-password-form label { margin-top: 12px; }
+.profile-form .submit-button, .profile-password-form .submit-button { grid-column: 1 / -1; margin-top: 14px; }
+.profile-password-form { display: grid; grid-template-columns: 1fr 1fr; gap: 0 12px; margin-top: 24px; padding-top: 18px; border-top: 1px solid var(--line); }
+.profile-password-form h3 { grid-column: 1 / -1; margin: 0; font-size: 16px; }
+.profile-message { margin-top: 14px; padding: 10px 12px; color: var(--green); background: #e7f4ea; font-size: 11px; font-weight: 700; }
 .password-field { position: relative; }
 .password-field input { padding-right: 42px; }
 .password-toggle { position: absolute; top: 50%; right: 9px; width: 28px; height: 28px; display: grid; place-items: center; transform: translateY(-50%); border: 0; border-radius: 4px; color: var(--muted); background: transparent; cursor: pointer; }

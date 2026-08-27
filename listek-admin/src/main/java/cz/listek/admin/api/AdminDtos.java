@@ -52,6 +52,29 @@ public final class AdminDtos {
 
     }
 
+    public record AdminProfileResponse(String username, String firstName, String lastName, String birthNumber,
+            String email, String street, String city, String postalCode) {
+
+    }
+
+    public record UpdateAdminProfileRequest(@NotBlank
+            @Size(max = 100) String firstName,
+            @NotBlank
+            @Size(max = 100) String lastName,
+            @NotBlank
+            @Size(max = 11) String birthNumber,
+            @jakarta.validation.constraints.Email
+            @NotBlank
+            @Size(max = 160) String email,
+            @NotBlank
+            @Size(max = 160) String street,
+            @NotBlank
+            @Size(max = 100) String city,
+            @NotBlank
+            @jakarta.validation.constraints.Pattern(regexp = "[0-9]{3} ?[0-9]{2}") String postalCode) {
+
+    }
+
     public record AuthResponse(String token, String username, boolean mustChangePassword) {
 
     }
