@@ -1,0 +1,16 @@
+ 
+vault-1  | Unseal Key: MY5JwYjnwyxEaEkN4iKnhAl9YDB9Gq87yD45Kv2Zo2k=
+vault-1  | Root Token: local-dev-token
+vault-1  | 
+image: postgres:17.7
+
+
+Unseal Key: Xaq4odMe5lwASQ4fYBw6cvRl3IaQa50UMT80olxF9Pw=
+
+Root Token: local-dev-token
+
+
+
+
+
+
