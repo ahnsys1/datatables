@@ -14,17 +14,20 @@ Spring Boot 4.1 backend pro internetove bankovnictvi Listek. Aplikace obsahuje R
 ## Spusteni databaze a aplikace
 
 ```bash
-docker compose up -d postgres
-mvn spring-boot:run
+docker compose up --build
 ```
 
-Vychozi konfigurace pouziva PostgreSQL na `localhost:5433`:
+Lokální Compose spustí HashiCorp Vault v development režimu. Služba `vault-seed` vygeneruje název databáze, uživatele a heslo pomocí Vault RNG, vytvoří databázi a uloží připojení do cest `secret/listek` a `secret/listek-admin`:
 
-- databaze: `listek`
-- uzivatel: `listek`
-- heslo: `listek`
+```text
+DB_URL=<adresa s náhodně generovaným názvem databáze>
+DB_USERNAME=<náhodně generovaný uživatel>
+DB_PASSWORD=<náhodně generované heslo>
+```
 
-Konfiguraci lze prepsat promennymi `DB_URL`, `DB_USERNAME`, `DB_PASSWORD` a `SERVER_PORT`.
+Spring Cloud Vault načte tyto hodnoty při startu. `application.properties` je používá přes `spring.datasource.url=${DB_URL}`, `spring.datasource.username=${DB_USERNAME}` a `spring.datasource.password=${DB_PASSWORD}`. Heslo není uloženo v `docker-compose.yml` ani v souboru v repozitáři.
+
+PostgreSQL používá v tomto čistě lokálním vývojovém stacku autentizaci `trust`, aby nevznikl bootstrap cyklus PostgreSQL → Vault → PostgreSQL. Toto nastavení není vhodné pro produkci.
 
 Flyway se spousti automaticky pri startu aplikace. Schema je v `src/main/resources/db/migration` a nove zmeny se pridavaji jako dalsi migrace, napr. `V2__add_card_table.sql`. Hibernate ma nastaveno `ddl-auto: validate`, takze strukturu databaze meni pouze Flyway.
 
