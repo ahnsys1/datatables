@@ -14,7 +14,7 @@ services:
       retries: 10
 
   postgres:
-    image: postgres:16-alpine
+    image: postgres:17.7
     container_name: listek-postgres
     entrypoint: ["/bin/sh", "-ec"]
     command: ["if [ ! -s /auth/pg_hba.conf ]; then cp /config/pg_hba.trust.conf /auth/pg_hba.conf; fi\nexec docker-entrypoint.sh postgres -c hba_file=/auth/pg_hba.conf"]
