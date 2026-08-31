@@ -1,4 +1,6 @@
 node_modules
+listek-backend/hesla.txt
+myapp-jpa-server/.env
 HELP.md
 target/
 !.mvn/wrapper/maven-wrapper.jar
