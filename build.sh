@@ -12,10 +12,8 @@
     chmod go-w ../filebeat/filebeat.yml
 
     echo "Starting Docker Compose services with rebuild..."
-    docker compose up --build
-    if [ $? -eq 0 ]; then
-        echo "Docker Compose services started successfully."
-    else
-        echo "Error starting Docker Compose services."
-        exit 1
-    fi
+    read -rsp 'Vault token: ' VAULT_TOKEN
+    export VAULT_TOKEN
+    echo
+    sh docker-compose-vault.sh up --build
+    unset VAULT_TOKEN
