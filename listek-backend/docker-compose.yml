@@ -29,11 +29,10 @@ services:
     build:
       context: .
       dockerfile: vault-seed.Dockerfile
-    entrypoint: ["/bin/sh", "-ec"]
-    command: ["if vault kv get secret/listek >/dev/null 2>&1; then exit 0; fi\nDB_NAME=\"app_$(vault write -field=random_bytes sys/tools/random/8 format=hex)\"\nDB_USERNAME=\"app_$(vault write -field=random_bytes sys/tools/random/8 format=hex)\"\nDB_PASSWORD=\"$(vault write -field=random_bytes sys/tools/random/32 format=hex)\"\npsql -v ON_ERROR_STOP=1 -h /var/run/postgresql -U postgres -d postgres -v db_username=\"$${DB_USERNAME}\" -v db_password=\"$${DB_PASSWORD}\" <<'SQL'\nCREATE ROLE :\"db_username\" LOGIN PASSWORD :'db_password';\nSQL\ncreatedb -h /var/run/postgresql -U postgres -O \"$${DB_USERNAME}\" \"$${DB_NAME}\"\nDB_URL=\"jdbc:postgresql://postgres:5432/$${DB_NAME}\"\nvault kv put secret/listek DB_URL=\"$${DB_URL}\" DB_USERNAME=\"$${DB_USERNAME}\" DB_PASSWORD=\"$${DB_PASSWORD}\"\nvault kv put secret/listek-admin DB_URL=\"$${DB_URL}\" DB_USERNAME=\"$${DB_USERNAME}\" DB_PASSWORD=\"$${DB_PASSWORD}\"\ncp /config/pg_hba.scram.conf /auth/pg_hba.conf\npsql -v ON_ERROR_STOP=1 -h /var/run/postgresql -U postgres -d postgres -c \"SELECT pg_reload_conf()\"\nPGPASSWORD=\"$${DB_PASSWORD}\" psql -v ON_ERROR_STOP=1 -h postgres -U \"$${DB_USERNAME}\" -d \"$${DB_NAME}\" -c \"SELECT 1\""]
+    entrypoint: ["/bin/sh", "/scripts/vault-seed.sh"]
     environment:
       VAULT_ADDR: http://host.docker.internal:8200
-      VAULT_TOKEN: ${VAULT_TOKEN:?VAULT_TOKEN is required}
+      VAULT_TOKEN: ${LISTEK_VAULT_TOKEN:?Use docker-compose-vault.sh to start the stack}
     extra_hosts:
       - "host.docker.internal:host-gateway"
     depends_on:
@@ -43,6 +42,7 @@ services:
       - postgres-auth:/auth
       - postgres-socket:/var/run/postgresql
       - ./postgres/pg_hba.scram.conf:/config/pg_hba.scram.conf:ro
+      - ./vault-seed.sh:/scripts/vault-seed.sh:ro
     networks:
       - listek-network
 
@@ -55,7 +55,7 @@ services:
       - listek-network
     environment:
       SPRING_CLOUD_VAULT_URI: http://host.docker.internal:8200
-      SPRING_CLOUD_VAULT_TOKEN: ${VAULT_TOKEN:?VAULT_TOKEN is required}
+      SPRING_CLOUD_VAULT_TOKEN: ${LISTEK_VAULT_TOKEN:?Use docker-compose-vault.sh to start the stack}
       SERVER_PORT: 8080
     extra_hosts:
       - "host.docker.internal:host-gateway"
@@ -101,9 +101,9 @@ services:
     container_name: listek-admin
     environment:
       VAULT_ADDR: http://host.docker.internal:8200
-      VAULT_TOKEN: ${VAULT_TOKEN:?VAULT_TOKEN is required}
+      VAULT_TOKEN: ${LISTEK_VAULT_TOKEN:?Use docker-compose-vault.sh to start the stack}
       SPRING_CLOUD_VAULT_URI: http://host.docker.internal:8200
-      SPRING_CLOUD_VAULT_TOKEN: ${VAULT_TOKEN:?VAULT_TOKEN is required}
+      SPRING_CLOUD_VAULT_TOKEN: ${LISTEK_VAULT_TOKEN:?Use docker-compose-vault.sh to start the stack}
       SERVER_PORT: 8090
     extra_hosts:
       - "host.docker.internal:host-gateway"

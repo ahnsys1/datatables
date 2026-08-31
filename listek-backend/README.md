@@ -14,15 +14,15 @@ Spring Boot 4.1 backend pro internetove bankovnictvi Listek. Aplikace obsahuje R
 ## Spusteni databaze a aplikace
 
 ```bash
-docker compose up --build
+sh docker-compose-vault.sh up --build
 ```
 
-Lokální Compose spustí HashiCorp Vault v development režimu. Služba `vault-seed` vygeneruje název databáze, uživatele a heslo pomocí Vault RNG, vytvoří databázi a uloží připojení do cest `secret/listek` a `secret/listek-admin`:
+Launcher načte aktuální token ze samostatného lokálního Vault kontejneru `vault` pouze do prostředí Compose procesu. Token se neukládá do Compose konfigurace. Služba `vault-seed` načte uživatelsky spravované připojení z cest `secret/listek` a `secret/listek-admin` a připraví odpovídající PostgreSQL role a databáze:
 
 ```text
-DB_URL=<adresa s náhodně generovaným názvem databáze>
-DB_USERNAME=<náhodně generovaný uživatel>
-DB_PASSWORD=<náhodně generované heslo>
+DB_URL=<adresa databáze>
+DB_USERNAME=<uživatel databáze>
+DB_PASSWORD=<heslo databáze>
 ```
 
 Spring Cloud Vault načte tyto hodnoty při startu. `application.properties` je používá přes `spring.datasource.url=${DB_URL}`, `spring.datasource.username=${DB_USERNAME}` a `spring.datasource.password=${DB_PASSWORD}`. Heslo není uloženo v `docker-compose.yml` ani v souboru v repozitáři.
