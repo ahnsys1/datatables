@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="cs">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Český RAG chat nad vlastními PDF dokumenty">
+    <title>Archiv AI</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=Source+Serif+4:opsz,wght@8..60,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/styles.css?v=6">
+</head>
+<body>
+<div class="app-shell">
+    <aside class="library" id="library">
+        <div class="brand">
+            <span class="brand-mark" aria-hidden="true">A</span>
+            <div>
+                <strong>Archiv AI</strong>
+                <span>Český dokumentový asistent</span>
+            </div>
+        </div>
+
+        <section class="library-content" aria-labelledby="documents-title">
+            <div class="section-heading">
+                <div>
+                    <span class="eyebrow">Znalostní báze</span>
+                    <h2 id="documents-title">Dokumenty</h2>
+                </div>
+                <span class="document-count" id="document-count">0</span>
+            </div>
+
+            <label class="drop-zone" id="drop-zone">
+                <input id="file-input" type="file" accept="application/pdf,.pdf" multiple>
+                <i data-lucide="file-up" aria-hidden="true"></i>
+                <strong>Nahrajte PDF</strong>
+                <span>Vyberte soubor nebo jej přetáhněte sem</span>
+            </label>
+
+            <div class="upload-list" id="upload-list" aria-live="polite"></div>
+        </section>
+
+        <div class="privacy-note">
+            <i data-lucide="database" aria-hidden="true"></i>
+            <span>Dokumenty zůstávají ve vaší lokální databázi.</span>
+        </div>
+    </aside>
+
+    <main class="chat-area">
+        <header class="chat-header">
+            <button class="icon-button mobile-only" id="menu-button" type="button" aria-label="Otevřít dokumenty" title="Dokumenty">
+                <i data-lucide="panel-left"></i>
+            </button>
+            <div>
+                <span class="status-dot"></span>
+                <span>Qwen · lokální model</span>
+            </div>
+            <button class="new-chat" id="new-chat" type="button">
+                <i data-lucide="square-pen" aria-hidden="true"></i>
+                Nový chat
+            </button>
+        </header>
+
+        <div class="conversation-wrap">
+            <section class="conversation" id="conversation" aria-live="polite">
+                <div class="welcome" id="welcome">
+                    <div class="welcome-symbol"><i data-lucide="scan-search" aria-hidden="true"></i></div>
+                    <span class="eyebrow">Ptejte se svých dokumentů</span>
+                    <h1>Co potřebujete najít?</h1>
+                    <p>Nahrajte PDF a položte otázku. Odpověď vznikne pouze z nalezeného obsahu.</p>
+                    <div class="suggestions">
+                        <button type="button" data-question="Shrň hlavní body dokumentu.">Shrň hlavní body</button>
+                        <button type="button" data-question="Jaké termíny a povinnosti dokument uvádí?">Najdi termíny a povinnosti</button>
+                    </div>
+                </div>
+            </section>
+            <div class="chat-scrollbar" id="chat-scrollbar" aria-hidden="true"><span></span></div>
+        </div>
+
+        <footer class="composer-wrap">
+            <form class="composer" id="chat-form">
+                <textarea id="message-input" rows="1" maxlength="4000" placeholder="Zeptejte se na obsah dokumentů…" aria-label="Vaše otázka" required></textarea>
+                <button class="send-button" id="send-button" type="submit" aria-label="Odeslat zprávu" title="Odeslat">
+                    <i data-lucide="arrow-up" aria-hidden="true"></i>
+                </button>
+            </form>
+            <small>AI se může mýlit. Důležitá fakta ověřte ve zdrojovém dokumentu.</small>
+        </footer>
+    </main>
+</div>
+<div class="scrim" id="scrim"></div>
+<script src="https://unpkg.com/lucide@0.468.0/dist/umd/lucide.min.js"></script>
+<script src="/app.js?v=7"></script>
+</body>
+</html>
