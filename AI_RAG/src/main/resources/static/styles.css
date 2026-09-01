@@ -126,7 +126,7 @@ h2 { margin: 4px 0 0; font-family: "Source Serif 4", serif; font-size: 25px; }
 .privacy-note { display: flex; gap: 10px; padding: 17px 24px; color: var(--muted); border-top: 1px solid var(--line); font-size: 11px; line-height: 1.4; }
 .privacy-note svg { width: 16px; flex: 0 0 16px; color: var(--forest); }
 
-.chat-area { display: grid; grid-template-rows: 64px minmax(0, 1fr) auto; min-width: 0; background: var(--surface); }
+.chat-area { display: grid; grid-template-rows: 64px minmax(0, 1fr) auto; min-width: 0; min-height: 0; background: var(--surface); }
 .chat-header { display: flex; align-items: center; justify-content: space-between; padding: 0 clamp(18px, 4vw, 48px); border-bottom: 1px solid var(--line); }
 .chat-header > div { display: flex; align-items: center; gap: 8px; color: var(--muted); font-size: 12px; }
 .status-dot { width: 7px; height: 7px; background: #29a167; border-radius: 50%; box-shadow: 0 0 0 3px #dcf3e7; }

@@ -44,3 +44,5 @@ services:
 volumes:
   pgvector-data-v18:
   ollama-data:
+    external: true
+    name: ollama
