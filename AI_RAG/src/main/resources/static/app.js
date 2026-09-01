@@ -15,12 +15,22 @@ const chatScrollbarThumb = chatScrollbar.querySelector("span");
 let conversationId = crypto.randomUUID();
 let messagesContainer;
 let uploadedDocuments = 0;
+let scrollbarUpdatePending = false;
 
 lucide.createIcons();
 
 function updateChatScrollbar() {
+    if (scrollbarUpdatePending) return;
+    scrollbarUpdatePending = true;
+    requestAnimationFrame(() => {
+        scrollbarUpdatePending = false;
+        updateChatScrollbarNow();
+    });
+}
+
+function updateChatScrollbarNow() {
     const trackHeight = chatScrollbar.clientHeight;
-    const thumbHeight = Math.max(42, trackHeight * conversation.clientHeight / conversation.scrollHeight);
+    const thumbHeight = Math.max(18, trackHeight * conversation.clientHeight / conversation.scrollHeight);
     const maxThumbTop = Math.max(0, trackHeight - thumbHeight);
     const maxScrollTop = Math.max(1, conversation.scrollHeight - conversation.clientHeight);
     chatScrollbarThumb.style.height = `${Math.min(trackHeight, thumbHeight)}px`;
@@ -40,7 +50,7 @@ chatScrollbar.addEventListener("click", (event) => {
         top: ratio * (conversation.scrollHeight - conversation.clientHeight),
         behavior: "instant"
     });
-    updateChatScrollbar();
+    updateChatScrollbarNow();
 });
 chatScrollbarThumb.addEventListener("pointerdown", (event) => {
     const startY = event.clientY;
@@ -55,7 +65,7 @@ chatScrollbarThumb.addEventListener("pointerdown", (event) => {
                 top: startScrollTop + (moveEvent.clientY - startY) * availableScroll / availableTrack,
                 behavior: "instant"
             });
-            updateChatScrollbar();
+            updateChatScrollbarNow();
         }
     };
     chatScrollbarThumb.addEventListener("pointermove", moveThumb);
@@ -114,7 +124,8 @@ function addMessage(role, text, sources = []) {
     ensureMessagesContainer().append(message);
     lucide.createIcons({ nodes: [message] });
     conversation.scrollTo({ top: conversation.scrollHeight, behavior: "instant" });
-    updateChatScrollbar();
+    updateChatScrollbarNow();
+    new ResizeObserver(updateChatScrollbar).observe(messagesContainer);
     return message;
 }
 
