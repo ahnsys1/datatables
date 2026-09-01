@@ -1,7 +1,7 @@
  #!/bin/bash
     
     echo "running ng build"
-    cd myapp-client
+    cd ../myapp-client
     ng build
 
     cd ../myapp-jpa-server
