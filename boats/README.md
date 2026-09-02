@@ -32,3 +32,37 @@ Pak otevřete:
 
 ## Poznámka
 SQLite databáze se vytváří automaticky v souboru `storage.sqlite`.
+
+
+
+
+
+
+
+
+
+
+
+
+Aplikaci se nepodařilo spustit, protože PHP nemá SQLite ovladač:
+
+```text
+PDOException: could not find driver
+```
+
+Nainstaluj ho:
+
+```bash
+sudo apt update
+sudo apt install php8.5-sqlite3
+```
+
+Potom spusť:
+
+```bash
+cd /home/jan/Desktop/datatables/boats
+php init_db.php
+php -S localhost:8000
+```
+
+Aplikace bude na http://localhost:8000/login.php.

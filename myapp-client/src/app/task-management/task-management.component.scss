@@ -14,6 +14,14 @@
   flex-wrap: wrap;
 }
 
+.sprint-status-completed {
+  order: 3;
+}
+
+.sprint-status-not-started {
+  order: 1;
+}
+
 .project-picker-top {
   display: flex;
   align-items: center;
@@ -118,6 +126,7 @@
   display: block;
   flex-shrink: 0;
   fill: currentColor;
+  transform: translateY(10px);
 }
 
 .discussion-button-icon path {

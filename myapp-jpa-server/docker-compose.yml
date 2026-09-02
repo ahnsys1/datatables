@@ -1,18 +1,6 @@
-networks:
-  myapp-network:
-    driver: bridge
+version: "3.9"
 
 
-    
-
-
-volumes:
-  rabbitmq_data:
-    driver: local
-  postgres_data:
-    driver: local
-  es_data:
-    driver: local
 
 services:
   myapp-client:
@@ -25,7 +13,7 @@ services:
       backend:
         condition: service_started
     networks:
-      - myapp-network
+      - datatables-network
     restart: always
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost/health"]
@@ -63,15 +51,8 @@ services:
     volumes:
       - ${HOME}:/host-home
 
-    depends_on:
-      postgres:
-        condition: service_started
-      rabbitmq:
-        condition: service_started
-      keycloak:
-        condition: service_healthy
     networks:
-      - myapp-network
+      - datatables-network
     restart: always
     healthcheck:
       test: ["CMD", "wget", "-qO-", "http://localhost:9090/actuator/health"]
@@ -79,79 +60,6 @@ services:
       timeout: 20s
       retries: 3
 
-  rabbitmq:
-    image: rabbitmq:4.1.8
-    ports:
-      - "61613:61613"
-# STOMP port
-      - "5672:5672"
-# AMQP protocol port
-      - "15672:15672"
-# Management UI port
-      - "15674:15674"
-# web-stomp (WS) for browser clients
-    environment:
-      - RABBITMQ_DEFAULT_USER=${DATATABLES_RABBITMQ_USERNAME:?Run with docker-compose-vault.sh}
-      - RABBITMQ_DEFAULT_PASS=${DATATABLES_RABBITMQ_PASSWORD:?Run with docker-compose-vault.sh}
-      - RABBITMQ_MNESIA_BASE=/var/lib/rabbitmq
-      - RABBITMQ_ENABLED_PLUGINS=rabbitmq_stomp,rabbitmq_management,rabbitmq_web_stomp
-    volumes:
-      - ./rabbitmq:/etc/rabbitmq
-      - rabbitmq_data:/var/lib/rabbitmq
-    networks:
-      - myapp-network
-    healthcheck:
-      test: ["CMD", "rabbitmq-diagnostics", "ping"]
-      interval: 10s
-      timeout: 5s
-      start_period: 40s
-      retries: 5
-    restart: always
-
-  keycloak:
-    image: keycloak/keycloak:26.5.7
-    command: ["start-dev", "--import-realm"]
-    environment:
-      - KC_HEALTH_ENABLED=true
-      - KC_BOOTSTRAP_ADMIN_USERNAME=${DATATABLES_KEYCLOAK_ADMIN_USERNAME:?Run with docker-compose-vault.sh}
-      - KC_BOOTSTRAP_ADMIN_PASSWORD=${DATATABLES_KEYCLOAK_ADMIN_PASSWORD:?Run with docker-compose-vault.sh}
-    ports:
-      - "8180:8080"
-    volumes:
-      - ./src/main/resources/keycloak:/opt/keycloak/data/import:ro
-    networks:
-      - myapp-network
-    healthcheck:
-      test:
-        [
-          "CMD",
-          "bash",
-          "-c",
-          "exec 3<>/dev/tcp/127.0.0.1/9000; printf 'GET /health/ready HTTP/1.1\\r\\nHost: localhost\\r\\nConnection: close\\r\\n\\r\\n' >&3; grep '200 OK' <&3"
-        ]
-      interval: 15s
-      timeout: 5s
-      retries: 20
-    restart: always
- 
-  postgres:
-    image: postgres:17.7
-    environment:
-      - POSTGRES_USER=${DATATABLES_DB_USERNAME:?Run with docker-compose-vault.sh}
-      - POSTGRES_PASSWORD=${DATATABLES_DB_PASSWORD:?Run with docker-compose-vault.sh}
-      - POSTGRES_DB=${DATATABLES_DB_NAME:?Run with docker-compose-vault.sh}
-    ports:
-      - "5432:5432"
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "exec gosu \"$$(stat -c %u /proc/1)\" pg_isready -q -h /var/run/postgresql"]
-      interval: 60s
-      timeout: 5s
-      retries: 5
-    networks:
-      - myapp-network
-    restart: always
 
  # Elastic Stack (ELK)
   elasticsearch:
@@ -176,7 +84,7 @@ services:
       retries: 10
       start_period: 30s
     networks:
-      - myapp-network
+      - datatables-network
 
   kibana:
     image: docker.elastic.co/kibana/kibana:7.17.13
@@ -194,7 +102,7 @@ services:
       retries: 10
       start_period: 30s
     networks:
-      - myapp-network
+      - datatables-network
 
 
 #  logstash:
@@ -236,4 +144,13 @@ services:
       retries: 5
       start_period: 10s
     networks:
-      - myapp-network
+      - datatables-network
+volumes:
+  es_data:
+    driver: local
+  filebeat_data:
+    driver: local
+
+networks:
+  datatables-network:
+    external: true

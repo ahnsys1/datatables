@@ -363,9 +363,19 @@ export class TaskManagementService {
       .sort((a, b) => a.date.getTime() - b.date.getTime());
   }
 
-  private parseDateValue(value: string | null | undefined): Date | null {
+  private parseDateValue(value: string | number[] | null | undefined): Date | null {
     if (value == null) {
       return null;
+    }
+
+    if (Array.isArray(value)) {
+      const [year, month, day] = value;
+      if (![year, month, day].every(Number.isInteger)) {
+        return null;
+      }
+
+      const parsedArrayDate = new Date(year, month - 1, day);
+      return Number.isNaN(parsedArrayDate.getTime()) ? null : this.startOfDay(parsedArrayDate);
     }
 
     const raw = value.trim();

@@ -227,10 +227,7 @@ function formatDuration(totalSeconds) {
 
 function formatIndexStatus(status) {
     const elapsed = formatDuration(status.elapsedSeconds || 0);
-    const estimatedEnd = status.estimatedCompletionAt
-        ? new Date(status.estimatedCompletionAt).toLocaleTimeString("cs-CZ", { hour: "2-digit", minute: "2-digit" })
-        : "počítám…";
-    return `${status.message} ${status.progress} % · Uplynulo ${elapsed} · Odhad konce ${estimatedEnd}`;
+    return `${status.message} ${status.progress} % · Uplynulo ${elapsed}`;
 }
 
 async function uploadFile(file) {

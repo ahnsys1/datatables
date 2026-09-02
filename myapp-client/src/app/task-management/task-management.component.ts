@@ -154,6 +154,7 @@ export class TaskManagementComponent implements OnInit, OnDestroy {
   private taskDiscussionRealtimeSubscription?: StompSubscription;
   private sprintStartDatePicker: FlatpickrInstance | null = null;
   private sprintEndDatePicker: FlatpickrInstance | null = null;
+  private dashboardLoadSequence = 0;
 
   constructor(
     private readonly authService: AuthService,
@@ -544,9 +545,17 @@ export class TaskManagementComponent implements OnInit, OnDestroy {
       this.dashboard = null;
       return;
     }
-    this.taskService.getSprintDashboard(this.selectedSprintId)
+    const loadSequence = ++this.dashboardLoadSequence;
+    const sprintId = this.selectedSprintId;
+
+    this.taskService.getSprintDashboard(sprintId)
       .subscribe({
         next: data => {
+          if (loadSequence !== this.dashboardLoadSequence || this.selectedSprintId !== sprintId) {
+            return;
+          }
+
+          this.errorMessage = '';
           this.dashboard = data;
           const selectedStoryExists = data.userStories.some(story => story.id === this.taskForm.storyId);
           if (!selectedStoryExists) {
@@ -560,6 +569,10 @@ export class TaskManagementComponent implements OnInit, OnDestroy {
           this.cdr.detectChanges();
         },
         error: () => {
+          if (loadSequence !== this.dashboardLoadSequence || this.selectedSprintId !== sprintId) {
+            return;
+          }
+
           this.errorMessage = 'Dashboard se nepodařilo načíst.';
           this.cdr.detectChanges();
         }
@@ -1222,11 +1235,22 @@ export class TaskManagementComponent implements OnInit, OnDestroy {
 
     this.taskService.assignStoryToSprint(story.id, this.selectedSprintId)
       .subscribe({
-        next: () => {
+        next: assignedStory => {
           this.draggingStoryId = null;
           this.draggingStorySource = null;
+          this.errorMessage = '';
+          if (this.dashboard != null && assignedStory.sprintId === this.selectedSprintId) {
+            const alreadyInDashboard = this.dashboard.userStories.some(item => item.id === assignedStory.id);
+            this.dashboard = {
+              ...this.dashboard,
+              userStories: alreadyInDashboard
+                ? this.dashboard.userStories.map(item => item.id === assignedStory.id ? assignedStory : item)
+                : [...this.dashboard.userStories, assignedStory]
+            };
+          }
           this.loadBacklog();
           this.loadDashboard();
+          this.cdr.detectChanges();
         },
         error: err => {
           this.draggingStoryId = null;

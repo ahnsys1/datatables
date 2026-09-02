@@ -6,9 +6,10 @@ services:
       POSTGRES_USER: rag
       POSTGRES_PASSWORD: rag
     ports:
-      - "5432:5432"
+      - "5433:5432"
     volumes:
       - pgvector-data-v18:/var/lib/postgresql
+      - ./postgres/init.sql:/docker-entrypoint-initdb.d/01-vector.sql:ro
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U rag -d rag"]
       interval: 5s
@@ -17,6 +18,10 @@ services:
 
   ollama:
     image: ollama/ollama:latest
+    mem_limit: 8g
+    environment:
+      OLLAMA_MAX_LOADED_MODELS: "1"
+      OLLAMA_NUM_PARALLEL: "1"
     ports:
       - "11434:11434"
     volumes:
@@ -37,7 +42,10 @@ services:
         condition: service_healthy
     environment:
       DATABASE_URL: jdbc:postgresql://postgres:5432/rag
+      DATABASE_USER: rag
+      DATABASE_PASSWORD: rag
       OLLAMA_BASE_URL: http://ollama:11434
+      JAVA_TOOL_OPTIONS: -Xms512m -Xmx2g
     ports:
       - "8080:8080"
 

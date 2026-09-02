@@ -104,7 +104,7 @@
                 <div class="card p-3 mt-3">
                     <h6 class="mb-2">Stav user stories ve sprintu</h6>
                     <div class="row g-2">
-                        <div class="col-md-4">
+                        <div class="col-md-4 sprint-status-completed">
                             <div class="small fw-semibold text-success mb-1">Dokončené ({{ sprintCompletedStories().length }})</div>
                             @if (sprintCompletedStories().length === 0) {
                             <div class="small text-muted">Žádné.</div>
@@ -145,7 +145,7 @@
                             }
                             }
                         </div>
-                        <div class="col-md-4">
+                        <div class="col-md-4 sprint-status-not-started">
                             <div class="small fw-semibold text-warning mb-1">Rozpracované ({{ sprintInProgressStories().length }})</div>
                             @if (sprintInProgressStories().length === 0) {
                             <div class="small text-muted">Žádné.</div>
