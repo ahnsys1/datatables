@@ -81,7 +81,7 @@ export default function LoansPage() {
   const [earlyRepayment, setEarlyRepayment] = useState(false);
   const [repaymentError, setRepaymentError] = useState("");
   const [expandedLoanId, setExpandedLoanId] = useState<string | null>(null);
-  const [onlyUnpaid, setOnlyUnpaid] = useState(true);
+  const [onlyUnpaid, setOnlyUnpaid] = useState(false);
   const [error, setError] = useState("");
   const [rates, setRates] = useState<InterestSettings | null>(null);
 
@@ -359,7 +359,7 @@ export default function LoansPage() {
         {loadingApplications && (
           <p className="api-notice">Načítám vaše žádosti...</p>
         )}
-        {applications.length > 0 && (
+        {!loadingApplications && (
           <section className="loan-applications">
             <div className="section-heading">
               <h2>Moje půjčky a žádosti</h2>
@@ -388,7 +388,15 @@ export default function LoansPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {visibleApplications.map((application) => {
+                  {visibleApplications.length === 0 ? (
+                    <tr>
+                      <td colSpan={6} className="loan-table-empty">
+                        {onlyUnpaid
+                          ? "Všechny půjčky jsou splacené."
+                          : "Zatím nemáte žádné půjčky ani žádosti."}
+                      </td>
+                    </tr>
+                  ) : visibleApplications.map((application) => {
                     const approved = application.status === "APPROVED";
                     const repaid = approved && (application.remainingAmount ?? 0) <= 0;
                     const canRepay =
@@ -408,13 +416,6 @@ export default function LoansPage() {
                           )
                         }
                       >
-                      {visibleApplications.length === 0 && (
-                        <tr>
-                          <td colSpan={6} className="loan-table-empty">
-                            Všechny půjčky jsou splacené.
-                          </td>
-                        </tr>
-                      )}
                         <td>
                           {canRepay ? (
                             <span className="loan-repayment-actions">

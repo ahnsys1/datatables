@@ -25,27 +25,27 @@ services:
       timeout: 5s
       retries: 10
 
-  vault-seed:
-    build:
-      context: .
-      dockerfile: vault-seed.Dockerfile
-    container_name: listek-vault-seed
-    environment:
-      VAULT_ADDR: http://host.docker.internal:8200
-      VAULT_TOKEN: ${VAULT_TOKEN:?Use docker-compose-vault.sh to start the stack}
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
-    command: ["/bin/sh", "/vault-seed.sh"]
-    volumes:
-      - ./vault-seed.sh:/vault-seed.sh:ro
-      - postgres-auth:/auth
-      - postgres-socket:/var/run/postgresql
-      - ./postgres/pg_hba.scram.conf:/config/pg_hba.scram.conf:ro
-    networks:
-      - listek-network
-    depends_on:
-      postgres:
-        condition: service_healthy
+  # vault-seed:
+  #   build:vault-seed
+  #     context: .
+  #     dockerfile: vault-seed.Dockerfile
+  #   container_name: listek-vault-seed
+  #   environment:
+  #     VAULT_ADDR: http://host.docker.internal:8200
+  #     VAULT_TOKEN: ${VAULT_TOKEN:?Use docker-compose-vault.sh to start the stack}
+  #   extra_hosts:
+  #     - "host.docker.internal:host-gateway"
+  #   command: ["/bin/sh", "/vault-seed.sh"]
+  #   volumes:
+  #     - ./vault-seed.sh:/vault-seed.sh:ro
+  #     - postgres-auth:/auth
+  #     - postgres-socket:/var/run/postgresql
+  #     - ./postgres/pg_hba.scram.conf:/config/pg_hba.scram.conf:ro
+  #   networks:
+  #     - listek-network
+  #   depends_on:
+  #     postgres:
+  #       condition: service_healthy
 
   listek-backend:
     build:
@@ -63,9 +63,6 @@ services:
       SERVER_PORT: 8080
     extra_hosts:
       - "host.docker.internal:host-gateway"
-    depends_on:
-      vault-seed:
-        condition: service_completed_successfully
     healthcheck:
       test: ["CMD-SHELL", "curl -sS http://localhost:8080/api/v1/health >/dev/null"]
       interval: 5s

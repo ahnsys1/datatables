@@ -11,9 +11,30 @@ command -v jq >/dev/null 2>&1 || { echo "jq is required" >&2; exit 1; }
 response_file="$(mktemp)"
 trap 'rm -f "$response_file"' EXIT
 
-status_code="$(curl --silent --show-error --output "$response_file" --write-out '%{http_code}' \
-  --header "X-Vault-Token: ${VAULT_TOKEN}" \
-  "${VAULT_ADDR}/v1/${VAULT_SECRET_PATH}")"
+status_code=000
+attempt=1
+max_attempts=30
+while [ "$attempt" -le "$max_attempts" ]; do
+  if status_code="$(curl --silent --show-error --output "$response_file" --write-out '%{http_code}' \
+    --connect-timeout 2 --max-time 5 \
+    --header "X-Vault-Token: ${VAULT_TOKEN}" \
+    "${VAULT_ADDR}/v1/${VAULT_SECRET_PATH}" 2>/dev/null)"; then
+    :
+  else
+    status_code=000
+  fi
+
+  case "$status_code" in
+    200|403|404) break ;;
+    5??|000)
+      if [ "$attempt" -lt "$max_attempts" ]; then
+        sleep 1 
+      fi
+      ;;
+    *) break ;;
+  esac
+  attempt=$((attempt + 1))
+done
 
 case "$status_code" in
   200) ;;
