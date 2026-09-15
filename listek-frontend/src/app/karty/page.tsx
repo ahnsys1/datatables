@@ -89,10 +89,11 @@ export default function CardsPage() {
       >
     > = {},
   ) {
-    if (!activeCard) return;
+    if (!activeCard && !accountId) return false;
     setSaving(true);
     try {
-      const savedCard = await updateCard(activeCard.id, {
+      const card = activeCard ?? (await createCard(accountId));
+      const savedCard = await updateCard(card.id, {
         locked: overrides.locked ?? locked,
         paymentLimit: overrides.paymentLimit ?? paymentLimit,
         onlinePaymentLimit: overrides.onlinePaymentLimit ?? onlinePaymentLimit,
@@ -102,9 +103,11 @@ export default function CardsPage() {
         cashWithdrawals: overrides.cashWithdrawals ?? cashWithdrawals,
       });
       setCards((currentCards) =>
-        currentCards.map((card) =>
-          card.id === savedCard.id ? savedCard : card,
-        ),
+        currentCards.some((currentCard) => currentCard.id === savedCard.id)
+          ? currentCards.map((currentCard) =>
+              currentCard.id === savedCard.id ? savedCard : currentCard,
+            )
+          : [savedCard, ...currentCards],
       );
       setLocked(savedCard.locked);
       setPaymentLimit(savedCard.paymentLimit);
@@ -114,12 +117,14 @@ export default function CardsPage() {
       setInStorePayments(savedCard.inStorePayments);
       setCashWithdrawals(savedCard.cashWithdrawals);
       setApiError("");
+      return true;
     } catch (error) {
       setApiError(
         error instanceof Error
           ? error.message
           : "Nastavení karty se nepodařilo uložit.",
       );
+      return false;
     } finally {
       setSaving(false);
     }
@@ -148,6 +153,11 @@ export default function CardsPage() {
   function closeModal() {
     setModal(null);
     setOrderSent(false);
+  }
+
+  async function submitCardSettings(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (await saveSettings()) closeModal();
   }
 
   return (
@@ -243,13 +253,7 @@ export default function CardsPage() {
           </button>
         </div>
         {modal && (
-          <div
-            className="modal-backdrop"
-            role="presentation"
-            onMouseDown={(event) =>
-              event.target === event.currentTarget && closeModal()
-            }
-          >
+          <div className="modal-backdrop" role="presentation">
             <section
               className="payment-modal card-modal"
               role="dialog"
@@ -258,13 +262,14 @@ export default function CardsPage() {
             >
               <button
                 className="modal-close"
+                type="button"
                 onClick={closeModal}
                 aria-label="Zavřít"
               >
                 <X size={21} />
               </button>
               {modal === "limits" ? (
-                <>
+                <form onSubmit={submitCardSettings}>
                   <p className="modal-kicker">Nastavení karty</p>
                   <h2 id="card-modal-title">Limity a bezpečnost</h2>
                   <div className="card-limit-list">
@@ -280,7 +285,7 @@ export default function CardsPage() {
                           setPaymentLimit(Number(event.target.value))
                         }
                         min="0"
-                        step="1000"
+                        step="1"
                       />{" "}
                       Kč
                     </label>
@@ -296,7 +301,7 @@ export default function CardsPage() {
                           setOnlinePaymentLimit(Number(event.target.value))
                         }
                         min="0"
-                        step="1000"
+                        step="1"
                       />{" "}
                       Kč
                     </label>
@@ -312,28 +317,31 @@ export default function CardsPage() {
                           setWithdrawalLimit(Number(event.target.value))
                         }
                         min="0"
-                        step="500"
+                        step="1"
                       />{" "}
                       Kč
                     </label>
                   </div>
                   <div className="card-switches">
                     <button
-                      className={onlinePayments ? "is-on" : ""}
-                      onClick={() => setOnlinePayments((value) => !value)}
-                    >
-                      <span>{onlinePayments ? <Check size={14} /> : null}</span>
-                      <b>Platby na internetu</b>
-                    </button>
-                    <button
                       className={inStorePayments ? "is-on" : ""}
+                      type="button"
                       onClick={() => setInStorePayments((value) => !value)}
                     >
                       <span>{inStorePayments ? <Check size={14} /> : null}</span>
                       <b>Placení v obchodech</b>
                     </button>
                     <button
+                      className={onlinePayments ? "is-on" : ""}
+                      type="button"
+                      onClick={() => setOnlinePayments((value) => !value)}
+                    >
+                      <span>{onlinePayments ? <Check size={14} /> : null}</span>
+                      <b>Platby na internetu</b>
+                    </button>
+                    <button
                       className={cashWithdrawals ? "is-on" : ""}
+                      type="button"
                       onClick={() => setCashWithdrawals((value) => !value)}
                     >
                       <span>
@@ -344,10 +352,7 @@ export default function CardsPage() {
                   </div>
                   <button
                     className="pay-button payment-submit"
-                    onClick={() => {
-                      void saveSettings();
-                      closeModal();
-                    }}
+                    type="submit"
                     disabled={saving}
                   >
                     Uložit nastavení
@@ -355,7 +360,7 @@ export default function CardsPage() {
                   <p className="secure-note">
                     <ShieldCheck size={16} /> Změny se projeví okamžitě.
                   </p>
-                </>
+                </form>
               ) : orderSent ? (
                 <div className="payment-success">
                   <span>
