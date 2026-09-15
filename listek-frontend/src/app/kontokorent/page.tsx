@@ -6,7 +6,7 @@ import BankShell from "../BankShell";
 import { Account, InterestSettings, OverdraftApplication, createOverdraftApplication, getAccounts, getInterestSettings, getOverdraftApplications, terminateOverdraft } from "../../lib/api";
 import { getSession } from "../../lib/session";
 
-const currency = new Intl.NumberFormat("cs-CZ", { style: "currency", currency: "CZK", maximumFractionDigits: 0 });
+const currency = new Intl.NumberFormat("cs-CZ", { style: "currency", currency: "CZK", currencyDisplay: "narrowSymbol", maximumFractionDigits: 0 });
 
 function applicationStatusLabel(status: OverdraftApplication["status"]) {
   return status === "PENDING" ? "Čeká na posouzení" : status === "APPROVED" ? "Schváleno" : "Neschváleno";

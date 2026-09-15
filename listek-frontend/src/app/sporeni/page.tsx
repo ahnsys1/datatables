@@ -8,7 +8,7 @@ import {
   Trash2,
   X,
 } from "lucide-react";
-import { FormEvent, useEffect, useState } from "react";
+import { FormEvent, useEffect, useRef, useState } from "react";
 import BankShell from "../BankShell";
 import {
   Account,
@@ -40,6 +40,7 @@ export default function SavingsPage() {
   const [message, setMessage] = useState("");
   const [saving, setSaving] = useState(false);
   const [rates, setRates] = useState<InterestSettings | null>(null);
+  const modalRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
     Promise.all([getAccounts(), getInterestSettings()])
@@ -49,6 +50,33 @@ export default function SavingsPage() {
       })
       .catch(() => setMessage("Účty se nepodařilo načíst."));
   }, []);
+
+  useEffect(() => {
+    if (!modal) return;
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setModal(null);
+      if (event.key !== "Tab") return;
+      const focusable = modalRef.current?.querySelectorAll<HTMLElement>("button, input, select, textarea, a[href]");
+      if (!focusable?.length) return;
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
+    };
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    window.addEventListener("keydown", closeOnEscape);
+    modalRef.current?.querySelector<HTMLElement>("input:not([disabled]), button")?.focus();
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener("keydown", closeOnEscape);
+    };
+  }, [modal]);
 
   function persistGoals(nextGoals: Goal[]) {
     setGoals(nextGoals);
@@ -232,11 +260,9 @@ export default function SavingsPage() {
           <div
             className="modal-backdrop"
             role="presentation"
-            onMouseDown={(event) =>
-              event.target === event.currentTarget && setModal(null)
-            }
           >
             <section
+              ref={modalRef}
               className="payment-modal account-modal"
               role="dialog"
               aria-modal="true"

@@ -35,7 +35,7 @@ const navigation = [
 ];
 
 const currency = new Intl.NumberFormat("cs-CZ", {
-  style: "currency", currency: "CZK", minimumFractionDigits: 2,
+  style: "currency", currency: "CZK", currencyDisplay: "narrowSymbol", minimumFractionDigits: 2,
 });
 
 function TransactionIcon({ type }: { type: Transaction["icon"] }) {

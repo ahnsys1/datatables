@@ -32,7 +32,7 @@ function viewForPath(pathname: string): View {
   return entry?.[0] ?? "overview";
 }
 
-const money = new Intl.NumberFormat("cs-CZ", { style: "currency", currency: "CZK", maximumFractionDigits: 0 });
+const money = new Intl.NumberFormat("cs-CZ", { style: "currency", currency: "CZK", currencyDisplay: "narrowSymbol", maximumFractionDigits: 0 });
 const date = new Intl.DateTimeFormat("cs-CZ", { dateStyle: "medium", timeStyle: "short" });
 const navigation = [
   { id: "overview" as const, label: "Přehled", icon: LayoutDashboard },

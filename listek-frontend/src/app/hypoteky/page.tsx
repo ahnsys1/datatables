@@ -15,6 +15,7 @@ import { getSession } from "../../lib/session";
 const currency = new Intl.NumberFormat("cs-CZ", {
   style: "currency",
   currency: "CZK",
+  currencyDisplay: "narrowSymbol",
   maximumFractionDigits: 0,
 });
 

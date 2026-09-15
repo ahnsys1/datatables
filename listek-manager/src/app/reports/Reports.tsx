@@ -4,7 +4,7 @@ import { ArrowLeft, ArrowRight, ClipboardCheck } from "lucide-react";
 import { useEffect, useState } from "react";
 import { LoanReport as LoanReportData, getLoanReport } from "@/lib/api";
 
-const money = new Intl.NumberFormat("cs-CZ", { style: "currency", currency: "CZK", maximumFractionDigits: 0 });
+const money = new Intl.NumberFormat("cs-CZ", { style: "currency", currency: "CZK", currencyDisplay: "narrowSymbol", maximumFractionDigits: 0 });
 const date = new Intl.DateTimeFormat("cs-CZ", { dateStyle: "medium", timeStyle: "short" });
 
 export default function Reports() {
