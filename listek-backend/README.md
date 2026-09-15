@@ -17,15 +17,19 @@ Spring Boot 4.1 backend pro internetove bankovnictvi Listek. Aplikace obsahuje R
 sh docker-compose-vault.sh up --build
 ```
 
-Launcher načte aktuální token ze samostatného lokálního Vault kontejneru `vault` pouze do prostředí Compose procesu. Token se neukládá do Compose konfigurace. Služba `vault-seed` načte uživatelsky spravované připojení z cest `secret/listek` a `secret/listek-admin` a připraví odpovídající PostgreSQL role a databáze:
+Launcher načte secret `secrets/data/listek` z lokálního Vaultu a předá databázové proměnné pouze procesu Compose. Token se neukládá do Compose konfigurace. Služba `vault-seed` načte uživatelsky spravované připojení z cest `secrets/listek` a `secrets/listek-admin` pomocí Vault CLI a připraví odpovídající PostgreSQL role a databáze:
 
 ```text
-DB_URL=<adresa databáze>
+DB_URL=jdbc:postgresql://postgres:5432/listek
 DB_USERNAME=<uživatel databáze>
 DB_PASSWORD=<heslo databáze>
 ```
 
-Spring Cloud Vault načte tyto hodnoty při startu. `application.properties` je používá přes `spring.datasource.url=${DB_URL}`, `spring.datasource.username=${DB_USERNAME}` a `spring.datasource.password=${DB_PASSWORD}`. Heslo není uloženo v `docker-compose.yml` ani v souboru v repozitáři.
+`DB_URL` musí být JDBC URL včetně prefixu `jdbc:`. Hodnota jako
+`postgresql://postgres:5432/listek` nebo `postgres://...` není platná pro
+Spring Boot datasource.
+
+Launcher je předá jako `SPRING_DATASOURCE_URL`, `SPRING_DATASOURCE_USERNAME` a `SPRING_DATASOURCE_PASSWORD` službám backendu a adminu. Heslo není uloženo v `docker-compose.yml` ani v souboru v repozitáři.
 
 PostgreSQL používá v tomto čistě lokálním vývojovém stacku autentizaci `trust`, aby nevznikl bootstrap cyklus PostgreSQL → Vault → PostgreSQL. Toto nastavení není vhodné pro produkci.
 

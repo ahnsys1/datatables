@@ -7,8 +7,15 @@ reconcile_secret() {
   DB_URL="$(vault kv get -field=DB_URL "$secret_path")"
   DB_USERNAME="$(vault kv get -field=DB_USERNAME "$secret_path")"
   DB_PASSWORD="$(vault kv get -field=DB_PASSWORD "$secret_path")"
-  DB_NAME="${DB_URL##*/}"
-  DB_NAME="${DB_NAME%%\?*}"
+  DB_NAME="$(vault kv get -field=DB_NAME "$secret_path")"
+
+  case "$DB_URL" in
+    jdbc:postgresql://*) ;;
+    *)
+      echo "DB_URL in $secret_path must start with jdbc:postgresql://" >&2
+      exit 1
+      ;;
+  esac
 
   if [ -z "$DB_NAME" ] || [ -z "$DB_USERNAME" ] || [ -z "$DB_PASSWORD" ]; then
     echo "DB_URL, DB_USERNAME and DB_PASSWORD must be set in $secret_path" >&2
@@ -47,8 +54,8 @@ SQL
     -U "$DB_USERNAME" -d "$DB_NAME" -c "SELECT 1" >/dev/null
 }
 
-reconcile_secret secret/listek
-reconcile_secret secret/listek-admin
+reconcile_secret secrets/listek
+reconcile_secret secrets/listek-admin
 
 cp /config/pg_hba.scram.conf /auth/pg_hba.conf
 psql -v ON_ERROR_STOP=1 -h /var/run/postgresql -U postgres -d postgres \

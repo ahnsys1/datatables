@@ -1,27 +1,54 @@
 #!/bin/sh
 set -eu
 
-VAULT_CONTAINER="${VAULT_CONTAINER:-vault}"
+VAULT_ADDR="${VAULT_ADDR:-http://127.0.0.1:8200}"
+VAULT_TOKEN="${VAULT_TOKEN:?VAULT_TOKEN must be set}"
+VAULT_SECRET_PATH="${VAULT_SECRET_PATH:-secrets/data/listek}"
 
-if ! docker inspect "$VAULT_CONTAINER" >/dev/null 2>&1; then
-  echo "Vault container '$VAULT_CONTAINER' is not running" >&2
-  exit 1
-fi
+command -v curl >/dev/null 2>&1 || { echo "curl is required" >&2; exit 1; }
+command -v jq >/dev/null 2>&1 || { echo "jq is required" >&2; exit 1; }
 
-LISTEK_VAULT_TOKEN="$(docker logs "$VAULT_CONTAINER" 2>&1 | awk '/Root Token:/{token=$3} END{print token}')"
+response_file="$(mktemp)"
+trap 'rm -f "$response_file"' EXIT
 
-if [ -z "$LISTEK_VAULT_TOKEN" ]; then
-  echo "Could not obtain the development Vault token" >&2
-  exit 1
-fi
+status_code="$(curl --silent --show-error --output "$response_file" --write-out '%{http_code}' \
+  --header "X-Vault-Token: ${VAULT_TOKEN}" \
+  "${VAULT_ADDR}/v1/${VAULT_SECRET_PATH}")"
 
-if ! docker exec \
-  -e VAULT_ADDR=http://127.0.0.1:8200 \
-  -e VAULT_TOKEN="$LISTEK_VAULT_TOKEN" \
-  "$VAULT_CONTAINER" vault token lookup >/dev/null 2>&1; then
-  echo "The development Vault token is invalid" >&2
-  exit 1
-fi
+case "$status_code" in
+  200) ;;
+  404)
+    echo "Vault secret '${VAULT_SECRET_PATH}' does not exist" >&2
+    exit 1
+    ;;
+  403)
+    echo "Vault denied access to '${VAULT_SECRET_PATH}'; check VAULT_TOKEN" >&2
+    exit 1
+    ;;
+  *)
+    echo "Vault request for '${VAULT_SECRET_PATH}' failed with HTTP ${status_code}" >&2
+    exit 1
+    ;;
+esac
 
-export LISTEK_VAULT_TOKEN
-exec docker compose "$@"
+vault_response="$(cat "$response_file")"
+
+read_secret() {
+  printf '%s' "$vault_response" | jq --exit-status --raw-output ".data.data.$1 | strings | select(length > 0)"
+}
+
+export DB_URL="$(read_secret DB_URL)"
+export DB_USERNAME="$(read_secret DB_USERNAME)"
+export DB_PASSWORD="$(read_secret DB_PASSWORD)"
+
+case "$DB_URL" in
+  jdbc:postgresql://*) ;;
+  *)
+    echo "DB_URL in ${VAULT_SECRET_PATH} must start with jdbc:postgresql://" >&2
+    exit 1
+    ;;
+esac
+
+script_dir="$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)"
+export VAULT_TOKEN
+exec docker compose -f "${script_dir}/docker-compose.yml" "$@"

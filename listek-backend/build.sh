@@ -1,20 +1,22 @@
- #!/bin/bash
-    
-    echo "running ng build"
-    cd ../listek-frontend
-    ng build
+#!/bin/bash
+set -e
 
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+WORKSPACE_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 
-    cd ../listek-admin
-    mvn clean install -DskipTests
-    
+echo "running listek-frontend build"
+cd "$WORKSPACE_DIR/listek-frontend"
+npm run build
 
-    # Filebeat refuses configuration files writable by group or other users.
-    chmod go-w ../filebeat/filebeat.yml
+cd "$WORKSPACE_DIR/listek-admin"
+mvn clean install -DskipTests
 
-    echo "Starting Docker Compose services with rebuild..."
-    read -rsp 'Vault token: ' VAULT_TOKEN
-    export VAULT_TOKEN
-    echo
-    sh docker-compose-vault.sh up --build
-    unset VAULT_TOKEN
+cd "$SCRIPT_DIR"
+mvn clean install -DskipTests
+
+echo "Starting Docker Compose services with rebuild..."
+read -rsp 'Vault token: ' VAULT_TOKEN
+echo
+export VAULT_TOKEN
+trap 'unset VAULT_TOKEN' EXIT
+sh "$SCRIPT_DIR/docker-compose-vault.sh" up --build
