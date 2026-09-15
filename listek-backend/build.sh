@@ -8,11 +8,17 @@ echo "running listek-frontend build"
 cd "$WORKSPACE_DIR/listek-frontend"
 npm run build
 
+cd "$WORKSPACE_DIR/listek-manager"
+npm run build
+
+
 cd "$WORKSPACE_DIR/listek-admin"
 mvn clean install -DskipTests
 
-cd "$SCRIPT_DIR"
+cd "$WORKSPACE_DIR/listek-backend"
 mvn clean install -DskipTests
+
+
 
 echo "Starting Docker Compose services with rebuild..."
 read -rsp 'Vault token: ' VAULT_TOKEN
