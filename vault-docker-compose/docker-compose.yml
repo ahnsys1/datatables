@@ -11,6 +11,8 @@ services:
       VAULT_ADDR: http://0.0.0.0:8200
     ports:
       - "8200:8200"
+    networks:
+      - projects-network
     volumes:
       - vault_data:/vault/file
       - ./vault.hcl:/vault/config/vault.hcl:ro
@@ -19,3 +21,8 @@ services:
 volumes:
   vault_data:
     driver: local
+
+networks:
+  projects-network:
+    external: true
+

@@ -13,7 +13,7 @@ services:
       backend:
         condition: service_started
     networks:
-      - datatables-network
+      - projects-network
     restart: always
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost/health"]
@@ -25,9 +25,9 @@ services:
     build: .
     ports:
       - "9090:9090"
-      - "5005:5005"
+#      - "5005:5005"
     environment:
-      - JAVA_TOOL_OPTIONS=-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005
+#      - JAVA_TOOL_OPTIONS=-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005
       # Ensure your application is configured to connect to myapp-postgres
       - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/${DATATABLES_DB_NAME:?Run with docker-compose-vault.sh}
 # Use service name 'postgres'
@@ -52,7 +52,7 @@ services:
       - ${HOME}:/host-home
 
     networks:
-      - datatables-network
+      - projects-network
     restart: always
     healthcheck:
       test: ["CMD", "wget", "-qO-", "http://localhost:9090/actuator/health"]
@@ -84,7 +84,7 @@ services:
       retries: 10
       start_period: 30s
     networks:
-      - datatables-network
+      - projects-network
 
   kibana:
     image: docker.elastic.co/kibana/kibana:7.17.13
@@ -102,7 +102,7 @@ services:
       retries: 10
       start_period: 30s
     networks:
-      - datatables-network
+      - projects-network
 
 
 #  logstash:
@@ -144,7 +144,7 @@ services:
       retries: 5
       start_period: 10s
     networks:
-      - datatables-network
+      - projects-network
 volumes:
   es_data:
     driver: local
@@ -152,5 +152,5 @@ volumes:
     driver: local
 
 networks:
-  datatables-network:
+  projects-network:
     external: true

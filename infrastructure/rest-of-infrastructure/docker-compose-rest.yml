@@ -22,7 +22,7 @@ services:
       - ./rabbitmq:/etc/rabbitmq
       - rabbitmq_data:/var/lib/rabbitmq
     networks:
-      - datatables-network
+      - projects-network
     healthcheck:
       test: ["CMD", "rabbitmq-diagnostics", "ping"]
       interval: 10s
@@ -43,7 +43,7 @@ services:
     volumes:
       - ../../myapp-jpa-server/src/main/resources/keycloak:/opt/keycloak/data/import:ro
     networks:
-      - datatables-network
+      - projects-network
     healthcheck:
       test:
         [
@@ -66,7 +66,7 @@ services:
     ports:
       - "5432:5432"
     networks:
-      - datatables-network
+      - projects-network
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
@@ -80,11 +80,13 @@ services:
 
 
 networks:
-  datatables-network:
+  projects-network:
     external: true
 
 volumes:
   vault_data:
+    driver: local
+  keycloak_data:
     driver: local
   rabbitmq_data:
     driver: local

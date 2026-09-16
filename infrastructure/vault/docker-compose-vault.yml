@@ -6,7 +6,7 @@ services:
     cap_add:
       - IPC_LOCK
     networks:
-      - datatables-network
+      - projects-network
     environment:
       VAULT_ADDR: http://0.0.0.0:8200
     ports:
@@ -22,7 +22,7 @@ volumes:
     driver: local
 
 networks:
-  datatables-network:
+  projects-network:
     external: true
 
 

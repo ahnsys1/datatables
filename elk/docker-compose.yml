@@ -32,7 +32,7 @@ services:
       timeout: 10s
       retries: 5
     networks:
-      - docker-elk
+      - projects-network
 
   kibana:
     image: docker.elastic.co/kibana/kibana:9.2.0
@@ -50,7 +50,7 @@ services:
       ELASTICSEARCH_USERNAME: elastic
       ELASTICSEARCH_PASSWORD: changeme
     networks:
-      - docker-elk
+      - projects-network
     depends_on:
       - elasticsearch
 
@@ -66,13 +66,13 @@ services:
       ELASTICSEARCH_PASSWORD: changeme
       ELASTICSEARCH_HOSTS: "https://elasticsearch:9200"
     networks:
-      - docker-elk
+      - projects-network
     depends_on:
       - elasticsearch
 
 networks:
-  docker-elk:
-    driver: bridge
+  projects-network:
+    external: true
 
 volumes:
   esdata:
