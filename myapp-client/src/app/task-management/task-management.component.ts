@@ -632,7 +632,9 @@ export class TaskManagementComponent implements OnInit, OnDestroy {
     this.discussionFlatMessages = [];
     this.discussionDraft = '';
     this.discussionReplyTo = null;
+    this.unreadDiscussionStoryIds.delete(story.id);
     this.loadStoryDiscussionMessages(true);
+    this.cdr.markForCheck();
   }
 
   closeStoryDiscussion(): void {
@@ -665,6 +667,7 @@ export class TaskManagementComponent implements OnInit, OnDestroy {
     this.taskDiscussionDraft = '';
     this.taskDiscussionReplyTo = null;
     this.taskDiscussionErrorMessage = '';
+    this.unreadDiscussionTaskIds.delete(task.id);
     this.cdr.detectChanges();
     this.loadTaskDiscussionMessages(true);
   }
