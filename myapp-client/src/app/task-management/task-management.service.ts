@@ -113,7 +113,9 @@ export class TaskManagementService {
 
   registerUser(payload: {
     username: string;
-    displayName: string;
+    firstName: string;
+    lastName: string;
+    email: string;
     password: string;
   }): Observable<TmUser> {
     return this.http.post<TmUser>(`${this.baseUrl}/register`, {
@@ -124,7 +126,9 @@ export class TaskManagementService {
 
   createUser(payload: {
     username: string;
-    displayName: string;
+    firstName: string;
+    lastName: string;
+    email: string;
     password: string;
     admin: boolean;
   }): Observable<TmUser> {

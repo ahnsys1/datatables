@@ -9,7 +9,9 @@ import { HttpErrorResponse } from '@angular/common/http';
 
 type AccountForm = {
   username: string;
-  displayName: string;
+  firstName: string;
+  lastName: string;
+  email: string;
   password: string;
   confirmPassword: string;
   admin: boolean;
@@ -76,7 +78,9 @@ export class AccountManagementComponent implements OnInit {
     this.successMessage = '';
     this.taskService.registerUser({
       username: this.signupForm.username.trim(),
-      displayName: this.normalizeDisplayName(this.signupForm),
+      firstName: this.signupForm.firstName.trim(),
+      lastName: this.signupForm.lastName.trim(),
+      email: this.signupForm.email.trim(),
       password: this.signupForm.password
     }).subscribe({
       next: () => {
@@ -111,7 +115,9 @@ export class AccountManagementComponent implements OnInit {
     this.successMessage = '';
     this.taskService.createUser({
       username: this.adminCreateForm.username.trim(),
-      displayName: this.normalizeDisplayName(this.adminCreateForm),
+      firstName: this.adminCreateForm.firstName.trim(),
+      lastName: this.adminCreateForm.lastName.trim(),
+      email: this.adminCreateForm.email.trim(),
       password: this.adminCreateForm.password,
       admin: this.adminCreateForm.admin
     }).subscribe({
@@ -164,18 +170,24 @@ export class AccountManagementComponent implements OnInit {
 
   private validateForm(form: AccountForm, allowAdmin: boolean): string | null {
     const username = form.username.trim();
-    const displayName = form.displayName.trim();
+    const firstName = form.firstName.trim();
+    const lastName = form.lastName.trim();
+    const email = form.email.trim();
 
-    if (username === '' || form.password.trim() === '' || form.confirmPassword.trim() === '') {
-      return 'Vyplň pole Username, Heslo a Potvrzení hesla.';
+    if (username === '' || firstName === '' || lastName === '' || email === '' || form.password.trim() === '' || form.confirmPassword.trim() === '') {
+      return 'Vyplň Username, jméno, příjmení, email, heslo a potvrzení hesla.';
     }
 
     if (!/^[a-zA-Z0-9._@-]{4,40}$/.test(username)) {
       return 'Username musí mít 4-40 znaků a smí obsahovat jen písmena, čísla, tečku, podtržítko, pomlčku nebo @.';
     }
 
-    if (displayName !== '' && (displayName.length < 1 || displayName.length > 80)) {
-      return 'Pole Zobrazované jméno může mít 1-80 znaků, nebo ho nech prázdné a doplní se z Username.';
+    if (firstName.length > 80 || lastName.length > 80) {
+      return 'Jméno a příjmení mohou mít nejvýše 80 znaků.';
+    }
+
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      return 'Zadej platný email.';
     }
 
     if (form.password !== form.confirmPassword) {
@@ -197,17 +209,13 @@ export class AccountManagementComponent implements OnInit {
   private emptyForm(admin: boolean): AccountForm {
     return {
       username: '',
-      displayName: '',
+      firstName: '',
+      lastName: '',
+      email: '',
       password: '',
       confirmPassword: '',
       admin
     };
-  }
-
-  private normalizeDisplayName(form: AccountForm): string {
-    const username = form.username.trim();
-    const displayName = form.displayName.trim();
-    return displayName === '' ? username : displayName;
   }
 
   private resolveApiError(err: unknown, fallback: string): string {

@@ -34,8 +34,9 @@
         </div>
 
         <input class="form-control mb-2" placeholder="Username" [(ngModel)]="signupForm.username" />
-        <input class="form-control mb-1" placeholder="Zobrazované jméno (volitelné)" [(ngModel)]="signupForm.displayName" />
-        <div class="small text-muted mb-2">Volitelné. Když ho necháš prázdné, použije se Username.</div>
+        <input class="form-control mb-2" placeholder="Jméno" [(ngModel)]="signupForm.firstName" />
+        <input class="form-control mb-2" placeholder="Příjmení" [(ngModel)]="signupForm.lastName" />
+        <input class="form-control mb-2" type="email" placeholder="Email" [(ngModel)]="signupForm.email" />
         <input class="form-control mb-2" type="password" placeholder="Heslo" [(ngModel)]="signupForm.password" />
         <input class="form-control mb-3" type="password" placeholder="Potvrzení hesla" [(ngModel)]="signupForm.confirmPassword" />
 
@@ -64,8 +65,9 @@
         }
 
         <input class="form-control mb-2" placeholder="Username" [(ngModel)]="adminCreateForm.username" [disabled]="currentUser?.admin !== true" />
-        <input class="form-control mb-1" placeholder="Zobrazované jméno (volitelné)" [(ngModel)]="adminCreateForm.displayName" [disabled]="currentUser?.admin !== true" />
-        <div class="small text-muted mb-2">Volitelné. Když ho necháš prázdné, použije se Username.</div>
+        <input class="form-control mb-2" placeholder="Jméno" [(ngModel)]="adminCreateForm.firstName" [disabled]="currentUser?.admin !== true" />
+        <input class="form-control mb-2" placeholder="Příjmení" [(ngModel)]="adminCreateForm.lastName" [disabled]="currentUser?.admin !== true" />
+        <input class="form-control mb-2" type="email" placeholder="Email" [(ngModel)]="adminCreateForm.email" [disabled]="currentUser?.admin !== true" />
         <input class="form-control mb-2" type="password" placeholder="Heslo" [(ngModel)]="adminCreateForm.password" [disabled]="currentUser?.admin !== true" />
         <input class="form-control mb-2" type="password" placeholder="Potvrzení hesla" [(ngModel)]="adminCreateForm.confirmPassword" [disabled]="currentUser?.admin !== true" />
         <label class="account-role-toggle mb-3">

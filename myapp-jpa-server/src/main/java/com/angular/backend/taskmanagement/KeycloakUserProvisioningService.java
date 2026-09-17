@@ -3,20 +3,19 @@ package com.angular.backend.taskmanagement;
 import java.util.List;
 import java.util.Locale;
 
-import jakarta.ws.rs.NotFoundException;
-import jakarta.ws.rs.WebApplicationException;
-import jakarta.ws.rs.core.Response;
-
-import org.springframework.http.HttpStatus;
-import org.springframework.stereotype.Service;
-import org.springframework.web.server.ResponseStatusException;
-
 import org.keycloak.admin.client.CreatedResponseUtil;
 import org.keycloak.admin.client.Keycloak;
 import org.keycloak.admin.client.KeycloakBuilder;
 import org.keycloak.representations.idm.CredentialRepresentation;
 import org.keycloak.representations.idm.RoleRepresentation;
 import org.keycloak.representations.idm.UserRepresentation;
+import org.springframework.http.HttpStatus;
+import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
+
+import jakarta.ws.rs.NotFoundException;
+import jakarta.ws.rs.WebApplicationException;
+import jakarta.ws.rs.core.Response;
 
 @Service
 public class KeycloakUserProvisioningService {
@@ -30,15 +29,14 @@ public class KeycloakUserProvisioningService {
         this.properties = properties;
     }
 
-    public String createUser(String username, String displayName, String password, boolean admin) {
+    public String createUser(String username, String firstName, String lastName, String email, String password, boolean admin) {
         try (Keycloak keycloak = newKeycloakClient()) {
-            String[] nameParts = splitDisplayName(displayName);
             UserRepresentation user = new UserRepresentation();
             user.setEnabled(true);
             user.setUsername(username);
-            user.setFirstName(nameParts[0]);
-            user.setLastName(nameParts[1]);
-            user.setEmail(defaultEmailFor(username));
+            user.setFirstName(firstName.trim());
+            user.setLastName(lastName.trim());
+            user.setEmail(email.trim());
             user.setEmailVerified(true);
             user.setRequiredActions(List.of());
 
@@ -169,28 +167,6 @@ public class KeycloakUserProvisioningService {
                     "Missing Keycloak admin configuration: " + propertyName);
         }
         return value;
-    }
-
-    private String[] splitDisplayName(String displayName) {
-        String normalized = displayName == null ? "" : displayName.trim();
-        if (normalized.isEmpty()) {
-            return new String[] { "Task", "User" };
-        }
-
-        String[] tokens = normalized.split("\\s+", 2);
-        if (tokens.length == 1) {
-            return new String[] { tokens[0], tokens[0] };
-        }
-
-        return new String[] { tokens[0], tokens[1] };
-    }
-
-    private String defaultEmailFor(String username) {
-        if (username != null && username.contains("@")) {
-            return username;
-        }
-
-        return username + "@task-management.local";
     }
 
     private ResponseStatusException mapKeycloakResponse(Response response, String fallbackMessage) {

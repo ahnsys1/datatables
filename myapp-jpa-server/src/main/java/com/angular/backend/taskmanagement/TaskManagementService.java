@@ -13,9 +13,9 @@ import java.util.Set;
 import org.springframework.http.HttpStatus;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
@@ -28,9 +28,9 @@ import com.angular.backend.taskmanagement.TaskManagementDtos.CreateProjectReques
 import com.angular.backend.taskmanagement.TaskManagementDtos.CreateSprintRequest;
 import com.angular.backend.taskmanagement.TaskManagementDtos.CreateStoryDiscussionMessageRequest;
 import com.angular.backend.taskmanagement.TaskManagementDtos.CreateStoryRequest;
-import com.angular.backend.taskmanagement.TaskManagementDtos.CreateUserRequest;
 import com.angular.backend.taskmanagement.TaskManagementDtos.CreateTaskDiscussionMessageRequest;
 import com.angular.backend.taskmanagement.TaskManagementDtos.CreateTaskRequest;
+import com.angular.backend.taskmanagement.TaskManagementDtos.CreateUserRequest;
 import com.angular.backend.taskmanagement.TaskManagementDtos.MarkStoryDiscussionReadRequest;
 import com.angular.backend.taskmanagement.TaskManagementDtos.MarkTaskDiscussionReadRequest;
 import com.angular.backend.taskmanagement.TaskManagementDtos.ProjectAccessOverviewResponse;
@@ -44,10 +44,10 @@ import com.angular.backend.taskmanagement.TaskManagementDtos.StoryResponse;
 import com.angular.backend.taskmanagement.TaskManagementDtos.TaskDiscussionMessageResponse;
 import com.angular.backend.taskmanagement.TaskManagementDtos.TaskDiscussionRealtimeEvent;
 import com.angular.backend.taskmanagement.TaskManagementDtos.TaskResponse;
-import com.angular.backend.taskmanagement.TaskManagementDtos.UpdateUserProjectAccessRequest;
 import com.angular.backend.taskmanagement.TaskManagementDtos.UpdateStoryRequest;
 import com.angular.backend.taskmanagement.TaskManagementDtos.UpdateTaskRequest;
 import com.angular.backend.taskmanagement.TaskManagementDtos.UpdateTaskStatusRequest;
+import com.angular.backend.taskmanagement.TaskManagementDtos.UpdateUserProjectAccessRequest;
 import com.angular.backend.taskmanagement.TaskManagementDtos.UserResponse;
 
 @Service
@@ -125,7 +125,10 @@ public class TaskManagementService {
 
         return createManagedUser(
             request.username().trim(),
-            normalizeDisplayName(request.username(), request.displayName()),
+            normalizeDisplayName(request.firstName(), request.lastName()),
+            request.firstName(),
+            request.lastName(),
+            request.email(),
             request.password().trim(),
             false);
     }
@@ -152,18 +155,26 @@ public class TaskManagementService {
 
         return createManagedUser(
                 request.username().trim(),
-                normalizeDisplayName(request.username(), request.displayName()),
+                normalizeDisplayName(request.firstName(), request.lastName()),
+                request.firstName(),
+                request.lastName(),
+                request.email(),
                 request.password().trim(),
                 Boolean.TRUE.equals(request.admin()));
     }
 
     private void validateCreateUserRequest(CreateUserRequest request) {
-        if (request == null || isBlank(request.username()) || isBlank(request.password())) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Username and password are required");
+        if (request == null || isBlank(request.username()) || isBlank(request.firstName())
+            || isBlank(request.lastName()) || isBlank(request.email()) || isBlank(request.password())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                "Username, first name, last name, email and password are required");
         }
 
         String username = request.username().trim();
-        String displayName = normalizeDisplayName(request.username(), request.displayName());
+        String firstName = request.firstName().trim();
+        String lastName = request.lastName().trim();
+        String email = request.email().trim();
+        String displayName = normalizeDisplayName(request.firstName(), request.lastName());
         String password = request.password();
 
         if (!username.matches("^[a-zA-Z0-9._@-]{4,40}$")) {
@@ -176,6 +187,14 @@ public class TaskManagementService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Zobrazované jméno může mít nejvýše 80 znaků.");
         }
 
+        if (firstName.length() > 80 || lastName.length() > 80) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Jméno a příjmení mohou mít nejvýše 80 znaků.");
+        }
+
+        if (!email.matches("^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$")) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Email nemá platný formát.");
+        }
+
         if (password.isBlank()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Username and password are required");
         }
@@ -184,6 +203,9 @@ public class TaskManagementService {
     private UserResponse createManagedUser(
             String requestedUsername,
             String requestedDisplayName,
+            String requestedFirstName,
+            String requestedLastName,
+            String requestedEmail,
             String requestedPassword,
             boolean requestedAdmin) {
         if (userRepository.existsByUsername(requestedUsername)) {
@@ -192,7 +214,9 @@ public class TaskManagementService {
 
         String keycloakUserId = keycloakUserProvisioningService.createUser(
                 requestedUsername,
-                requestedDisplayName,
+                requestedFirstName,
+                requestedLastName,
+                requestedEmail,
                 requestedPassword,
                 requestedAdmin);
 
@@ -210,10 +234,9 @@ public class TaskManagementService {
         }
     }
 
-    private String normalizeDisplayName(String username, String displayName) {
-        String normalizedUsername = username == null ? "" : username.trim();
-        String normalizedDisplayName = displayName == null ? "" : displayName.trim();
-        return normalizedDisplayName.isEmpty() ? normalizedUsername : normalizedDisplayName;
+    private String normalizeDisplayName(String firstName, String lastName) {
+        String nameFromParts = String.join(" ", firstName == null ? "" : firstName.trim(), lastName == null ? "" : lastName.trim()).trim();
+        return nameFromParts;
     }
 
     @Transactional

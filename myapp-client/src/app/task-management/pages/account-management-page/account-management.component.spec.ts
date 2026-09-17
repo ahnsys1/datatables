@@ -54,7 +54,9 @@ describe('AccountManagementComponent', () => {
     fixture.detectChanges();
 
     component.signupForm.username = 'new.user';
-    component.signupForm.displayName = 'New User';
+    component.signupForm.firstName = 'New';
+    component.signupForm.lastName = 'User';
+    component.signupForm.email = 'new.user@example.com';
     component.signupForm.password = 'weak';
     component.signupForm.confirmPassword = 'weak';
 
@@ -62,19 +64,23 @@ describe('AccountManagementComponent', () => {
 
     expect(taskService.registerUser).toHaveBeenCalledWith({
       username: 'new.user',
-      displayName: 'New User',
+      firstName: 'New',
+      lastName: 'User',
+      email: 'new.user@example.com',
       password: 'weak'
     });
     expect(component.errorMessage).toBe('');
   });
 
-  it('should use username as display name when the display name is blank', () => {
+  it('should send the supplied identity fields for signup', () => {
     const fixture = TestBed.createComponent(AccountManagementComponent);
     const component = fixture.componentInstance;
     fixture.detectChanges();
 
     component.signupForm.username = 'new.user';
-    component.signupForm.displayName = '   ';
+    component.signupForm.firstName = 'New';
+    component.signupForm.lastName = 'User';
+    component.signupForm.email = 'new.user@example.com';
     component.signupForm.password = 'ValidPass12';
     component.signupForm.confirmPassword = 'ValidPass12';
 
@@ -82,7 +88,9 @@ describe('AccountManagementComponent', () => {
 
     expect(taskService.registerUser).toHaveBeenCalledWith({
       username: 'new.user',
-      displayName: 'new.user',
+      firstName: 'New',
+      lastName: 'User',
+      email: 'new.user@example.com',
       password: 'ValidPass12'
     });
   });
@@ -93,7 +101,9 @@ describe('AccountManagementComponent', () => {
     fixture.detectChanges();
 
     component.signupForm.username = 'new.user';
-    component.signupForm.displayName = 'New User';
+    component.signupForm.firstName = 'New';
+    component.signupForm.lastName = 'User';
+    component.signupForm.email = 'new.user@example.com';
     component.signupForm.password = 'ValidPass12';
     component.signupForm.confirmPassword = 'ValidPass12';
 
@@ -101,7 +111,9 @@ describe('AccountManagementComponent', () => {
 
     expect(taskService.registerUser).toHaveBeenCalledWith({
       username: 'new.user',
-      displayName: 'New User',
+      firstName: 'New',
+      lastName: 'User',
+      email: 'new.user@example.com',
       password: 'ValidPass12'
     });
     expect(component.successMessage).toContain('Účet byl vytvořen');
@@ -116,7 +128,9 @@ describe('AccountManagementComponent', () => {
     fixture.detectChanges();
 
     component.adminCreateForm.username = 'managed.admin';
-    component.adminCreateForm.displayName = 'Managed Admin';
+    component.adminCreateForm.firstName = 'Managed';
+    component.adminCreateForm.lastName = 'Admin';
+    component.adminCreateForm.email = 'managed.admin@example.com';
     component.adminCreateForm.password = 'simplepass1';
     component.adminCreateForm.confirmPassword = 'simplepass1';
     component.adminCreateForm.admin = true;
@@ -125,7 +139,9 @@ describe('AccountManagementComponent', () => {
 
     expect(taskService.createUser).toHaveBeenCalledWith({
       username: 'managed.admin',
-      displayName: 'Managed Admin',
+      firstName: 'Managed',
+      lastName: 'Admin',
+      email: 'managed.admin@example.com',
       password: 'simplepass1',
       admin: true
     });

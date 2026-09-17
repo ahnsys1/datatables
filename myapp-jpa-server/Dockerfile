@@ -1,13 +1,16 @@
-# Use a minimal base image for running the application
-FROM alpine/java:22-jdk
+FROM maven:3.9-eclipse-temurin-17 AS builder
 
-# Set the working directory
+WORKDIR /build
+COPY pom.xml ./
+RUN mvn dependency:go-offline -q
+
+COPY src ./src
+RUN mvn package -DskipTests -q
+
+FROM eclipse-temurin:17-jre-alpine
+
 WORKDIR /app
-
-# Copy the packaged application from the builder stage
-COPY target/*.jar app.jar
+COPY --from=builder /build/target/*.jar app.jar
 EXPOSE 9090
 
-
-# Command to run the application
 ENTRYPOINT ["java", "-jar", "app.jar"]

@@ -12,7 +12,14 @@ public final class TaskManagementDtos {
     public record UserResponse(String id, String username, String displayName, boolean admin, List<Long> accessibleProjectIds) {
     }
 
-    public record CreateUserRequest(String username, String displayName, String password, Boolean admin) {
+        public record CreateUserRequest(
+            String username,
+            String displayName,
+            String firstName,
+            String lastName,
+            String email,
+            String password,
+            Boolean admin) {
     }
 
         public record CreateProjectRequest(String name, String description) {

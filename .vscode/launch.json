@@ -6,6 +6,13 @@
     "configurations": [
         {
             "type": "java",
+            "name": "Test",
+            "request": "launch",
+            "mainClass": "com.angular.backend.stocks.dto.Test",
+            "projectName": "myapp-jpa-server"
+        },
+        {
+            "type": "java",
             "name": "Lambdas",
             "request": "launch",
             "mainClass": "com.example.json.Lambdas",
