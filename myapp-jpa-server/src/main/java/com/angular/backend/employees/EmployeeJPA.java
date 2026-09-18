@@ -33,10 +33,12 @@ import lombok.Data;
 @Table(name = "employees", uniqueConstraints = @UniqueConstraint(name = "uk_employees_name", columnNames = "name"))
 public class EmployeeJPA {
 
-    public EmployeeJPA(String id, String name, String position,
+    public EmployeeJPA(String id, String name, String firstName, String lastName, String position,
             String extn, String salary, LocalDate start_date, String office, EmployeeJPA manager, boolean hasManagerRights) {
         this.id = id;
         this.name = name;
+        this.firstName = firstName;
+        this.lastName = lastName;
         this.position = position;
         this.extn = extn;
         this.salary = salary;
@@ -52,6 +54,10 @@ public class EmployeeJPA {
     public String id;
     @Column(unique = true)
     public String name;
+    @Column(name = "first_name")
+    public String firstName;
+    @Column(name = "last_name")
+    public String lastName;
     public String position;
     public String extn;
     public String salary;

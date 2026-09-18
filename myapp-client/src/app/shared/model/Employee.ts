@@ -3,6 +3,8 @@
 export class Employee {
     public id: string;
     public name: string;
+    public firstName: string;
+    public lastName: string;
     public position: string;
     public salary: string;
     public start_date: string;
@@ -16,6 +18,8 @@ export class Employee {
     constructor(
         id: string,
         name: string,
+        firstName: string,
+        lastName: string,
         position: string,
         salary: string,
         start_date: string,
@@ -26,6 +30,8 @@ export class Employee {
     ) {
         this.id = id;
         this.name = name;
+        this.firstName = firstName;
+        this.lastName = lastName;
         this.position = position;
         this.salary = salary;
         this.start_date = start_date;

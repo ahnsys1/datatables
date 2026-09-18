@@ -137,7 +137,7 @@ public class EmployeeService {
             log.debug("Employee import validation completed for {} records", requests.size());
             for (EmployeeRestoreRequest request : requests) {
                 log.debug("Importing employee {}", request.id());
-                employeeRepository.restoreEmployee(request.id(), request.name(), request.position(), request.extn(),
+                employeeRepository.restoreEmployee(request.id(), request.name(), request.firstName(), request.lastName(), request.position(), request.extn(),
                         request.salary(), request.start_date(), request.office(), request.hasManagerRights());
             }
             for (EmployeeRestoreRequest request : requests) {
@@ -287,6 +287,8 @@ public class EmployeeService {
 
         // Update fields from the incoming employee object
         employeeToUpdate.setName(employeeDetails.getName());
+        employeeToUpdate.setFirstName(employeeDetails.getFirstName());
+        employeeToUpdate.setLastName(employeeDetails.getLastName());
         employeeToUpdate.setPosition(employeeDetails.getPosition());
         employeeToUpdate.setSalary(employeeDetails.getSalary());
         employeeToUpdate.setStart_date(employeeDetails.getStart_date());
@@ -337,6 +339,8 @@ public class EmployeeService {
             throw new IllegalArgumentException("Employee data must not be null.");
         }
         validateRequiredField(employee.getName(), "name");
+        validateRequiredField(employee.getFirstName(), "firstName");
+        validateRequiredField(employee.getLastName(), "lastName");
         validateRequiredField(employee.getPosition(), "position");
         validateRequiredField(employee.getExtn(), "extn");
         validateRequiredField(employee.getSalary(), "salary");
@@ -351,6 +355,8 @@ public class EmployeeService {
             throw new IllegalArgumentException("Employee data must not be null.");
         }
         validateRequiredField(employee.name(), "name");
+        validateRequiredField(employee.firstName(), "firstName");
+        validateRequiredField(employee.lastName(), "lastName");
         validateRequiredField(employee.position(), "position");
         validateRequiredField(employee.extn(), "extn");
         validateRequiredField(employee.salary(), "salary");
@@ -367,7 +373,7 @@ public class EmployeeService {
     }
 
     private EmployeeJPA copyEmployeeState(EmployeeJPA employee) {
-        EmployeeJPA copy = new EmployeeJPA(employee.getId(), employee.getName(), employee.getPosition(),
+        EmployeeJPA copy = new EmployeeJPA(employee.getId(), employee.getName(), employee.getFirstName(), employee.getLastName(), employee.getPosition(),
                 employee.getExtn(), employee.getSalary(), employee.getStart_date(), employee.getOffice(),
                 employee.getManager(), employee.isHasManagerRights());
         copy.setChildren(List.copyOf(employee.getChildren()));

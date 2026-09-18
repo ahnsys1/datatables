@@ -33,7 +33,7 @@
             <!-- use a disabled button to provide padding for leaf nodes -->
             <span class="tree-node-spacer"></span>
             <button type="button" class="employee-node-label" (click)="selectEmployee(node)">
-                <span class="employee-name">{{node.name}}</span>
+                <span class="employee-name">{{node.firstName}} {{node.lastName}}</span>
                 <span class="employee-position">[{{node.position}}]</span>
             </button>
             <div class="move-actions" *ngIf="selectedEmployee && canMoveToManager(node)">
@@ -52,12 +52,12 @@
         <div>
             <div class="mat-tree-node employee-tree-node" [class.manager-node]="isManager(node)"
                 [class.selected]="isSelected(node)">
-                <button mat-icon-button class="tree-node-toggle" [attr.aria-label]="'Toggle ' + node.name"
+                <button mat-icon-button class="tree-node-toggle" [attr.aria-label]="'Toggle ' + node.firstName + ' ' + node.lastName"
                     (click)="treeControl.toggle(node)">
                     <span class="tree-node-toggle-symbol">{{ treeControl.isExpanded(node) ? '-' : '+' }}</span>
                 </button>
                 <button type="button" class="employee-node-label" (click)="selectEmployee(node)">
-                    <span class="employee-name">{{node.name}}</span>
+                    <span class="employee-name">{{node.firstName}} {{node.lastName}}</span>
                     <span class="employee-position">[{{node.position}}]</span>
                 </button>
                 <div class="move-actions" *ngIf="selectedEmployee && canMoveToManager(node)">

@@ -19,6 +19,24 @@
             </div>
         </div>
 
+        <div class="form-group m-2">
+            <label>{{ 'first-name' | translate }}</label>
+            <input type="text" class="form-control" placeholder="{{ 'enter-first-name' | translate }}" autocomplete="off"
+                #firstName="ngModel" name="firstName" required matInput [(ngModel)]="employeeObject.firstName">
+            <div *ngIf="firstName.invalid && (firstName.dirty || firstName.touched)" class="text-danger">
+                {{ 'first-name-is-required' | translate }}
+            </div>
+        </div>
+
+        <div class="form-group m-2">
+            <label>{{ 'last-name' | translate }}</label>
+            <input type="text" class="form-control" placeholder="{{ 'enter-last-name' | translate }}" autocomplete="off"
+                #lastName="ngModel" name="lastName" required matInput [(ngModel)]="employeeObject.lastName">
+            <div *ngIf="lastName.invalid && (lastName.dirty || lastName.touched)" class="text-danger">
+                {{ 'last-name-is-required' | translate }}
+            </div>
+        </div>
+
 
 
 

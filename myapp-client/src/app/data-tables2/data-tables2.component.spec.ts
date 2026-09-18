@@ -10,14 +10,15 @@ describe('DataTables2Component intraday changes', () => {
   it('parses an UPDATE row even when the export has no CREATE row', () => {
     const content = [
       csvRow([
-        'timestamp', 'action', 'employee_id', 'old_name', 'new_name', 'old_position', 'new_position',
+        'timestamp', 'action', 'employee_id', 'old_name', 'new_name', 'old_first_name', 'new_first_name',
+        'old_last_name', 'new_last_name', 'old_position', 'new_position',
         'old_extn', 'new_extn', 'old_salary', 'new_salary', 'old_start_date', 'new_start_date',
         'old_office', 'new_office', 'old_has_manager_rights', 'new_has_manager_rights',
         'old_manager_id', 'new_manager_id', 'old_manager_name', 'new_manager_name'
       ]),
       csvRow([
-        '2026-08-14T10:00:00', 'UPDATE', 'employee-1', 'Old, Name', 'New, Name', 'Developer', 'Senior Developer',
-        '100', '101', '50000', '55000', '2026-01-01', '2026-08-01', 'Prague', 'Brno', 'false', 'true',
+        '2026-08-14T10:00:00', 'UPDATE', 'employee-1', 'Old, Name', 'New, Name', 'Old', 'New', 'Name', 'Surname',
+        'Developer', 'Senior Developer', '100', '101', '50000', '55000', '2026-01-01', '2026-08-01', 'Prague', 'Brno', 'false', 'true',
         'manager-old', 'manager-new', 'Old Manager', 'New Manager'
       ])
     ].join('\n');
@@ -28,6 +29,8 @@ describe('DataTables2Component intraday changes', () => {
       action: 'UPDATE',
       employeeId: 'employee-1',
       newName: 'New, Name',
+      newFirstName: 'New',
+      newLastName: 'Surname',
       newManagerId: 'manager-new'
     })]);
   });

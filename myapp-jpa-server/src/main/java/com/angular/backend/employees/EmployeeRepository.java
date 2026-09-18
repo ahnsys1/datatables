@@ -16,9 +16,9 @@ public interface EmployeeRepository extends JpaRepository<EmployeeJPA, String> {
     void truncateEmployees();
 
         @Modifying
-        @Query(value = "INSERT INTO employees (id, name, position, extn, salary, start_date, office, has_manager_rights, manager_id) "
-            + "VALUES (:id, :name, :position, :extn, :salary, :startDate, :office, :hasManagerRights, NULL)", nativeQuery = true)
-        void restoreEmployee(String id, String name, String position, String extn, String salary,
+        @Query(value = "INSERT INTO employees (id, name, first_name, last_name, position, extn, salary, start_date, office, has_manager_rights, manager_id) "
+            + "VALUES (:id, :name, :firstName, :lastName, :position, :extn, :salary, :startDate, :office, :hasManagerRights, NULL)", nativeQuery = true)
+        void restoreEmployee(String id, String name, String firstName, String lastName, String position, String extn, String salary,
             java.time.LocalDate startDate, String office, boolean hasManagerRights);
 
         @Modifying

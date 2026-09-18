@@ -9,13 +9,15 @@
     <table id="managerTable" class="display table table-striped table-hover table-bordered">
       <thead>
         <tr>
-          <th>{{ 'name' | translate }}</th>
+          <th>{{ 'first-name' | translate }}</th>
+          <th>{{ 'last-name' | translate }}</th>
           <th>{{ 'position' | translate }}</th>
         </tr>
       </thead>
       <tbody>
         <tr *ngFor="let m of managers" [attr.data-id]="m.id">
-          <td>{{ m.name }}</td>
+          <td>{{ m.firstName }}</td>
+          <td>{{ m.lastName }}</td>
           <td>{{ m.position }}</td>
         </tr>
       </tbody>

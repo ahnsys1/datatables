@@ -10,16 +10,14 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.jackson.JacksonAutoConfiguration;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
-import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
-import org.springframework.amqp.rabbit.core.RabbitTemplate;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
-import org.junit.jupiter.api.BeforeEach;
 
 import com.angular.backend.AbstractIntegrationTest;
 
@@ -81,6 +79,8 @@ public class EmployeeServiceTest extends AbstractIntegrationTest {
         // Given
         EmployeeJPA employee = new EmployeeJPA();
         employee.setName("New Employee");
+        employee.setFirstName("New");
+        employee.setLastName("Employee");
         employee.setPosition("Tester");
         employee.setOffice("IT");
         employee.setExtn("E789");
@@ -142,6 +142,8 @@ public class EmployeeServiceTest extends AbstractIntegrationTest {
 
         EmployeeJPA employeeDetailsToUpdate = new EmployeeJPA();
         employeeDetailsToUpdate.setName("New Name");
+        employeeDetailsToUpdate.setFirstName("New");
+        employeeDetailsToUpdate.setLastName("Name");
         employeeDetailsToUpdate.setPosition("Manager");
         employeeDetailsToUpdate.setExtn("E792");
         employeeDetailsToUpdate.setSalary("100000");

@@ -50,6 +50,8 @@ public class EmployeeJPAControllerTest extends AbstractIntegrationTest {
     void createEmployee_shouldReturnCreated() throws Exception {
         EmployeeJPA employee = new EmployeeJPA();
         employee.setName("John Doe");
+        employee.setFirstName("John");
+        employee.setLastName("Doe");
         employee.setPosition("Developer");
         employee.setExtn("1234");
         employee.setSalary("80000");
@@ -70,6 +72,8 @@ public class EmployeeJPAControllerTest extends AbstractIntegrationTest {
     void createEmployee_withoutRequiredField_shouldReturnBadRequest() throws Exception {
         EmployeeJPA employee = new EmployeeJPA();
         employee.setName("John Doe");
+        employee.setFirstName("John");
+        employee.setLastName("Doe");
         employee.setPosition("Developer");
         employee.setSalary("80000");
         employee.setStart_date(LocalDate.of(2023, 1, 15));

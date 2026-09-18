@@ -29,13 +29,13 @@ public class EmployeeCsvExportService {
     private static final DateTimeFormatter EXPORT_DATE_FORMAT = DateTimeFormatter.ofPattern("dd-MM-yyyy");
     private static final String LEGACY_CHANGE_TITLE = "Intra-day employee changes";
     private static final String[] CHANGE_HEADER = {
-            "timestamp", "action", "employee_id", "old_name", "new_name", "old_position", "new_position",
+            "timestamp", "action", "employee_id", "old_name", "new_name", "old_first_name", "new_first_name", "old_last_name", "new_last_name", "old_position", "new_position",
             "old_extn", "new_extn", "old_salary", "new_salary", "old_start_date", "new_start_date",
             "old_office", "new_office", "old_has_manager_rights", "new_has_manager_rights", "old_manager_id",
             "new_manager_id", "old_manager_name", "new_manager_name"
     };
     private static final String[] EMPLOYEE_HEADER = {
-            "employee_id", "name", "position", "extn", "salary", "start_date", "office", "has_manager_rights",
+            "employee_id", "name", "first_name", "last_name", "position", "extn", "salary", "start_date", "office", "has_manager_rights",
             "manager_id", "manager_name"
     };
 
@@ -254,6 +254,8 @@ public class EmployeeCsvExportService {
         EmployeeJPA employeeWithId = newEmployee != null ? newEmployee : oldEmployee;
         row.append(',').append(csv(employeeWithId == null ? null : employeeWithId.getId()));
         appendPairField(row, oldEmployee == null ? null : oldEmployee.getName(), newEmployee == null ? null : newEmployee.getName());
+        appendPairField(row, oldEmployee == null ? null : oldEmployee.getFirstName(), newEmployee == null ? null : newEmployee.getFirstName());
+        appendPairField(row, oldEmployee == null ? null : oldEmployee.getLastName(), newEmployee == null ? null : newEmployee.getLastName());
         appendPairField(row, oldEmployee == null ? null : oldEmployee.getPosition(), newEmployee == null ? null : newEmployee.getPosition());
         appendPairField(row, oldEmployee == null ? null : oldEmployee.getExtn(), newEmployee == null ? null : newEmployee.getExtn());
         appendPairField(row, oldEmployee == null ? null : oldEmployee.getSalary(), newEmployee == null ? null : newEmployee.getSalary());
@@ -272,7 +274,7 @@ public class EmployeeCsvExportService {
 
     private String employeeRow(EmployeeJPA employee) {
         String[] values = {
-                employee.getId(), employee.getName(), employee.getPosition(), employee.getExtn(), employee.getSalary(),
+                employee.getId(), employee.getName(), employee.getFirstName(), employee.getLastName(), employee.getPosition(), employee.getExtn(), employee.getSalary(),
                 String.valueOf(employee.getStart_date()), employee.getOffice(), String.valueOf(employee.isHasManagerRights()),
                 employee.getManager() == null ? null : employee.getManager().getId(),
                 employee.getManager() == null ? null : employee.getManager().getName()

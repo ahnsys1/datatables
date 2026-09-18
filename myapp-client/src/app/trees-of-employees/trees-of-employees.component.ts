@@ -381,7 +381,8 @@ export class TreesOfEmployeesComponent implements OnInit {
   private filterEmployees(employees: Employee[], normalizedSearchText: string): Employee[] {
     return employees.reduce<Employee[]>((filteredEmployees, employee) => {
       const filteredChildren = this.filterEmployees(employee.children || [], normalizedSearchText);
-      const employeeMatches = employee.name?.toLowerCase().includes(normalizedSearchText);
+      const employeeMatches = [employee.name, employee.firstName, employee.lastName]
+        .some(value => value?.toLowerCase().includes(normalizedSearchText));
 
       if (employeeMatches || filteredChildren.length > 0) {
         filteredEmployees.push({

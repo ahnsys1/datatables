@@ -39,7 +39,7 @@ export class AddEmployeeComponent implements OnInit, AfterViewInit, OnDestroy {
     this.dialogRef.close();
   }
 
-  employeeObject: Employee = new Employee('', '', '', '', '', '', '', false, null);
+  employeeObject: Employee = new Employee('', '', '', '', '', '', '', '', '', false, null);
 
   isEditMode: boolean = false;
   managers: Employee[] = [];
