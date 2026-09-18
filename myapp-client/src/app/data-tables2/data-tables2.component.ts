@@ -69,39 +69,7 @@ export class DataTables2Component implements OnInit {
     ]).subscribe(translations => {
       this.dtOptions = {
         layout: {
-          topEnd: {
-            buttons: [
-              {
-                text: 'Import employees',
-                className: 'btn btn-outline-primary',
-                action: () => this.importEmployees()
-              },
-              {
-                text: 'Export employees',
-                className: 'btn btn-outline-secondary',
-                action: () => this.exportEmployees()
-              },
-              {
-                text: 'Import changes',
-                className: 'btn btn-outline-primary',
-                action: () => this.importIntradayChanges()
-              },
-              {
-                text: 'Export changes',
-                className: 'btn btn-outline-secondary',
-                action: () => this.exportIntradayChanges()
-              },
-              {
-                text: 'Delete employees',
-                className: 'btn btn-outline-danger',
-                action: () => this.deleteAllEmployees()
-              }
-            ]
-          },
           topStart: {
-            search: {
-              placeholder: 'Search employees'
-            },
             buttons: [
               {
                 text: translations['new-employee'],
@@ -703,31 +671,4 @@ export class DataTables2Component implements OnInit {
     return [...ordered, ...employees.filter(employee => !visited.has(employee.id))];
   }
 
-  private deleteAllEmployees(): void {
-    const employees = this.table.rows().data().toArray() as Employee[];
-    if (employees.length === 0) {
-      return;
-    }
-
-    const dialogRef = this.dialog.open(ConfirmationDialogComponent, {
-      data: {
-        title: this.translate.instant('confirm-delete'),
-        message: this.translate.instant('confirm-delete-message'),
-        confirmText: this.translate.instant('delete'),
-        cancelText: this.translate.instant('cancel')
-      } as ConfirmationDialogData
-    });
-    dialogRef.afterClosed().subscribe((confirmed: boolean) => {
-      if (confirmed) {
-        this.deleteEmployeeLayers(employees);
-      }
-    });
-  }
-
-  private deleteEmployeeLayers(employees: Employee[]): void {
-    this.employeeService.deleteAllEmployees().subscribe({
-      next: () => this.getEmployees(),
-      error: error => alert('Could not delete employees: ' + error.message)
-    });
-  }
 }
