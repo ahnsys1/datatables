@@ -29,11 +29,11 @@
 <div>
     <button mat-button class="btn btn-primary" (click)="expandDisplayedTree()">Expand All</button>
     <button mat-button class="btn btn-primary" (click)="treeControl.collapseAll()">Collapse All</button>
-    <button mat-button class="btn btn-success" [disabled]="!canMoveToSelectedTarget()"
+    <button mat-button class="btn move-toolbar-button" [disabled]="!canMoveToSelectedTarget()"
         (click)="moveSelectedAsChild(selectedTargetManager!)">
         Move selected employee to selected manager
     </button>
-    <button mat-button class="btn btn-success" [disabled]="!selectedEmployeeHasChildren() || !canMoveToSelectedTarget()"
+    <button mat-button class="btn move-toolbar-button" [disabled]="!selectedEmployeeHasChildren() || !canMoveToSelectedTarget()"
         (click)="moveSelectedChildrenTo(selectedTargetManager!)">
         Move selected employee's subordinates to selected manager
     </button>
