@@ -40,8 +40,11 @@ export class TreesOfEmployeesComponent implements OnInit {
 
   treeControl = new NestedTreeControl<Employee>(node => node.children);
   dataSource = new MatTreeNestedDataSource<Employee>();
+  lowerTreeControl = new NestedTreeControl<Employee>(node => node.children);
+  lowerDataSource = new MatTreeNestedDataSource<Employee>();
   allEmployees: Employee[] = [];
   selectedEmployee: Employee | null = null;
+  selectedTargetManager: Employee | null = null;
   searchText = '';
   searchInputText = '';
   undoStack: HierarchyUndoAction[] = [];
@@ -64,7 +67,9 @@ export class TreesOfEmployeesComponent implements OnInit {
       } else {
         this.selectedEmployee = null;
       }
+      this.selectedTargetManager = null;
       this.refreshDisplayedTree();
+      this.refreshLowerTree();
       if (expandAfterLoad) {
         setTimeout(() => selectedEmployeeId ? this.expandToEmployee(selectedEmployeeId) : this.expandDisplayedTree());
       }
@@ -83,6 +88,17 @@ export class TreesOfEmployeesComponent implements OnInit {
 
   isSelected(node: Employee): boolean {
     return this.selectedEmployee?.id === node.id;
+  }
+
+  selectTargetManager(node: Employee): void {
+    if (!this.isManager(node)) {
+      return;
+    }
+    this.selectedTargetManager = this.isTargetManager(node) ? null : this.findEmployeeById(node.id);
+  }
+
+  isTargetManager(node: Employee): boolean {
+    return this.selectedTargetManager?.id === node.id;
   }
 
   isManager(node: Employee): boolean {
@@ -129,11 +145,19 @@ export class TreesOfEmployeesComponent implements OnInit {
     this.expandEmployees(this.dataSource.data);
   }
 
+  expandLowerTree(): void {
+    this.expandEmployees(this.lowerDataSource.data, this.lowerTreeControl);
+  }
+
   canMoveToManager(manager: Employee): boolean {
     const selectedEmployee = this.selectedEmployee ? this.findEmployeeById(this.selectedEmployee.id) : null;
     const targetManager = this.findEmployeeById(manager.id);
 
-    if (!selectedEmployee || !targetManager || !this.isManager(targetManager) || targetManager.id === selectedEmployee.id) {
+    if (!selectedEmployee || !targetManager || !this.isManager(targetManager)) {
+      return false;
+    }
+
+    if (this.wouldCreateManagerCycle(selectedEmployee, targetManager)) {
       return false;
     }
 
@@ -143,7 +167,15 @@ export class TreesOfEmployeesComponent implements OnInit {
       return false;
     }
 
-    return !this.isDescendantOf(targetManager, selectedEmployee);
+    return true;
+  }
+
+  canMoveToSelectedTarget(): boolean {
+    return !!this.selectedTargetManager && this.canMoveToManager(this.selectedTargetManager);
+  }
+
+  private wouldCreateManagerCycle(employee: Employee, proposedManager: Employee): boolean {
+    return proposedManager.id === employee.id || this.isDescendantOf(proposedManager, employee);
   }
 
   moveSelectedAsChild(manager: Employee): void {
@@ -348,10 +380,22 @@ export class TreesOfEmployeesComponent implements OnInit {
     }
   }
 
-  private expandEmployees(employees: Employee[]): void {
+  private refreshLowerTree(): void {
+    this.lowerDataSource.data = [...this.allEmployees];
+    this.lowerTreeControl.dataNodes = this.lowerDataSource.data;
+  }
+
+  private getSelectedEmployee(): Employee | null {
+    return this.selectedEmployee ? this.findEmployeeById(this.selectedEmployee.id) : null;
+  }
+
+  private expandEmployees(
+    employees: Employee[],
+    control: NestedTreeControl<Employee> = this.treeControl
+  ): void {
     for (const employee of employees) {
-      this.treeControl.expand(employee);
-      this.expandEmployees(employee.children || []);
+      control.expand(employee);
+      this.expandEmployees(employee.children || [], control);
     }
   }
 
