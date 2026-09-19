@@ -35,6 +35,7 @@
     "manager-cannot-be-deleted": "Manager Deletion Error",
     "employee-cannot-subordintes-to-be-deleted": "Cannot delete a manager who has subordinates.",
     "datatables.info": "From _START_ to _END_ of _MAX_ rows<br/>",
+    "datatables.info-empty": "From 0 to 0 of 0 rows<br/>",
     "name-is-required": "Employee name is required.",
     "first-name-is-required": "First name is required.",
     "last-name-is-required": "Last name is required.",
