@@ -103,6 +103,12 @@ export class TreesOfEmployeesComponent implements OnInit {
     return this.selectedTargetManager?.id === node.id;
   }
 
+  isLowerSearchMatch(node: Employee): boolean {
+    const normalizedSearchText = this.lowerSearchText.trim().toLowerCase();
+    return normalizedSearchText.length > 0 && [node.name, node.firstName, node.lastName]
+      .some(value => value?.toLowerCase().includes(normalizedSearchText));
+  }
+
   isManager(node: Employee): boolean {
     return node.hasManagerRights === true;
   }
@@ -417,8 +423,31 @@ export class TreesOfEmployeesComponent implements OnInit {
     this.lowerTreeControl.dataNodes = displayedEmployees;
 
     if (normalizedSearchText) {
-      setTimeout(() => this.expandLowerTree());
+      setTimeout(() => this.expandLowerSearchResults(displayedEmployees, normalizedSearchText));
     }
+  }
+
+  private expandLowerSearchResults(employees: Employee[], normalizedSearchText: string): void {
+    this.lowerTreeControl.collapseAll();
+
+    const expandMatchingPaths = (currentEmployees: Employee[]): boolean => {
+      let containsMatch = false;
+
+      for (const employee of currentEmployees) {
+        const employeeMatches = [employee.name, employee.firstName, employee.lastName]
+          .some(value => value?.toLowerCase().includes(normalizedSearchText));
+        const childContainsMatch = expandMatchingPaths(employee.children || []);
+
+        if (employeeMatches || childContainsMatch) {
+          this.lowerTreeControl.expand(employee);
+          containsMatch = true;
+        }
+      }
+
+      return containsMatch;
+    };
+
+    expandMatchingPaths(employees);
   }
 
   private filterManagers(employees: Employee[]): Employee[] {

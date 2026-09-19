@@ -97,7 +97,9 @@
     <div class="lower-tree-surface">
     <mat-tree [dataSource]="lowerDataSource" [treeControl]="lowerTreeControl">
         <mat-nested-tree-node *matTreeNodeDef="let node">
-            <div class="mat-tree-node employee-tree-node lower-tree-node" [class.selected-target-manager]="isTargetManager(node)">
+            <div class="mat-tree-node employee-tree-node lower-tree-node"
+                [class.selected-target-manager]="isTargetManager(node)"
+                [class.lower-search-match]="isLowerSearchMatch(node)">
                 <span class="tree-node-spacer"></span>
                 <button type="button" class="employee-node-label" [disabled]="!isManager(node)" (click)="selectTargetManager(node)">
                     <span class="employee-name">{{ node.firstName }} {{ node.lastName }}</span>
@@ -116,7 +118,9 @@
         </mat-nested-tree-node>
         <mat-nested-tree-node *matTreeNodeDef="let node; when: hasChild">
             <div>
-                <div class="mat-tree-node employee-tree-node lower-tree-node" [class.selected-target-manager]="isTargetManager(node)">
+                <div class="mat-tree-node employee-tree-node lower-tree-node"
+                    [class.selected-target-manager]="isTargetManager(node)"
+                    [class.lower-search-match]="isLowerSearchMatch(node)">
                     <button mat-icon-button class="tree-node-toggle" [attr.aria-label]="'Toggle ' + node.firstName + ' ' + node.lastName"
                         (click)="lowerTreeControl.toggle(node)">
                         <span class="tree-node-toggle-symbol">{{ lowerTreeControl.isExpanded(node) ? '-' : '+' }}</span>
