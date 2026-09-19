@@ -28,7 +28,8 @@
     "cancel": "Cancelar",
     "manager-cannot-be-deleted": "Error de eliminación del gerente",
     "employee-cannot-subordintes-to-be-deleted": "No se puede eliminar a un gerente que tiene subordinados.",
-    "datatables.info": "De _start_ a _end_ de _max_ filas<br/>"
+    "datatables.info": "De _start_ a _end_ de _max_ filas<br/>",
+    "datatables.info-empty": "De 0 a 0 de 0 filas<br/>"
 }{
     "new-employee": "Nuevo empleado",
     "edit-employee": "Editar empleado",

@@ -105,7 +105,7 @@
                     <span class="employee-name">{{ node.firstName }} {{ node.lastName }}</span>
                 </button>
                 <span class="employee-position">[{{ node.position }}]</span>
-                <div class="move-actions" *ngIf="selectedEmployee && canMoveToManager(node)">
+                <div class="move-actions" *ngIf="selectedEmployee && isLowerSearchMatch(node) && canMoveToManager(node)">
                     <button mat-button class="btn btn-sm btn-outline-primary move-action" (click)="moveSelectedAsChild(node)">
                         Move employee
                     </button>
@@ -129,7 +129,7 @@
                         <span class="employee-name">{{ node.firstName }} {{ node.lastName }}</span>
                     </button>
                     <span class="employee-position">[{{ node.position }}]</span>
-                    <div class="move-actions" *ngIf="selectedEmployee && canMoveToManager(node)">
+                    <div class="move-actions" *ngIf="selectedEmployee && isLowerSearchMatch(node) && canMoveToManager(node)">
                         <button mat-button class="btn btn-sm btn-outline-primary move-action" (click)="moveSelectedAsChild(node)">
                             Move employee
                         </button>

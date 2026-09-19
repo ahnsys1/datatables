@@ -61,13 +61,14 @@ export class DataTables3Component implements OnInit {
     // Using `get` ensures that the translations are loaded before we try to use them.
     // `instant` can fail if the component initializes before the translation file is fetched.
     this.translate.get([
-      'datatables.info', 'new-employee', 'edit-employee', 'remove-employee', 'confirm-delete',
+      'datatables.info', 'datatables.info-empty', 'new-employee', 'edit-employee', 'remove-employee', 'confirm-delete',
       'confirm-delete-message', 'delete', 'cancel', 'id', 'name', 'first-name', 'last-name', 'manager', 'position',
       'office', 'extn', 'start-date', 'salary', 'is-manager', 'yes', 'no'
     ]).subscribe(translations => {
       this.dtOptions = {
         language: {
-          info: translations['datatables.info']
+          info: translations['datatables.info'],
+          infoEmpty: translations['datatables.info-empty']
         },
         layout: {
           topStart: {

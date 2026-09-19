@@ -35,6 +35,7 @@
     "manager-cannot-be-deleted": "Chyba manažera manažera",
     "employee-cannot-subordintes-to-be-deleted": "Nelze odstranit manažera, který má podřízené.",
     "datatables.info": "Od _start_ do _end_ of _max_ řádky<br/>",
+    "datatables.info-empty": "Od 0 do 0 z 0 řádků<br/>",
     "name-is-required": "Je vyžadováno jméno zaměstnance.",
     "first-name-is-required": "Je vyžadováno křestní jméno.",
     "last-name-is-required": "Je vyžadováno příjmení.",
