@@ -47,8 +47,8 @@
                 <span class="tree-node-spacer"></span>
                 <button type="button" class="employee-node-label" (click)="selectEmployee(node)">
                     <span class="employee-name">{{node.firstName}} {{node.lastName}}</span>
-                    <span class="employee-position">[{{node.position}}]</span>
                 </button>
+                <span class="employee-position">[{{node.position}}]</span>
             </div>
         </mat-nested-tree-node>
         <mat-nested-tree-node *matTreeNodeDef="let node; when: hasChild">
@@ -61,8 +61,8 @@
                     </button>
                     <button type="button" class="employee-node-label" (click)="selectEmployee(node)">
                         <span class="employee-name">{{node.firstName}} {{node.lastName}}</span>
-                        <span class="employee-position">[{{node.position}}]</span>
                     </button>
+                    <span class="employee-position">[{{node.position}}]</span>
                 </div>
                 <ul [class.example-tree-invisible]="!treeControl.isExpanded(node)">
                     <ng-container matTreeNodeOutlet></ng-container>
@@ -77,6 +77,17 @@
     <div class="tree-panel-heading">
         <h3>Target manager</h3>
         <span>Select a manager in the lower tree.</span>
+    </div>
+    <div class="employee-search">
+        <input type="search" class="form-control" placeholder="Search employee by name (minimum 3 characters)"
+            [value]="lowerSearchInputText" (input)="onLowerSearchInput($event)" (keydown.enter)="searchLowerEmployees()" />
+        <button mat-button class="btn btn-primary" type="button" [disabled]="lowerSearchInputText.trim().length < 3"
+            (click)="searchLowerEmployees()">
+            Search
+        </button>
+        <button *ngIf="lowerSearchText" mat-button class="btn btn-outline-secondary" type="button" (click)="clearLowerSearch()">
+            Clear
+        </button>
     </div>
     <div>
         <button mat-button class="btn btn-primary" (click)="expandLowerTree()">Expand All</button>

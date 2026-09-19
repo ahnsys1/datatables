@@ -55,7 +55,7 @@ export class EmployeeService {
   }
 
   employeeByNameExists(employeeName: string): Observable<boolean> {
-    return this.http.get<boolean>(`${this.baseUrl}/employees/employeeByNameExists/${employeeName}`);
+    return this.http.get<boolean>(`${this.baseUrl}/employees/employeeByNameExists/${encodeURIComponent(employeeName)}`);
   }
 
   createEmployee(employee: Employee): Observable<Employee> {

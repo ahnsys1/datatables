@@ -44,6 +44,7 @@ export class AddEmployeeComponent implements OnInit, AfterViewInit, OnDestroy {
   isEditMode: boolean = false;
   managers: Employee[] = [];
   employeeNameExists = false;
+  employeeNameCheckPending = false;
   startDateDisplay = '';
   private originalName: string | undefined;
   private startDatePicker: FlatpickrInstance | null = null;
@@ -201,11 +202,14 @@ export class AddEmployeeComponent implements OnInit, AfterViewInit, OnDestroy {
     // Don't validate if the name is empty or hasn't changed from the original in edit mode
     if (!name || (this.isEditMode && name === this.originalName)) {
       this.employeeNameExists = false;
+      this.employeeNameCheckPending = false;
       return;
     }
 
+    this.employeeNameCheckPending = true;
     this.employeeService.employeeByNameExists(name).subscribe((exists: boolean) => {
       this.employeeNameExists = exists;
+      this.employeeNameCheckPending = false;
       this.cdr.markForCheck(); // Manually trigger change detection for OnPush
     });
   }
@@ -267,17 +271,42 @@ export class AddEmployeeComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   onSubmit(form: any): void {
-    if (form.valid && !this.employeeNameExists && this.isStartDateValid()) {
-      this.employeeObject.managerId = this.employeeObject.manager?.id || null;
-      this.dialogRef.close({
-        ...this.employeeObject,
-        start_date: this.toApiDate(this.employeeObject.start_date)
-      });
+    if (!form.valid || this.employeeNameCheckPending || this.employeeNameExists || !this.isStartDateValid()) {
+      return;
     }
+
+    if (this.isEditMode) {
+      this.closeWithEmployee();
+      return;
+    }
+
+    this.employeeNameCheckPending = true;
+    this.employeeService.employeeByNameExists(this.employeeObject.name.trim()).subscribe({
+      next: exists => {
+        this.employeeNameExists = exists;
+        this.employeeNameCheckPending = false;
+        this.cdr.markForCheck();
+        if (!exists) {
+          this.closeWithEmployee();
+        }
+      },
+      error: () => {
+        this.employeeNameCheckPending = false;
+        this.cdr.markForCheck();
+      }
+    });
   }
 
   getModalTitle(): string {
     return this.isEditMode ? 'edit-employee' : 'new-employee';
+  }
+
+  private closeWithEmployee(): void {
+    this.employeeObject.managerId = this.employeeObject.manager?.id || null;
+    this.dialogRef.close({
+      ...this.employeeObject,
+      start_date: this.toApiDate(this.employeeObject.start_date)
+    });
   }
 
   private applyStartDate(date: Date): void {

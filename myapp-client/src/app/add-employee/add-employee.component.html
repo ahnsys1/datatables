@@ -10,7 +10,7 @@
             <label>{{ 'name' | translate }}</label>
             <input type="text" class="form-control" (ngModelChange)="checkEmployeeName($event)"
                 placeholder="{{ 'enter-name' | translate }}" autocomplete="off" #name="ngModel" name="name" required matInput
-                [(ngModel)]="employeeObject.name">
+                [(ngModel)]="employeeObject.name" [disabled]="isEditMode">
             <div *ngIf="name.invalid && (name.dirty || name.touched)" class="text-danger">
                 {{ 'name-is-required' | translate }}
             </div>
@@ -136,7 +136,7 @@
         </div>
 
         <div class="button-group m-2">
-            <button type="submit" class="btn btn-success m-2" [disabled]="!employeeForm.valid">
+            <button type="submit" class="btn btn-success m-2" [disabled]="!employeeForm.valid || employeeNameCheckPending">
                 {{ 'submit' | translate }}
             </button>
 

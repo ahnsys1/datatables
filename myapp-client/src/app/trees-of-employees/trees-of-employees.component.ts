@@ -47,6 +47,8 @@ export class TreesOfEmployeesComponent implements OnInit {
   selectedTargetManager: Employee | null = null;
   searchText = '';
   searchInputText = '';
+  lowerSearchText = '';
+  lowerSearchInputText = '';
   undoStack: HierarchyUndoAction[] = [];
   redoStack: HierarchyUndoAction[] = [];
   isUndoing = false;
@@ -122,6 +124,11 @@ export class TreesOfEmployeesComponent implements OnInit {
     this.searchInputText = target.value;
   }
 
+  onLowerSearchInput(event: Event): void {
+    const target = event.target as HTMLInputElement;
+    this.lowerSearchInputText = target.value;
+  }
+
   searchEmployees(): void {
     const searchText = this.searchInputText.trim();
 
@@ -139,6 +146,25 @@ export class TreesOfEmployeesComponent implements OnInit {
     this.searchInputText = '';
     this.searchText = '';
     this.refreshDisplayedTree();
+  }
+
+  searchLowerEmployees(): void {
+    const searchText = this.lowerSearchInputText.trim();
+
+    if (searchText.length < 3) {
+      this.lowerSearchText = '';
+      this.refreshLowerTree();
+      return;
+    }
+
+    this.lowerSearchText = searchText;
+    this.refreshLowerTree();
+  }
+
+  clearLowerSearch(): void {
+    this.lowerSearchInputText = '';
+    this.lowerSearchText = '';
+    this.refreshLowerTree();
   }
 
   expandDisplayedTree(): void {
@@ -381,8 +407,32 @@ export class TreesOfEmployeesComponent implements OnInit {
   }
 
   private refreshLowerTree(): void {
-    this.lowerDataSource.data = [...this.allEmployees];
-    this.lowerTreeControl.dataNodes = this.lowerDataSource.data;
+    const normalizedSearchText = this.lowerSearchText.trim().toLowerCase();
+    const managerEmployees = this.filterManagers(this.allEmployees);
+    const displayedEmployees = normalizedSearchText
+      ? this.filterEmployees(managerEmployees, normalizedSearchText)
+      : managerEmployees;
+
+    this.lowerDataSource.data = [...displayedEmployees];
+    this.lowerTreeControl.dataNodes = displayedEmployees;
+
+    if (normalizedSearchText) {
+      setTimeout(() => this.expandLowerTree());
+    }
+  }
+
+  private filterManagers(employees: Employee[]): Employee[] {
+    return employees.reduce<Employee[]>((managers, employee) => {
+      if (employee.hasManagerRights !== true) {
+        return managers;
+      }
+
+      managers.push({
+        ...employee,
+        children: this.filterManagers(employee.children || [])
+      });
+      return managers;
+    }, []);
   }
 
   private getSelectedEmployee(): Employee | null {
